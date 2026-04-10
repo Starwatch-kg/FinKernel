@@ -1,16 +1,67 @@
-# React + Vite
+# FinFuture - Умный финансовый ассистент
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FinFuture — это современное веб-приложение для управления личными финансами, созданное специально для зумеров.
 
-Currently, two official plugins are available:
+## 🎯 Основные возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Учёт транзакций** - Добавляй доходы и расходы с категориями
+- **AI-Советник** - Получай персональные финансовые рекомендации
+- **Прогноз расходов** - Узнай, когда могут закончиться деньги
+- **Аналитика** - Визуализация трат по категориям
+- **Достижения** - Геймификация для мотивации
+- **Умные советы** - AI анализирует твои траты и подсказывает, как экономить
 
-## React Compiler
+## 🚀 Технологии
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** - Современный UI фреймворк
+- **Vite** - Быстрая сборка и HMR
+- **Framer Motion** - Плавные анимации
+- **React Router** - Навигация
+- **Zustand** - Управление состоянием
 
-## Expanding the ESLint configuration
+## 📦 Установка
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+```
+
+## 🔧 Разработка
+
+```bash
+npm run dev
+```
+
+Приложение будет доступно по адресу `http://localhost:5173`
+
+## 🏗️ Сборка
+
+```bash
+npm run build
+```
+
+## 📱 Структура проекта
+
+```
+src/
+├── components/     # Переиспользуемые компоненты
+├── screens/        # Экраны приложения
+├── hooks/          # Кастомные хуки
+├── api.js          # API функции
+└── settings.js     # Настройки приложения
+```
+
+## 🎨 Основные экраны
+
+- **Главная** - Баланс, прогноз, последние транзакции
+- **Транзакции** - Добавление и просмотр всех операций
+- **AI-Советник** - Чат с финансовым ассистентом
+- **Достижения** - Прогресс и награды
+- **Настройки** - Персонализация приложения
+
+## 👥 Команда
+
+Starwatch Team - The best command ergans
+
+---
+
+Made with ❤️ by Starwatch
