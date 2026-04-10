@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(chmod +x:*)",
+      "Bash(grep -E '\\\\.\\(py|md|txt|yml|sh|bat\\)$|Dockerfile')",
+      "Bash(ls -1 *.md *.py *.txt *.yml Dockerfile)",
+      "Bash(ls:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(sudo docker-compose:*)",
+      "Bash(curl -s http://localhost:8000/docs)",
+      "Bash(curl -s http://localhost:8000/openapi.json)",
+      "Bash(curl -X POST http://localhost:8000/api/chat -H \"Content-Type: application/json\" -d '{\"user_id\": 1, \"message\": \"test\"}' -v)",
+      "Bash(curl -s http://localhost:8000/api/users)",
+      "Bash(kill:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
