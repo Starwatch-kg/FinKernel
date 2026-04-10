@@ -112,6 +112,106 @@ class LessonProgress(Base):
     user = relationship("User", back_populates="lesson_progress")
     lesson = relationship("Lesson", back_populates="progress")
 
+class Stock(Base):
+    __tablename__ = "stocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticker = Column(String, unique=True, index=True)
+    name = Column(String)
+    current_price = Column(Float)
+    change_percent = Column(Float, default=0.0)
+    sector = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+class UserStock(Base):
+    __tablename__ = "user_stocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    stock_id = Column(Integer, ForeignKey("stocks.id"))
+    shares = Column(Integer, default=0)
+    avg_buy_price = Column(Float)
+    purchased_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    stock = relationship("Stock")
+
+class MarketEvent(Base):
+    __tablename__ = "market_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(Text)
+    event_type = Column(String)  # crash, boom, news
+    impact = Column(String)  # positive, negative, neutral
+    ticker = Column(String, nullable=True)
+    options = Column(JSON)  # Варианты действий
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    active = Column(Boolean, default=True)
+
+class UserMarketEventAction(Base):
+    __tablename__ = "user_market_event_actions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    event_id = Column(Integer, ForeignKey("market_events.id"))
+    action = Column(String)
+    result = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    event = relationship("MarketEvent")
+
+class DailyMission(Base):
+    __tablename__ = "daily_missions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    mission_type = Column(String)  # transaction, lesson, login
+    target_value = Column(Integer)
+    xp_reward = Column(Integer, default=50)
+    date = Column(DateTime, default=datetime.utcnow)
+
+class UserDailyMission(Base):
+    __tablename__ = "user_daily_missions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    mission_id = Column(Integer, ForeignKey("daily_missions.id"))
+    progress = Column(Integer, default=0)
+    completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime, nullable=True)
+
+    user = relationship("User")
+    mission = relationship("DailyMission")
+
+class AdaptiveMastery(Base):
+    __tablename__ = "adaptive_mastery"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    topic = Column(String, index=True)
+    mastery_level = Column(Float, default=0.0)  # 0.0 - 1.0
+    correct_answers = Column(Integer, default=0)
+    total_answers = Column(Integer, default=0)
+    last_practiced = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+
+class AdaptiveQuestion(Base):
+    __tablename__ = "adaptive_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic = Column(String, index=True)
+    question_text = Column(Text)
+    options = Column(JSON)
+    correct_answer = Column(Integer)
+    difficulty = Column(Float, default=0.5)  # 0.0 - 1.0
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb")
 
 engine = create_async_engine(DATABASE_URL, echo=True)
