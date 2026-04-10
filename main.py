@@ -2,9 +2,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc, func
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, validator
 from typing import List, Optional
 from datetime import datetime, timedelta
+import os
+import logging
 
 from models import (
     User, Transaction, TransactionCategory, Achievement, UserAchievement,
@@ -12,11 +14,18 @@ from models import (
 )
 from llm_agent import parse_transaction_with_llm, evaluate_purchase_with_llm
 
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Financial AI Assistant")
+
+# CORS из переменных окружения
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8080,http://localhost:5173,http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:5173", "http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,9 +68,21 @@ class RegisterRequest(BaseModel):
     name: str
     password: str
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+class AddTransactionRequest(BaseModel):
+    userId: str
+    amount: float
+    category: str
+    description: Optional[str] = None
+
+class CompleteLessonRequest(BaseModel):
+    userId: str
+    lessonId: int
+    correctAnswers: int = 0
+    totalQuestions: int = 0
+
+class OnboardingSubmitRequest(BaseModel):
+    userId: str
+    answers: dict
 
 @app.on_event("startup")
 async def startup():
@@ -333,9 +354,9 @@ async def get_transactions_frontend(userId: str, limit: int = 30, db: AsyncSessi
     ]
 
 @app.post("/api/transactions")
-async def add_transaction_frontend(userId: str, amount: float, category: str, description: str = None, db: AsyncSession = Depends(get_db)):
+async def add_transaction_frontend(request: AddTransactionRequest, db: AsyncSession = Depends(get_db)):
     """Добавить транзакцию"""
-    result = await db.execute(select(User).where(User.username == userId))
+    result = await db.execute(select(User).where(User.username == request.userId))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -343,20 +364,20 @@ async def add_transaction_frontend(userId: str, amount: float, category: str, de
 
     # Создаем транзакцию
     try:
-        cat = TransactionCategory[category]
+        cat = TransactionCategory[request.category]
     except KeyError:
         cat = TransactionCategory.other
 
     transaction = Transaction(
         user_id=user.id,
-        amount=abs(amount),
+        amount=abs(request.amount),
         category=cat,
-        description=description
+        description=request.description
     )
     db.add(transaction)
 
     # Обновляем баланс и XP
-    user.current_balance -= abs(amount)
+    user.current_balance -= abs(request.amount)
     user.xp += 5
     user.last_activity = datetime.utcnow()
 
@@ -611,15 +632,15 @@ async def get_lesson_detail(lessonId: int, userId: str, db: AsyncSession = Depen
     }
 
 @app.post("/api/v2/complete-lesson")
-async def complete_lesson(userId: str, lessonId: int, correctAnswers: int = 0, totalQuestions: int = 0, db: AsyncSession = Depends(get_db)):
+async def complete_lesson(request: CompleteLessonRequest, db: AsyncSession = Depends(get_db)):
     """Завершить урок"""
-    result = await db.execute(select(User).where(User.username == userId))
+    result = await db.execute(select(User).where(User.username == request.userId))
     user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    result = await db.execute(select(Lesson).where(Lesson.id == lessonId))
+    result = await db.execute(select(Lesson).where(Lesson.id == request.lessonId))
     lesson = result.scalar_one_or_none()
 
     if not lesson:
@@ -629,11 +650,11 @@ async def complete_lesson(userId: str, lessonId: int, correctAnswers: int = 0, t
     result = await db.execute(
         select(LessonProgress)
         .where(LessonProgress.user_id == user.id)
-        .where(LessonProgress.lesson_id == lessonId)
+        .where(LessonProgress.lesson_id == request.lessonId)
     )
     progress = result.scalar_one_or_none()
 
-    score = int((correctAnswers / totalQuestions * 100)) if totalQuestions > 0 else 100
+    score = int((request.correctAnswers / request.totalQuestions * 100)) if request.totalQuestions > 0 else 100
 
     if progress:
         progress.completed = True
@@ -642,7 +663,7 @@ async def complete_lesson(userId: str, lessonId: int, correctAnswers: int = 0, t
     else:
         progress = LessonProgress(
             user_id=user.id,
-            lesson_id=lessonId,
+            lesson_id=request.lessonId,
             completed=True,
             score=score,
             completed_at=datetime.utcnow()
@@ -702,16 +723,16 @@ async def get_onboarding_questions():
     ]
 
 @app.post("/api/onboarding/submit")
-async def submit_onboarding(userId: str, answers: dict, db: AsyncSession = Depends(get_db)):
+async def submit_onboarding(request: OnboardingSubmitRequest, db: AsyncSession = Depends(get_db)):
     """Сохранить ответы онбординга"""
-    result = await db.execute(select(User).where(User.username == userId))
+    result = await db.execute(select(User).where(User.username == request.userId))
     user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     user.onboarding_completed = True
-    user.onboarding_data = answers
+    user.onboarding_data = request.answers
 
     await db.commit()
 
@@ -834,3 +855,97 @@ async def get_levels():
         {"level": i, "xp_required": 100, "title": f"Уровень {i}"}
         for i in range(1, 51)
     ]
+
+# ============ Заглушки для неиспользуемых функций ============
+
+@app.get("/api/daily-missions")
+async def get_daily_missions(userId: str):
+    """Ежедневные миссии (заглушка)"""
+    return []
+
+@app.post("/api/buy-freeze")
+async def buy_freeze(userId: str):
+    """Покупка заморозки (заглушка)"""
+    return {"success": False, "message": "Feature not implemented"}
+
+@app.get("/api/stocks")
+async def get_stocks(userId: str):
+    """Список акций (заглушка)"""
+    return []
+
+@app.get("/api/stock/{ticker}")
+async def get_stock_detail(ticker: str, userId: str):
+    """Детали акции (заглушка)"""
+    return {"ticker": ticker, "price": 0, "change": 0}
+
+@app.get("/api/market-event")
+async def get_market_event(userId: str):
+    """Рыночные события (заглушка)"""
+    return None
+
+@app.get("/api/recommendations")
+async def get_recommendations(userId: str):
+    """Рекомендации (заглушка)"""
+    return []
+
+@app.post("/api/market-event/action")
+async def market_event_action(userId: str, eventId: int, action: str):
+    """Действие на событие (заглушка)"""
+    return {"success": False}
+
+@app.post("/api/trade")
+async def trade(userId: str, ticker: str, shares: int, action: str):
+    """Торговля акциями (заглушка)"""
+    return {"success": False, "message": "Trading not implemented"}
+
+@app.post("/api/reset-portfolio")
+async def reset_portfolio(userId: str):
+    """Сброс портфолио (заглушка)"""
+    return {"success": False}
+
+@app.get("/api/experience")
+async def get_experience(userId: str):
+    """Опыт пользователя (legacy, заглушка)"""
+    return {"xp": 0, "level": 1}
+
+@app.post("/api/interactions")
+async def post_interaction(userId: str, cardId: int, answer_index: int):
+    """Взаимодействия (legacy, заглушка)"""
+    return {"success": False}
+
+# ============ Adaptive Learning (заглушки) ============
+
+@app.get("/api/adaptive/mastery")
+async def get_adaptive_mastery(userId: str):
+    """Адаптивное обучение - мастерство (заглушка)"""
+    return {}
+
+@app.get("/api/adaptive/recommendation")
+async def get_adaptive_recommendation(userId: str):
+    """Адаптивные рекомендации (заглушка)"""
+    return None
+
+@app.get("/api/adaptive/next-question")
+async def get_adaptive_next_question(topic: str, userId: str):
+    """Следующий вопрос (заглушка)"""
+    return None
+
+@app.get("/api/adaptive/lesson-questions")
+async def get_adaptive_lesson_questions(topic: str, count: int, userId: str):
+    """Вопросы урока (заглушка)"""
+    return []
+
+@app.post("/api/adaptive/answer")
+async def record_adaptive_answer(userId: str, topic: str, questionId: int, isCorrect: bool, timeMs: int = 0, source: str = "lesson"):
+    """Записать ответ (заглушка)"""
+    return {"success": False}
+
+@app.get("/api/adaptive/generate-question")
+async def generate_question(userId: str, topic: Optional[str] = None):
+    """Генерация вопроса (заглушка)"""
+    return None
+
+@app.post("/api/v2/generate-lesson")
+async def generate_lesson(userId: str, weakTopic: Optional[str] = None, strongTopic: Optional[str] = None):
+    """Генерация урока (заглушка)"""
+    return None
