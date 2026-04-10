@@ -120,7 +120,7 @@ async def generate_lesson_with_llm(weak_topic: str = None, strong_topic: str = N
 Урок должен быть понятным, интересным и практичным. Включи 3-4 вопроса."""
 
         response = await client.chat.completions.create(
-            model="anthropic/claude-3.5-sonnet",
+            model="openai/gpt-4o",
             messages=[
                 {"role": "user", "content": prompt}
             ],

@@ -11,7 +11,13 @@ class TransactionCategory(enum.Enum):
     food = "food"
     transport = "transport"
     entertainment = "entertainment"
+    shopping = "shopping"
+    health = "health"
     education = "education"
+    salary = "salary"
+    freelance = "freelance"
+    investment = "investment"
+    gift = "gift"
     other = "other"
 
 class User(Base):
@@ -43,6 +49,7 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     amount = Column(Float)
     category = Column(Enum(TransactionCategory))
+    transaction_type = Column(String, default="expense")  # "income" or "expense"
     description = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
@@ -52,9 +59,11 @@ class Achievement(Base):
     __tablename__ = "achievements"
 
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)  # Используется в init_data.py
     title = Column(String)
     description = Column(String)
     icon = Column(String)
+    category = Column(String, default="other")  # savings, budget, discipline, streak
     xp_reward = Column(Integer, default=0)
     condition_type = Column(String)  # transaction_count, balance_reached, streak, etc.
     condition_value = Column(Integer)

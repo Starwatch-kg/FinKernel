@@ -27,10 +27,11 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8080,http://loc
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],  # Временно разрешаем все origins для отладки
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 class ChatRequest(BaseModel):
@@ -78,6 +79,7 @@ class AddTransactionRequest(BaseModel):
     userId: str
     amount: float
     category: str
+    type: str = "expense"  # "income" or "expense"
     description: Optional[str] = None
 
 class CompleteLessonRequest(BaseModel):
@@ -350,6 +352,7 @@ async def get_dashboard_frontend(userId: str, db: AsyncSession = Depends(get_db)
         daily_avg = total_expenses / 30
         days_left = int(user.current_balance / daily_avg) if daily_avg > 0 else 999
     else:
+        daily_avg = 0
         days_left = 999
 
     # Статистика по категориям
@@ -379,15 +382,17 @@ async def get_dashboard_frontend(userId: str, db: AsyncSession = Depends(get_db)
         "transactions": [
             {
                 "id": t.id,
-                "amount": -t.amount,
+                "amount": abs(t.amount),
+                "type": t.transaction_type if hasattr(t, 'transaction_type') else "expense",
                 "category": t.category.value,
-                "timestamp": t.timestamp.isoformat(),
+                "timestamp": t.timestamp.isoformat() if t.timestamp else datetime.utcnow().isoformat(),
                 "description": t.description or f"Покупка в категории {t.category.value}"
             }
             for t in recent_transactions
         ],
         "forecast": {
             "days_left": days_left,
+            "daily_avg": daily_avg,
             "message": f"При текущих тратах денег хватит на {days_left} дней" if days_left < 999 else "Отличный баланс!"
         },
         "ai_tips": ai_tips,
@@ -422,9 +427,10 @@ async def get_transactions_frontend(userId: str, limit: int = 30, db: AsyncSessi
     return [
         {
             "id": t.id,
-            "amount": -t.amount,
+            "amount": abs(t.amount),
+            "type": t.transaction_type if hasattr(t, 'transaction_type') else "expense",
             "category": t.category.value,
-            "timestamp": t.timestamp.isoformat(),
+            "timestamp": t.timestamp.isoformat() if t.timestamp else datetime.utcnow().isoformat(),
             "description": t.description or f"Покупка в категории {t.category.value}"
         }
         for t in transactions
@@ -445,16 +451,24 @@ async def add_transaction_frontend(request: AddTransactionRequest, db: AsyncSess
     except KeyError:
         cat = TransactionCategory.other
 
+    from datetime import datetime
+
     transaction = Transaction(
         user_id=user.id,
         amount=abs(request.amount),
         category=cat,
-        description=request.description
+        transaction_type=request.type,
+        description=request.description,
+        timestamp=datetime.utcnow()
     )
     db.add(transaction)
 
     # Обновляем баланс и XP
-    user.current_balance -= abs(request.amount)
+    if request.type == "income":
+        user.current_balance += abs(request.amount)
+    else:  # expense
+        user.current_balance -= abs(request.amount)
+
     user.xp += 5
     user.last_activity = datetime.utcnow()
 
@@ -586,9 +600,11 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
 
         achievements_list.append({
             "id": achievement.id,
+            "name": achievement.name if hasattr(achievement, 'name') else achievement.title,
             "title": achievement.title,
             "description": achievement.description,
             "icon": achievement.icon,
+            "category": achievement.category if hasattr(achievement, 'category') else "other",
             "xp_reward": achievement.xp_reward,
             "unlocked": is_unlocked,
             "progress": user_ach.progress if user_ach else 0,
@@ -1808,3 +1824,169 @@ async def generate_lesson(request: GenerateLessonRequest, db: AsyncSession = Dep
     except Exception as e:
         logger.error(f"Error generating lesson: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate lesson")
+
+@app.get("/api/v2/ai-advice")
+async def get_ai_advice(userId: str, db: AsyncSession = Depends(get_db)):
+    """Получить AI советы для пользователя"""
+    result = await db.execute(select(User).where(User.username == userId))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        # Получаем транзакции за последний месяц
+        from datetime import datetime, timedelta
+        month_ago = datetime.utcnow() - timedelta(days=30)
+        
+        result = await db.execute(
+            select(Transaction)
+            .where(Transaction.user_id == user.id)
+            .where(Transaction.timestamp >= month_ago)
+            .order_by(desc(Transaction.timestamp))
+        )
+        transactions = result.scalars().all()
+        
+        total_expenses = sum(t.amount for t in transactions)
+        
+        # Генерируем советы
+        tips = []
+        
+        if user.current_balance < 1000:
+            tips.append({
+                "icon": "⚠️",
+                "text": "Баланс критически низкий! Сократите расходы и найдите дополнительные источники дохода."
+            })
+        elif total_expenses > user.current_balance * 0.5:
+            tips.append({
+                "icon": "💡",
+                "text": "Вы тратите больше половины баланса в месяц. Рекомендую создать бюджет и придерживаться его."
+            })
+        else:
+            tips.append({
+                "icon": "✅",
+                "text": "Отличная работа! Ваши траты под контролем. Продолжайте в том же духе!"
+            })
+        
+        # Анализ по категориям
+        spending_by_category = {}
+        for t in transactions:
+            cat = t.category.value
+            spending_by_category[cat] = spending_by_category.get(cat, 0) + t.amount
+        
+        if spending_by_category.get("food", 0) > total_expenses * 0.4:
+            tips.append({
+                "icon": "🍔",
+                "text": "Расходы на еду составляют более 40%. Попробуйте готовить дома чаще — сэкономите до 30%."
+            })
+        
+        if spending_by_category.get("entertainment", 0) > total_expenses * 0.3:
+            tips.append({
+                "icon": "🎮",
+                "text": "Много трат на развлечения. Рекомендую сократить их на 20% и направить в накопления."
+            })
+        
+        tips.append({
+            "icon": "📊",
+            "text": f"Финансовый скоринг: {user.financial_score}/1000. Продолжайте улучшать свои финансовые привычки!"
+        })
+        
+        return {
+            "tips": tips,
+            "balance": user.current_balance,
+            "total_expenses": total_expenses,
+            "financial_score": user.financial_score
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating AI advice: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate advice")
+
+@app.post("/api/v2/ai-chat")
+async def ai_chat(request: dict, db: AsyncSession = Depends(get_db)):
+    """AI чат для финансовых советов"""
+    user_id = request.get("userId")
+    message = request.get("message", "")
+    
+    result = await db.execute(select(User).where(User.username == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        # Получаем контекст пользователя
+        from datetime import datetime, timedelta
+        month_ago = datetime.utcnow() - timedelta(days=30)
+        
+        result = await db.execute(
+            select(Transaction)
+            .where(Transaction.user_id == user.id)
+            .where(Transaction.timestamp >= month_ago)
+            .order_by(desc(Transaction.timestamp))
+            .limit(20)
+        )
+        transactions = result.scalars().all()
+        
+        total_expenses = sum(t.amount for t in transactions if t.transaction_type == "expense")
+        total_income = sum(t.amount for t in transactions if t.transaction_type == "income")
+        
+        # Формируем контекст для LLM
+        context = f"""Пользователь: {user.name}
+Баланс: {user.current_balance} ₽
+Доходы за месяц: {total_income} ₽
+Расходы за месяц: {total_expenses} ₽
+Уровень: {user.level}
+Финансовый скоринг: {user.financial_score}/1000
+
+Последние транзакции:
+"""
+        for t in transactions[:5]:
+            context += f"- {t.transaction_type}: {t.amount} ₽ ({t.category.value})\n"
+        
+        # Вызываем LLM
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        
+        if not api_key or api_key == "":
+            # Fallback без LLM
+            responses = [
+                "Отличный вопрос! Рекомендую сократить расходы на развлечения на 20% и направить эти деньги в накопления.",
+                "Судя по твоим тратам, ты тратишь много на еду вне дома. Попробуй готовить дома чаще — сэкономишь до 30%.",
+                f"Твой баланс {user.current_balance} ₽ стабилен! Продолжай в том же духе и не забывай откладывать 10-15% от дохода.",
+                "Заметил, что в этом месяце расходы выросли. Проверь свои категории — там можно оптимизировать.",
+            ]
+            import random
+            return {"response": random.choice(responses)}
+        
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key
+        )
+        
+        prompt = f"""{context}
+
+Вопрос пользователя: {message}
+
+Ты - финансовый AI-советник для подростков и молодежи. Отвечай кратко (2-3 предложения), понятно, дружелюбно. Используй эмодзи. Давай конкретные советы на основе данных пользователя."""
+        
+        response = await client.chat.completions.create(
+            model="openai/gpt-4o",
+            messages=[
+                {"role": "system", "content": "Ты финансовый советник для молодежи. Отвечай кратко, понятно, с эмодзи."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=200
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        logger.info(f"AI chat response for user {user.username}: {ai_response[:50]}...")
+        
+        return {"response": ai_response}
+        
+    except Exception as e:
+        logger.error(f"Error in AI chat: {str(e)}")
+        # Fallback
+        return {"response": f"Привет! У тебя сейчас {user.current_balance} ₽ на балансе. Чем могу помочь? 💰"}
