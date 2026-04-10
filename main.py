@@ -13,7 +13,7 @@ app = FastAPI(title="Financial AI Assistant")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],
+    allow_origins=["http://localhost:8080", "http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,6 +50,15 @@ class PurchaseEvaluationResponse(BaseModel):
     verdict: str
     reasoning: str
     current_balance: float
+
+class RegisterRequest(BaseModel):
+    email: str
+    name: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 @app.on_event("startup")
 async def startup():
@@ -207,3 +216,152 @@ async def evaluate_purchase(request: PurchaseEvaluationRequest, db: AsyncSession
         reasoning=evaluation.get("reasoning", "Нужно больше данных для оценки"),
         current_balance=user.current_balance
     )
+
+# ============ Эндпоинты для фронтенда ============
+
+@app.get("/api/dashboard")
+async def get_dashboard_frontend(userId: str, db: AsyncSession = Depends(get_db)):
+    """Дашборд для фронтенда - адаптер к существующему API"""
+    # Пытаемся найти пользователя по username (userId в фронтенде - это email/username)
+    result = await db.execute(select(User).where(User.username == userId))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Получаем транзакции
+    result = await db.execute(
+        select(Transaction)
+        .where(Transaction.user_id == user.id)
+        .order_by(desc(Transaction.timestamp))
+        .limit(10)
+    )
+    transactions = result.scalars().all()
+
+    # Считаем доходы и расходы
+    expenses = sum(t.amount for t in transactions)
+    income = 0  # Пока нет доходов в модели
+
+    return {
+        "balance": user.current_balance,
+        "income": income,
+        "expenses": expenses,
+        "transactions": [
+            {
+                "id": t.id,
+                "amount": -t.amount,  # Отрицательное для расходов
+                "category": t.category.value,
+                "timestamp": t.timestamp.isoformat(),
+                "description": f"Покупка в категории {t.category.value}"
+            }
+            for t in transactions
+        ],
+        "forecast": {
+            "days_left": 30,
+            "message": "При текущих тратах денег хватит на месяц"
+        },
+        "ai_tips": [
+            "Отличная работа! Продолжайте в том же духе.",
+            f"Ваш финансовый скоринг: {user.financial_score}/1000"
+        ],
+        "spending_chart": [
+            {"category": "food", "amount": sum(t.amount for t in transactions if t.category.value == "food")},
+            {"category": "transport", "amount": sum(t.amount for t in transactions if t.category.value == "transport")},
+            {"category": "entertainment", "amount": sum(t.amount for t in transactions if t.category.value == "entertainment")},
+            {"category": "other", "amount": sum(t.amount for t in transactions if t.category.value == "other")}
+        ],
+        "stats": {
+            "level": user.financial_score // 100,
+            "xp": user.financial_score % 100,
+            "streak": 0
+        }
+    }
+
+@app.get("/api/transactions")
+async def get_transactions_frontend(userId: str, limit: int = 30, db: AsyncSession = Depends(get_db)):
+    """Список транзакций для фронтенда"""
+    result = await db.execute(select(User).where(User.username == userId))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    result = await db.execute(
+        select(Transaction)
+        .where(Transaction.user_id == user.id)
+        .order_by(desc(Transaction.timestamp))
+        .limit(limit)
+    )
+    transactions = result.scalars().all()
+
+    return [
+        {
+            "id": t.id,
+            "amount": -t.amount,
+            "category": t.category.value,
+            "timestamp": t.timestamp.isoformat(),
+            "description": f"Покупка в категории {t.category.value}"
+        }
+        for t in transactions
+    ]
+
+@app.post("/api/register")
+async def register_frontend(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    """Регистрация пользователя"""
+    # Проверяем, существует ли пользователь
+    result = await db.execute(select(User).where(User.username == request.email))
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    # Создаем пользователя
+    user = User(username=request.email, current_balance=10000.0, financial_score=500)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return {
+        "access_token": "dummy_token",  # Временно без JWT
+        "name": request.name,
+        "email": request.email,
+        "is_admin": request.email == "admin@admin.com"
+    }
+
+@app.post("/api/login")
+async def login_frontend(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+    """Вход пользователя"""
+    result = await db.execute(select(User).where(User.username == request.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "access_token": "dummy_token",  # Временно без JWT
+        "name": user.username,
+        "email": user.username,
+        "is_admin": request.email == "admin@admin.com"
+    }
+
+# Заглушки для остальных эндпоинтов
+@app.get("/api/portfolio")
+async def get_portfolio(userId: str):
+    return {"cash": 10000, "stocks": [], "total_value": 10000}
+
+@app.get("/api/v2/modules")
+async def get_modules(userId: str):
+    return []
+
+@app.get("/api/achievements")
+async def get_achievements(userId: str):
+    return {"achievements": [], "daily_missions": []}
+
+@app.get("/api/onboarding/status")
+async def get_onboarding_status(userId: str):
+    return {"completed": True}
+
+@app.post("/api/check-portfolio")
+async def check_portfolio(userId: str):
+    return {"status": "ok"}
+
