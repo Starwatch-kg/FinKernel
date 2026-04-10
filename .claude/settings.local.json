@@ -40,7 +40,8 @@
       "Bash(docker compose restart:*)",
       "Bash(find . -type d -name \"__pycache__\" -exec rm -rf {} +)",
       "Bash(docker compose ps:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
