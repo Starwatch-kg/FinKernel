@@ -14,7 +14,18 @@
       "Bash(curl -X POST http://localhost:8000/api/chat -H \"Content-Type: application/json\" -d '{\"user_id\": 1, \"message\": \"test\"}' -v)",
       "Bash(curl -s http://localhost:8000/api/users)",
       "Bash(kill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)",
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(docker restart fin-api-1:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(git reset:*)"
     ]
   }
 }
