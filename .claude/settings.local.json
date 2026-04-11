@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x:*)",
+      "Bash(find /home/neo/Project/FIN/shared -type f ! -path \"*/microservices/*\" -delete)",
+      "Bash(awk '{print $NF}')",
+      "Bash(docker-compose config:*)",
+      "Bash(./start.sh:*)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s http://localhost:8000/api/dashboard/1)",
+      "Bash(curl -s -X POST http://localhost:8000/api/predict/1)",
+      "Bash(curl:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(python3 -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f\\\\\"Balance: {d['balance']}\\\\\"\\); print\\(f\\\\\"Days left: {d['prediction']['days_left'] if d['prediction'] else 'N/A'}\\\\\"\\); print\\(f\\\\\"Risk: {d['prediction']['risk_level'] if d['prediction'] else 'N/A'}\\\\\"\\)\")",
+      "Bash(docker-compose ps:*)",
+      "Bash(python3 -c \"import sys, json; p=json.load\\(sys.stdin\\); print\\(f\\\\\"🎯 AI Prediction Results:\\\\\"\\); print\\(f\\\\\"  Days left: {p['days_left']:.1f}\\\\\"\\); print\\(f\\\\\"  Risk level: {p['risk_level']}\\\\\"\\); print\\(f\\\\\"  Confidence: {p['confidence']:.0%}\\\\\"\\); print\\(f\\\\\"  {p['recommendation']}\\\\\"\\)\")",
+      "Bash(cat)",
+      "Bash(/tmp/test_flow.sh)",
+      "Bash(python3 -m json.tool)",
+      "Bash(ls -lh /home/neo/Project/FIN/*.md /home/neo/Project/FIN/*.sh)",
+      "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); p=d.get\\('prediction'\\); print\\('Prediction:', p['days_left'] if p else 'None'\\)\")",
+      "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(f\\\\\"Days left: {p['days_left']:.1f}\\\\\"\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f\\\\\"  \\\\${d['balance']:.2f}\\\\\"\\); print\\(f\\\\\"  Income: \\\\${d['total_income']:.2f}\\\\\"\\); print\\(f\\\\\"  Expenses: \\\\${d['total_expenses']:.2f}\\\\\"\\)\")",
+      "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(f\\\\\"  Days left: {p['days_left']:.1f}\\\\\"\\); print\\(f\\\\\"  Risk: {p['risk_level']}\\\\\"\\); print\\(f\\\\\"  {p['recommendation']}\\\\\"\\)\")",
+      "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(f'✅ Prediction created: {p[\\\\\"days_left\\\\\"]:.1f} days, risk: {p[\\\\\"risk_level\\\\\"]}'\\)\")",
+      "Bash(python3 -c \"import sys,json; t=json.load\\(sys.stdin\\); print\\(f'Transaction created: #{t[\\\\\"id\\\\\"]}'\\)\")",
+      "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(f'Prediction updated: {p[\\\\\"days_left\\\\\"]:.1f} days'\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); p=d.get\\('prediction'\\); print\\('Dashboard:'\\); print\\(f'  Balance: \\\\${d[\\\\\"balance\\\\\"]:.2f}'\\); print\\(f'  Prediction: {p[\\\\\"days_left\\\\\"]:.1f if p else \\\\\"null\\\\\"} days'\\); print\\(f'  Risk: {p[\\\\\"risk_level\\\\\"] if p else \\\\\"N/A\\\\\"}'\\)\")",
+      "Bash(python3 -c \"import sys,json; t=json.load\\(sys.stdin\\); print\\(f'   Created: #{t[\\\\\"id\\\\\"]} -\\\\${t[\\\\\"amount\\\\\"]}'\\)\")",
+      "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(f'   Days left: {p[\\\\\"days_left\\\\\"]:.1f}'\\); print\\(f'   Risk: {p[\\\\\"risk_level\\\\\"]}'\\); print\\(f'   {p[\\\\\"recommendation\\\\\"]}'\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); p=d.get\\('prediction'\\); print\\('Dashboard:'\\); print\\(f'  Balance: \\\\${d[\\\\\"balance\\\\\"]:.2f}'\\); print\\(f'  Prediction: {p[\\\\\"days_left\\\\\"]:.1f if p else 0} days' if p else '  Prediction: null'\\); print\\(f'  Risk: {p[\\\\\"risk_level\\\\\"]}' if p else '  Risk: N/A'\\)\")",
+      "Bash(python3 -c ':*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}

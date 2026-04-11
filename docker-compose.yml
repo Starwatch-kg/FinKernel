@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fin_postgres
+    environment:
+      POSTGRES_USER: finuser
+      POSTGRES_PASSWORD: finpass123
+      POSTGRES_DB: financedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finuser"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - finnet
+
+  redis:
+    image: redis:7-alpine
+    container_name: fin_redis
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - finnet
+
+  transactions:
+    build:
+      context: .
+      dockerfile: microservices/transaction-service/Dockerfile
+    container_name: fin_transactions
+    environment:
+      DATABASE_URL: postgresql+asyncpg://finuser:finpass123@postgres:5432/financedb
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - finnet
+
+  ai:
+    build:
+      context: .
+      dockerfile: microservices/ai-service/Dockerfile
+    container_name: fin_ai
+    environment:
+      DATABASE_URL: postgresql+asyncpg://finuser:finpass123@postgres:5432/financedb
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - finnet
+
+  gateway:
+    build:
+      context: .
+      dockerfile: microservices/api-gateway/Dockerfile
+    container_name: fin_gateway
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - transactions
+      - ai
+    networks:
+      - finnet
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: microservices/celery-worker/Dockerfile
+    container_name: fin_celery
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      AI_URL: http://ai:8002
+    depends_on:
+      - redis
+      - ai
+    networks:
+      - finnet
+
+  event-listener:
+    build:
+      context: .
+      dockerfile: microservices/celery-worker/Dockerfile
+    container_name: fin_listener
+    command: python worker.py
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      AI_URL: http://ai:8002
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - finnet
+
+volumes:
+  pgdata:
+
+networks:
+  finnet:
+    driver: bridge
