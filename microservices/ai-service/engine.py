@@ -1,11 +1,19 @@
-"""AI Prediction Engine"""
+"""AI Prediction Engine with OpenRouter Integration"""
 import numpy as np
 from typing import List, Dict, Tuple, Optional
+from openrouter_client import OpenRouterClient
+import sys
+sys.path.append('/app')
+
+from shared.logger import setup_logger
+
+logger = setup_logger("prediction_engine")
 
 
 class PredictionEngine:
     def __init__(self):
         self.min_txns = 3
+        self.openrouter = OpenRouterClient()
 
     def calculate_features(self, transactions: List[Dict]) -> Dict:
         if not transactions:
@@ -31,13 +39,37 @@ class PredictionEngine:
             "total_txns": len(expenses)
         }
 
-    def predict(self, balance: float, features: Dict) -> Tuple[Optional[float], float, str, str]:
+    async def predict(self, balance: float, features: Dict, transactions: List[Dict]) -> Tuple[Optional[float], float, str, str, bool]:
+        """Predict using OpenRouter LLM with fallback to statistical model"""
         if features['total_txns'] < self.min_txns:
-            return None, 0.3, "safe", "📊 Недостаточно данных"
+            return None, 0.3, "safe", "📊 Недостаточно данных", False
 
         if balance <= 0:
-            return 0, 0.95, "critical", "⚠️ Баланс на нуле!"
+            return 0, 0.95, "critical", "⚠️ Баланс на нуле!", False
 
+        # Try OpenRouter first
+        try:
+            llm_result = await self.openrouter.predict_financial_runway(
+                balance, transactions, features
+            )
+
+            if llm_result:
+                return (
+                    llm_result["days_left"],
+                    llm_result["confidence"],
+                    llm_result["risk_level"],
+                    llm_result["recommendation"],
+                    True  # AI was used
+                )
+        except Exception as e:
+            logger.warning(f"LLM prediction failed, using fallback: {e}")
+
+        # Fallback to statistical model
+        days_left, confidence, risk, rec = self._statistical_predict(balance, features)
+        return days_left, confidence, risk, rec, False  # AI was NOT used
+
+    def _statistical_predict(self, balance: float, features: Dict) -> Tuple[float, float, str, str]:
+        """Fallback statistical prediction"""
         adjusted_spend = 0.6 * features['rolling_7d'] + 0.4 * features['rolling_30d']
 
         if features['trend_slope'] > 0:

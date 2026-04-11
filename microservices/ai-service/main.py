@@ -10,7 +10,13 @@ from shared.db import get_db
 from shared.models import User, Transaction, Prediction, RiskLevel, Base
 from shared.redis import get_cache, set_cache
 from shared.schemas import PredictionResponse
+from shared.startup import validate_startup
+from shared.logger import setup_logger
 from engine import PredictionEngine
+
+# Validate configuration on startup
+config = validate_startup()
+logger = setup_logger("ai_service")
 
 app = FastAPI(title="AI")
 engine = PredictionEngine()
@@ -37,12 +43,12 @@ async def create_prediction(user_id: int, db: AsyncSession = Depends(get_db)):
     transactions = txn_result.scalars().all()
 
     txn_data = [
-        {"amount": t.amount, "type": t.type, "timestamp": t.timestamp}
+        {"amount": t.amount, "type": t.type.value, "timestamp": t.timestamp.isoformat()}
         for t in transactions
     ]
 
     features = engine.calculate_features(txn_data)
-    days_left, confidence, risk_level, recommendation = engine.predict(user.balance, features)
+    days_left, confidence, risk_level, recommendation, ai_used = await engine.predict(user.balance, features, txn_data)
 
     predicted_date = None
     if days_left is not None:
@@ -78,6 +84,7 @@ async def create_prediction(user_id: int, db: AsyncSession = Depends(get_db)):
         "risk_level": risk_level,
         "confidence": confidence,
         "recommendation": recommendation,
+        "ai_used": ai_used,
         "created_at": prediction.created_at.isoformat()
     }, ttl=3600)
 

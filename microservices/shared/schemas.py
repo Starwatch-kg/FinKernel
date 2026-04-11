@@ -32,6 +32,7 @@ class TransactionCreate(BaseModel):
     type: TransactionType
     category: TransactionCategory
     description: Optional[str] = None
+    idempotency_key: Optional[str] = None  # Client-provided UUID for idempotency
 
 
 class TransactionResponse(BaseModel):

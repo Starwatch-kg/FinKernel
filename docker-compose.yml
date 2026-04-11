@@ -39,9 +39,11 @@ services:
       context: .
       dockerfile: microservices/transaction-service/Dockerfile
     container_name: fin_transactions
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://finuser:finpass123@postgres:5432/financedb
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
     ports:
       - "8001:8001"
     depends_on:
@@ -57,9 +59,14 @@ services:
       context: .
       dockerfile: microservices/ai-service/Dockerfile
     container_name: fin_ai
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://finuser:finpass123@postgres:5432/financedb
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
     ports:
       - "8002:8002"
     depends_on:
@@ -75,8 +82,18 @@ services:
       context: .
       dockerfile: microservices/api-gateway/Dockerfile
     container_name: fin_gateway
+    env_file:
+      - .env
     environment:
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_MINUTES: ${JWT_EXPIRY_MINUTES:-10080}
+      TRANSACTIONS_URL: ${TRANSACTIONS_URL:-http://transactions:8001}
+      AI_URL: ${AI_URL:-http://ai:8002}
+      ADMIN_EMAILS: ${ADMIN_EMAILS}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
     ports:
       - "8000:8000"
     depends_on:
@@ -91,9 +108,11 @@ services:
       context: .
       dockerfile: microservices/celery-worker/Dockerfile
     container_name: fin_celery
+    env_file:
+      - .env
     environment:
-      REDIS_URL: redis://redis:6379/0
-      AI_URL: http://ai:8002
+      REDIS_URL: ${REDIS_URL}
+      AI_URL: ${AI_URL:-http://ai:8002}
     depends_on:
       - redis
       - ai
@@ -106,17 +125,85 @@ services:
       dockerfile: microservices/celery-worker/Dockerfile
     container_name: fin_listener
     command: python worker.py
+    env_file:
+      - .env
     environment:
-      REDIS_URL: redis://redis:6379/0
-      AI_URL: http://ai:8002
+      REDIS_URL: ${REDIS_URL}
+      AI_URL: ${AI_URL:-http://ai:8002}
     depends_on:
       - redis
       - celery-worker
     networks:
       - finnet
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: fin_frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - gateway
+    networks:
+      - finnet
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: fin_jaeger
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    networks:
+      - finnet
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: fin_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - finnet
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: fin_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - finnet
+
 volumes:
   pgdata:
+  prometheus_data:
+  grafana_data:
 
 networks:
   finnet:

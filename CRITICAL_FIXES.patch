@@ -1,0 +1,344 @@
+#!/bin/bash
+# CRITICAL PRODUCTION FIXES
+# Apply these patches before production deployment
+# Estimated time: 1 hour
+
+echo "🔧 Applying critical production fixes..."
+
+# ============================================================================
+# FIX 1: Bare Exception Handler in API Gateway
+# ============================================================================
+cat > /tmp/fix1.py << 'EOF'
+# microservices/api-gateway/main.py:194-198
+# BEFORE:
+#     try:
+#         pred_resp = await client.get(f"{AI_URL}/predict/{user_id}")
+#         prediction = pred_resp.json() if pred_resp.status_code == 200 else None
+#     except:
+#         prediction = None
+
+# AFTER:
+        try:
+            pred_resp = await client.get(f"{AI_URL}/predict/{user_id}")
+            prediction = pred_resp.json() if pred_resp.status_code == 200 else None
+        except httpx.HTTPError as e:
+            logger.warning(f"AI prediction unavailable for user {user_id}: {e}")
+            prediction = None
+        except Exception as e:
+            logger.error(f"Unexpected error fetching prediction for user {user_id}: {e}", exc_info=True)
+            prediction = None
+EOF
+
+# ============================================================================
+# FIX 2: Add Request ID Middleware
+# ============================================================================
+cat > /tmp/fix2_middleware.py << 'EOF'
+# Add to microservices/api-gateway/main.py after imports
+
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        request_id = str(uuid.uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
+# Add after app = FastAPI(title="Gateway")
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+EOF
+
+# ============================================================================
+# FIX 3: Rate Limit Auth Endpoints
+# ============================================================================
+cat > /tmp/fix3_ratelimit.py << 'EOF'
+# microservices/api-gateway/main.py
+
+# Update register endpoint (line ~77)
+@app.post("/api/register", response_model=AuthResponse)
+async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    # Rate limit by email to prevent spam
+    if not await rate_limit(f"auth:register:{req.email}", max_req=5, window=300):
+        raise HTTPException(429, "Too many registration attempts. Try again in 5 minutes.")
+
+    # Check if user exists
+    result = await db.execute(select(User).where(User.email == req.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(400, "User already exists")
+    # ... rest of code
+
+# Update login endpoint (line ~103)
+@app.post("/api/login", response_model=AuthResponse)
+async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
+    # Rate limit by email to prevent brute force
+    if not await rate_limit(f"auth:login:{req.email}", max_req=10, window=300):
+        raise HTTPException(429, "Too many login attempts. Try again in 5 minutes.")
+
+    # Find user
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalar_one_or_none()
+    # ... rest of code
+EOF
+
+# ============================================================================
+# FIX 4: Restrict CORS
+# ============================================================================
+cat > /tmp/fix4_cors.py << 'EOF'
+# microservices/api-gateway/main.py:40-46
+
+# Get allowed origins from environment
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost,http://localhost:80,http://localhost:3000,http://localhost:8000"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,  # Restricted to specific origins
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+EOF
+
+# ============================================================================
+# FIX 5: Add Retry Logic to OpenRouter
+# ============================================================================
+cat > /tmp/fix5_retry.py << 'EOF'
+# microservices/ai-service/openrouter_client.py
+
+import asyncio
+
+# Update predict_financial_runway method (line ~32)
+async def predict_financial_runway(
+    self,
+    balance: float,
+    transactions: list,
+    features: Dict[str, Any]
+) -> Optional[Dict[str, Any]]:
+    """Use LLM to predict financial runway with structured output"""
+    if not self.client:
+        return None
+
+    prompt = self._build_prediction_prompt(balance, transactions, features)
+
+    # Retry logic with exponential backoff
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a financial AI assistant. Analyze user spending patterns and predict how many days their money will last. Return ONLY valid JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=500,
+                timeout=10.0  # 10 second timeout
+            )
+
+            content = response.choices[0].message.content
+            result = self._parse_llm_output(content)
+            result["ai_used"] = True  # Mark as AI-generated
+            logger.info(f"LLM prediction successful for user balance ${balance:.2f}")
+            return result
+
+        except Exception as e:
+            logger.warning(f"OpenRouter attempt {attempt + 1}/{max_retries} failed: {e}")
+            if attempt == max_retries - 1:
+                logger.error(f"OpenRouter API error after {max_retries} attempts: {e}")
+                return None
+            # Exponential backoff: 1s, 2s, 4s
+            await asyncio.sleep(2 ** attempt)
+
+    return None
+EOF
+
+# ============================================================================
+# FIX 6: Update Engine to Return AI Flag
+# ============================================================================
+cat > /tmp/fix6_engine.py << 'EOF'
+# microservices/ai-service/engine.py
+
+# Update predict method signature (line ~42)
+async def predict(self, balance: float, features: Dict, transactions: List[Dict]) -> Tuple[Optional[float], float, str, str, bool]:
+    """Predict using OpenRouter LLM with fallback to statistical model"""
+    if features['total_txns'] < self.min_txns:
+        return None, 0.3, "safe", "📊 Недостаточно данных", False
+
+    if balance <= 0:
+        return 0, 0.95, "critical", "⚠️ Баланс на нуле!", False
+
+    # Try OpenRouter first
+    try:
+        llm_result = await self.openrouter.predict_financial_runway(
+            balance, transactions, features
+        )
+
+        if llm_result:
+            return (
+                llm_result["days_left"],
+                llm_result["confidence"],
+                llm_result["risk_level"],
+                llm_result["recommendation"],
+                True  # AI was used
+            )
+    except Exception as e:
+        logger.warning(f"LLM prediction failed, using fallback: {e}")
+
+    # Fallback to statistical model
+    days_left, confidence, risk, rec = self._statistical_predict(balance, features)
+    return days_left, confidence, risk, rec, False  # AI was NOT used
+EOF
+
+# ============================================================================
+# FIX 7: Update AI Service to Handle AI Flag
+# ============================================================================
+cat > /tmp/fix7_ai_service.py << 'EOF'
+# microservices/ai-service/main.py:51
+
+features = engine.calculate_features(txn_data)
+days_left, confidence, risk_level, recommendation, ai_used = await engine.predict(user.balance, features, txn_data)
+
+# ... later in the response (line ~79)
+await set_cache(f"prediction:{user_id}", {
+    "id": prediction.id,
+    "user_id": user_id,
+    "days_left": days_left,
+    "predicted_date": predicted_date.isoformat() if predicted_date else None,
+    "risk_level": risk_level,
+    "confidence": confidence,
+    "recommendation": recommendation,
+    "ai_used": ai_used,  # Add this field
+    "created_at": prediction.created_at.isoformat()
+}, ttl=3600)
+EOF
+
+# ============================================================================
+# FIX 8: Add Database Connection Limits
+# ============================================================================
+cat > /tmp/fix8_db.py << 'EOF'
+# microservices/shared/db.py
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://finuser:finpass123@postgres:5432/financedb")
+
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    pool_size=20,          # Max 20 connections in pool
+    max_overflow=10,       # Allow 10 overflow connections
+    pool_timeout=30,       # 30 second timeout to get connection
+    pool_recycle=3600      # Recycle connections after 1 hour
+)
+EOF
+
+# ============================================================================
+# FIX 9: Add Input Validation
+# ============================================================================
+cat > /tmp/fix9_validation.py << 'EOF'
+# microservices/api-gateway/main.py
+
+from pydantic import BaseModel, EmailStr, constr, validator
+
+class RegisterRequest(BaseModel):
+    email: EmailStr  # Validates email format
+    name: constr(min_length=2, max_length=100)  # Length limits
+    password: constr(min_length=8, max_length=128)  # Password requirements
+
+    @validator('password')
+    def password_strength(cls, v):
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        if not any(c.isalpha() for c in v):
+            raise ValueError('Password must contain at least one letter')
+        return v
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+EOF
+
+# ============================================================================
+# FIX 10: Add Structured Error Responses
+# ============================================================================
+cat > /tmp/fix10_errors.py << 'EOF'
+# microservices/api-gateway/main.py (after app creation)
+
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "validation_error",
+            "message": "Invalid request data",
+            "details": exc.errors(),
+            "request_id": getattr(request.state, "request_id", None)
+        }
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": "http_error",
+            "message": exc.detail,
+            "request_id": getattr(request.state, "request_id", None)
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "internal_error",
+            "message": "An internal error occurred",
+            "request_id": getattr(request.state, "request_id", None)
+        }
+    )
+EOF
+
+# ============================================================================
+# FIX 11: Update .env.example with CORS
+# ============================================================================
+cat >> /tmp/fix11_env.txt << 'EOF'
+
+# CORS Configuration (comma-separated list of allowed origins)
+ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://localhost:3000
+EOF
+
+echo ""
+echo "✅ All fix templates generated in /tmp/"
+echo ""
+echo "📋 MANUAL APPLICATION REQUIRED:"
+echo "   1. Review each fix in /tmp/fix*.py"
+echo "   2. Apply changes to corresponding files"
+echo "   3. Test each fix individually"
+echo "   4. Run integration tests"
+echo ""
+echo "⏱️  Estimated time: 1 hour"
+echo "🎯 Priority: CRITICAL - Apply before production"

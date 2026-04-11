@@ -1,0 +1,37 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'fin-production'
+    environment: 'production'
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['gateway:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'transaction-service'
+    static_configs:
+      - targets: ['transactions:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'ai-service'
+    static_configs:
+      - targets: ['ai:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
