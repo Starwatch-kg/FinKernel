@@ -48,7 +48,7 @@ jobs:
 
           # Build new images (don't restart yet)
           echo "🔨 Building new images..."
-          docker-compose build --no-cache
+          docker-compose build --no-cache gateway transactions ai frontend
 
           # If build fails, stop here (don't restart containers)
           if [ $? -ne 0 ]; then
@@ -69,9 +69,9 @@ jobs:
           echo "🔄 Restarting services..."
 
           # Stop services (except database and redis)
-          docker-compose stop gateway transactions ai
+          docker-compose stop gateway transactions ai frontend
 
-          # Start database and redis first
+          # Start database and redis first (if not running)
           docker-compose up -d postgres redis
           sleep 5
 
@@ -79,12 +79,12 @@ jobs:
           docker-compose up -d transactions ai
           sleep 5
 
-          # Start gateway last
+          # Start gateway
           docker-compose up -d gateway
           sleep 5
 
-          # Start nginx
-          docker-compose up -d nginx
+          # Start frontend
+          docker-compose up -d frontend
 
           # Health checks
           echo "🏥 Running health checks..."
@@ -118,3 +118,4 @@ jobs:
         echo "- **Branch**: main" >> $GITHUB_STEP_SUMMARY
         echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY

@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 from redis.asyncio import Redis
 from fastapi import Request, HTTPException
 from shared.logger import setup_logger
+from shared.fallback_limiter import fallback_limiter
 
 logger = setup_logger("rate_limiter")
 
@@ -83,13 +84,36 @@ class GlobalRateLimiter:
             }
 
         except Exception as e:
-            logger.error(f"Rate limiter error for {full_key}: {e} - FAILING OPEN")
-            # FAIL OPEN: Allow request if Redis is down, but log it
-            return True, {
-                "remaining": max_requests,
-                "reset_at": int(now + window_seconds),
-                "retry_after": 0
-            }
+            logger.error(f"Rate limiter error for {full_key}: {e} - USING FALLBACK")
+
+            # FAIL CLOSED: Use in-memory fallback rate limiter
+            # This prevents complete bypass but only protects single instance
+            try:
+                allowed, info = fallback_limiter.check_rate_limit(
+                    key=full_key,
+                    max_requests=max_requests,
+                    window_seconds=window_seconds
+                )
+
+                if not allowed:
+                    logger.warning(
+                        f"Fallback rate limiter blocked {full_key}: "
+                        f"Redis unavailable, using in-memory limits"
+                    )
+
+                return allowed, info
+
+            except Exception as fallback_error:
+                logger.critical(
+                    f"Both Redis and fallback rate limiter failed for {full_key}: {fallback_error} "
+                    f"- FAILING OPEN as last resort"
+                )
+                # Only fail open if both Redis AND fallback fail
+                return True, {
+                    "remaining": max_requests,
+                    "reset_at": int(now + window_seconds),
+                    "retry_after": 0
+                }
 
 
 # Rate limit configurations by endpoint type
@@ -137,7 +161,7 @@ async def apply_rate_limit(
     allowed, info = await rate_limiter.check_rate_limit(
         key=endpoint_type,
         max_requests=config["max_requests"],
-        window=config["window"],
+        window_seconds=config["window"],
         identifier=user_identifier
     )
 

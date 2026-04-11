@@ -17,6 +17,7 @@ from shared.schemas import TransactionCreate, TransactionResponse
 from shared.startup import validate_startup
 from shared.logger import setup_logger
 from shared.security_hardening import RequestIDMiddleware, validate_amount
+from shared.audit_logger import audit_logger
 
 # Import route modules
 from portfolio_routes_secure import router as portfolio_router
@@ -55,6 +56,7 @@ async def create_transaction(
     """
     Create transaction with ATOMIC balance update.
     Uses database transaction to prevent race conditions.
+    IDEMPOTENT: Same idempotency_key returns same transaction.
     """
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -64,6 +66,19 @@ async def create_transaction(
     except ValueError as e:
         logger.warning(f"[{request_id}] Invalid amount: {e}")
         raise HTTPException(400, str(e))
+
+    # CRITICAL: Check idempotency key to prevent duplicate transactions
+    if txn.idempotency_key:
+        existing_result = await db.execute(
+            select(Transaction).where(Transaction.idempotency_key == txn.idempotency_key)
+        )
+        existing_txn = existing_result.scalar_one_or_none()
+        if existing_txn:
+            logger.info(
+                f"[{request_id}] Idempotent request: returning existing transaction "
+                f"{existing_txn.id} for key {txn.idempotency_key}"
+            )
+            return existing_txn
 
     # Start database transaction
     async with db.begin():
@@ -87,13 +102,14 @@ async def create_transaction(
                 )
                 raise HTTPException(400, "Insufficient funds")
 
-        # Create transaction record
+        # Create transaction record with idempotency key
         db_txn = Transaction(
             user_id=txn.user_id,
             amount=validated_amount,
             type=txn.type.value,
             category=txn.category.value,
             description=txn.description,
+            idempotency_key=txn.idempotency_key,
             timestamp=datetime.utcnow()
         )
         db.add(db_txn)
@@ -106,9 +122,21 @@ async def create_transaction(
             user.balance -= validated_amount
             logger.info(f"[{request_id}] Expense: user {txn.user_id} -{validated_amount}")
 
-        # Commit transaction (releases lock)
-        await db.commit()
+        # Flush to get transaction ID before commit
+        await db.flush()
         await db.refresh(db_txn)
+
+    # Transaction committed automatically when exiting context manager
+
+    # Audit log transaction creation
+    await audit_logger.log_transaction_created(
+        user_id=txn.user_id,
+        transaction_id=db_txn.id,
+        amount=validated_amount,
+        transaction_type=txn.type.value,
+        request_id=request_id,
+        idempotency_key=txn.idempotency_key
+    )
 
     # Publish event (after commit)
     await publish_event("transaction.created", {
@@ -180,14 +208,20 @@ async def get_balance(user_id: int, db: AsyncSession = Depends(get_db)):
 async def delete_transaction(
     request: Request,
     transaction_id: int,
-    user_id: int,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Delete transaction with ATOMIC balance reversal.
-    Verifies ownership.
+    Verifies ownership via transaction service internal call.
+    NOTE: This endpoint is called by gateway which already verified user.
+    For direct use, add authentication dependency.
     """
     request_id = getattr(request.state, "request_id", "unknown")
+
+    # Get user_id from query param (passed by gateway after JWT verification)
+    # In future: add get_current_user dependency here too for defense in depth
+    from fastapi import Query
+    user_id: int = Query(...)
 
     async with db.begin():
         # Get transaction with lock
@@ -210,21 +244,48 @@ async def delete_transaction(
         )
         user = user_result.scalar_one_or_none()
 
-        if user:
-            # Reverse balance change
-            if txn.type == TransactionType.income:
-                user.balance -= txn.amount
-            else:
-                user.balance += txn.amount
+        if not user:
+            raise HTTPException(404, "User not found")
 
-            logger.info(
-                f"[{request_id}] Deleted transaction {transaction_id} "
-                f"for user {user_id}, reversed {txn.amount}"
-            )
+        # Store balance before deletion for audit
+        balance_before = user.balance
+
+        # CRITICAL: Validate balance before reversing income deletion
+        if txn.type == TransactionType.income:
+            if user.balance < txn.amount:
+                logger.warning(
+                    f"[{request_id}] Cannot delete income transaction {transaction_id}: "
+                    f"user {user_id} has insufficient balance {user.balance} < {txn.amount}"
+                )
+                raise HTTPException(
+                    400,
+                    f"Cannot delete transaction: insufficient balance to reverse income"
+                )
+            user.balance -= txn.amount
+        else:
+            user.balance += txn.amount
+
+        balance_after = user.balance
+
+        logger.info(
+            f"[{request_id}] Deleted transaction {transaction_id} "
+            f"for user {user_id}, reversed {txn.amount}"
+        )
 
         # Delete transaction
         await db.delete(txn)
         await db.commit()
+
+    # Audit log transaction deletion
+    await audit_logger.log_transaction_deleted(
+        user_id=user_id,
+        transaction_id=transaction_id,
+        amount=txn.amount,
+        transaction_type=txn.type.value,
+        request_id=request_id,
+        balance_before=balance_before,
+        balance_after=balance_after
+    )
 
     await delete_cache(f"dashboard:{user_id}")
 

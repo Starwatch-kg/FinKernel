@@ -17,9 +17,8 @@ import AchievementsScreen from "./screens/AchievementsScreen"
 import SettingsScreen from "./screens/SettingsScreen"
 import AboutScreen from "./screens/AboutScreen"
 import AuthScreen from "./screens/AuthScreen"
-import OnboardingScreen from "./screens/OnboardingScreen"
 import Tutorial from "./components/Tutorial"
-import { setUserId, getOnboardingStatus, clearAuth, isAdmin } from "./api"
+import { clearAuth, isAdmin } from "./api"
 import { getSettings } from "./settings"
 
 export default function App() {
@@ -32,7 +31,6 @@ export default function App() {
   const [lessonId, setLessonId] = useState(null)
   const [aiLessonData, setAiLessonData] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [initializing, setInitializing] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
   const [devMode, setDevMode] = useState(false)
@@ -62,75 +60,24 @@ export default function App() {
     const savedName = localStorage.getItem("finfuture_name")
     const savedEmail = localStorage.getItem("finfuture_email")
     if (savedName && savedEmail) {
-      setUserId(savedEmail)
-      const onboardingDone = localStorage.getItem("finfuture_onboarding_done") === "true"
-      if (onboardingDone) {
-        // Онбординг уже пройден — сразу в приложение
-        setUser(savedName)
-        setNeedsOnboarding(false)
-        setInitializing(false)
-      } else {
-        // Проверяем на бэкенде
-        getOnboardingStatus()
-          .then(status => {
-            setUser(savedName)
-            if (status.completed) {
-              localStorage.setItem("finfuture_onboarding_done", "true")
-            }
-            setNeedsOnboarding(!status.completed)
-            setInitializing(false)
-          })
-          .catch(() => {
-            // Бэкенд недоступен — пускаем без онбординга чтобы не блокировать
-            setUser(savedName)
-            setNeedsOnboarding(false)
-            setInitializing(false)
-          })
-      }
-    } else {
-      setInitializing(false)
+      setUser(savedName)
     }
+    setInitializing(false)
   }, [])
 
   const handleAuth = (name, isNewUser = false) => {
     setUser(name)
-    if (isNewUser) {
-      setNeedsOnboarding(true)
-    } else {
-      // Существующий пользователь — проверяем онбординг
-      getOnboardingStatus()
-        .then(status => {
-          if (status.completed) {
-            localStorage.setItem("finfuture_onboarding_done", "true")
-          } else {
-            // Старый пользователь без теста — пропускаем, не блокируем
-            localStorage.setItem("finfuture_onboarding_done", "true")
-          }
-          setNeedsOnboarding(false)
-        })
-        .catch(() => setNeedsOnboarding(false))
-    }
-  }
-
-  const handleOnboardingComplete = () => {
-    setNeedsOnboarding(false)
-    localStorage.setItem("finfuture_onboarding_done", "true")
-    setRefreshKey(k => k + 1)
-    setScreen("home")
-    setTab("home")
     // Show tutorial for new users
-    if (!localStorage.getItem("finfuture_tutorial_done")) {
+    if (isNewUser && !localStorage.getItem("finfuture_tutorial_done")) {
       setShowTutorial(true)
     }
   }
 
   const handleLogout = () => {
     setUser(null)
-    setNeedsOnboarding(false)
     setShowTutorial(false)
     clearAuth()
     localStorage.removeItem("finfuture_tutorial_done")
-    localStorage.removeItem("finfuture_onboarding_done")
   }
 
   const handleNavigate = (id) => {
@@ -180,20 +127,7 @@ export default function App() {
     )
   }
 
-  // Step 2: Logged in but needs onboarding → Test
-  if (needsOnboarding) {
-    return (
-      <div style={s.fullPage}>
-        <OnboardingScreen
-          onComplete={handleOnboardingComplete}
-          userName={user}
-          onLogout={handleLogout}
-        />
-      </div>
-    )
-  }
-
-  // Step 3: Main app
+  // Step 2: Main app
   return (
     <DevContext.Provider value={{ devMode, timeOffset, unlockAll, aiStatus, setAiStatus: (msg) => { setAiStatus(msg); setAiLog(log => [...log.slice(-19), { time: new Date().toLocaleTimeString("ru-RU"), msg }]) }, aiLog }}>
       <div style={s.layout}>

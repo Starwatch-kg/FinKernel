@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { registerUser, loginUser, setUserId } from "../api"
+import { registerUser, loginUser } from "../api"
 
 export default function AuthScreen({ onAuth }) {
   const [mode, setMode] = useState("login")
@@ -17,19 +17,24 @@ export default function AuthScreen({ onAuth }) {
       if (mode === "login") {
         const res = await loginUser(email, password)
         setLoading(false)
-        if (!res.ok) return setError(res.error || "Ошибка входа")
-        setUserId(res.email)
-        localStorage.setItem("finfuture_name", res.name)
-        onAuth(res.name, false)
+        // Backend returns { access_token, refresh_token, is_admin }
+        if (res.access_token) {
+          const userName = localStorage.getItem("finfuture_name") || name || "User"
+          onAuth(userName, false)
+        } else {
+          setError("Ошибка входа")
+        }
       } else {
         if (!name.trim()) { setLoading(false); return setError("Введите имя") }
         if (password.length < 8) { setLoading(false); return setError("Пароль должен быть не менее 8 символов") }
         const res = await registerUser(email, name, password)
         setLoading(false)
-        if (!res.ok) return setError(res.error || "Ошибка регистрации")
-        setUserId(res.email)
-        localStorage.setItem("finfuture_name", res.name)
-        onAuth(res.name, true)
+        // Backend returns { access_token, refresh_token, is_admin }
+        if (res.access_token) {
+          onAuth(name, true)
+        } else {
+          setError("Ошибка регистрации")
+        }
       }
     } catch (err) {
       setLoading(false)
@@ -47,30 +52,27 @@ export default function AuthScreen({ onAuth }) {
       // Try login first, register if not found
       try {
         const res = await loginUser(guestEmail, guestPassword)
-        if (res.ok) {
-          setUserId(res.email)
-          localStorage.setItem("finfuture_name", res.name)
+        if (res.access_token) {
           setLoading(false)
-          onAuth(res.name, false)
+          onAuth(guestName, false)
           return
         }
       } catch { /* login attempt failed, proceed to register */ }
       const res = await registerUser(guestEmail, guestName, guestPassword)
       setLoading(false)
-      if (!res.ok) return setError(res.error || "Ошибка")
-      setUserId(res.email)
-      localStorage.setItem("finfuture_name", res.name)
-      onAuth(res.name, true)
+      if (res.access_token) {
+        onAuth(guestName, true)
+      } else {
+        setError("Ошибка")
+      }
     } catch (err) {
       setLoading(false)
       // If user exists, try login
       try {
         const res = await loginUser(guestEmail, guestPassword)
-        if (res.ok) {
-          setUserId(res.email)
-          localStorage.setItem("finfuture_name", res.name)
+        if (res.access_token) {
           setLoading(false)
-          onAuth(res.name, false)
+          onAuth(guestName, false)
           return
         }
       } catch { /* login attempt failed, proceed to register */ }

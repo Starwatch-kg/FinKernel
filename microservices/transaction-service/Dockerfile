@@ -6,4 +6,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY microservices/transaction-service/ .
 COPY alembic.ini .
 COPY alembic ./alembic
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "main_secure:app", "--host", "0.0.0.0", "--port", "8001"]

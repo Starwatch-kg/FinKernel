@@ -4,7 +4,7 @@ Zero tolerance for vulnerabilities.
 All endpoints require authentication.
 No IDOR vulnerabilities.
 """
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -33,6 +33,8 @@ from shared.security_hardening import (
     sanitize_string, validate_amount, RateLimitExceeded
 )
 from shared.rate_limit_global import GlobalRateLimiter, apply_rate_limit
+from shared.audit_logger import audit_logger
+from shared.http_client import default_client, long_timeout_client
 
 # Validate configuration on startup
 config = validate_startup()
@@ -87,7 +89,14 @@ CATEGORY_ICONS = {
     "entertainment": "🎮",
     "education": "📚",
     "salary": "💰",
-    "other": "💸"
+    "other": "💸",
+    # Russian mappings
+    "еда": "🍔",
+    "транспорт": "🚗",
+    "развлечения": "🎮",
+    "образование": "📚",
+    "зарплата": "💰",
+    "другое": "💸"
 }
 
 
@@ -99,12 +108,28 @@ CATEGORY_ICONS = {
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     request_id = getattr(request.state, "request_id", "unknown")
     logger.warning(f"[{request_id}] Validation error: {exc.errors()}")
+
+    # Convert errors to JSON-serializable format
+    errors = []
+    for error in exc.errors():
+        error_dict = {
+            "loc": error.get("loc", []),
+            "msg": error.get("msg", ""),
+            "type": error.get("type", "")
+        }
+        # Handle ctx if present
+        if "ctx" in error:
+            ctx = error["ctx"]
+            if isinstance(ctx, dict):
+                error_dict["ctx"] = {k: str(v) for k, v in ctx.items()}
+        errors.append(error_dict)
+
     return JSONResponse(
         status_code=422,
         content={
             "error": "validation_error",
             "message": "Invalid request data",
-            "details": exc.errors(),
+            "details": errors,
             "request_id": request_id
         }
     )
@@ -288,6 +313,16 @@ async def login(
     if not user or not verify_password(req.password, user.password_hash):
         # Generic error message to prevent user enumeration
         logger.warning(f"Failed login attempt for: {req.email}")
+
+        # Audit log failed login
+        request_id = getattr(request.state, "request_id", "unknown")
+        await audit_logger.log_auth_failure(
+            email=req.email,
+            reason="invalid_credentials",
+            request_id=request_id,
+            ip_address=request.client.host if request.client else None
+        )
+
         raise HTTPException(401, "Invalid credentials")
 
     # Create tokens
@@ -359,6 +394,8 @@ async def create_transaction(
     """
     await apply_rate_limit(request, rate_limiter, "finance:transaction", str(user.user_id))
 
+    request_id = getattr(request.state, "request_id", "unknown")
+
     # Build transaction data with authenticated user ID
     transaction_data = {
         "user_id": user.user_id,  # FROM JWT, NOT REQUEST
@@ -368,31 +405,31 @@ async def create_transaction(
         "description": txn.description
     }
 
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.post(
-            f"{TRANSACTIONS_URL}/transactions",
-            json=transaction_data
-        )
-        resp.raise_for_status()
-        result = resp.json()
+    # Use resilient HTTP client with retry
+    resp = await default_client.post(
+        f"{TRANSACTIONS_URL}/transactions",
+        json=transaction_data,
+        request_id=request_id
+    )
+    result = resp.json()
 
-        # Map category
-        if result.get("category"):
-            result["category"] = CATEGORY_MAP.get(result["category"], result["category"])
-            result["category_icon"] = CATEGORY_ICONS.get(result.get("category", "").lower(), "💰")
-        result["comment"] = result.get("description", "")
-        result["date"] = result.get("timestamp", "")
+    # Map category
+    if result.get("category"):
+        result["category"] = CATEGORY_MAP.get(result["category"], result["category"])
+        result["category_icon"] = CATEGORY_ICONS.get(result.get("category", "").lower(), "💰")
+    result["comment"] = result.get("description", "")
+    result["date"] = result.get("timestamp", "")
 
-        # Invalidate cache
-        await delete_cache(f"dashboard:{user.user_id}")
+    # Invalidate cache
+    await delete_cache(f"dashboard:{user.user_id}")
 
-        return result
+    return result
 
 
 @app.get("/api/transactions")
 async def get_transactions(
     request: Request,
-    limit: int = Field(30, ge=1, le=100),
+    limit: int = Query(30, ge=1, le=100),
     user: UserContext = Depends(get_current_user)
 ):
     """
@@ -401,23 +438,25 @@ async def get_transactions(
     """
     await apply_rate_limit(request, rate_limiter, "read:list", str(user.user_id))
 
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.get(
-            f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit={limit}"
-        )
-        resp.raise_for_status()
-        transactions = resp.json()
+    request_id = getattr(request.state, "request_id", "unknown")
 
-        # Map categories
-        for txn in transactions:
-            if txn.get("category"):
-                eng_cat = txn["category"]
-                txn["category"] = CATEGORY_MAP.get(eng_cat, eng_cat)
-                txn["category_icon"] = CATEGORY_ICONS.get(eng_cat, "💰")
-            txn["comment"] = txn.get("description", "")
-            txn["date"] = txn.get("timestamp", "")
+    # Use resilient HTTP client with retry
+    resp = await default_client.get(
+        f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit={limit}",
+        request_id=request_id
+    )
+    transactions = resp.json()
 
-        return transactions
+    # Map categories
+    for txn in transactions:
+        if txn.get("category"):
+            eng_cat = txn["category"]
+            txn["category"] = CATEGORY_MAP.get(eng_cat, eng_cat)
+            txn["category_icon"] = CATEGORY_ICONS.get(eng_cat, "💰")
+        txn["comment"] = txn.get("description", "")
+        txn["date"] = txn.get("timestamp", "")
+
+    return transactions
 
 
 @app.delete("/api/transactions/{transaction_id}")
@@ -431,15 +470,17 @@ async def delete_transaction(
     """
     await apply_rate_limit(request, rate_limiter, "finance:transaction", str(user.user_id))
 
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.delete(
-            f"{TRANSACTIONS_URL}/transactions/{transaction_id}?user_id={user.user_id}"
-        )
-        resp.raise_for_status()
+    request_id = getattr(request.state, "request_id", "unknown")
 
-        await delete_cache(f"dashboard:{user.user_id}")
+    # Use resilient HTTP client with retry
+    resp = await default_client.delete(
+        f"{TRANSACTIONS_URL}/transactions/{transaction_id}?user_id={user.user_id}",
+        request_id=request_id
+    )
 
-        return resp.json()
+    await delete_cache(f"dashboard:{user.user_id}")
+
+    return resp.json()
 
 
 # ============================================================================
@@ -457,81 +498,112 @@ async def get_dashboard(
     """
     await apply_rate_limit(request, rate_limiter, "read:dashboard", str(user.user_id))
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        # Fetch data in parallel
-        balance_resp = await client.get(f"{TRANSACTIONS_URL}/balance/{user.user_id}")
-        txns_resp = await client.get(f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit=10")
+    request_id = getattr(request.state, "request_id", "unknown")
 
-        # Try to get AI prediction (non-critical)
-        try:
-            pred_resp = await client.get(f"{AI_URL}/predict/{user.user_id}", timeout=5.0)
-            prediction = pred_resp.json() if pred_resp.status_code == 200 else None
-        except Exception as e:
-            logger.warning(f"AI prediction unavailable for user {user.user_id}: {e}")
-            prediction = None
+    # Fetch data with resilient client
+    balance_resp = await default_client.get(
+        f"{TRANSACTIONS_URL}/balance/{user.user_id}",
+        request_id=request_id
+    )
+    txns_resp = await default_client.get(
+        f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit=10",
+        request_id=request_id
+    )
 
-        balance_resp.raise_for_status()
-        txns_resp.raise_for_status()
+    # Try to get AI prediction (non-critical)
+    prediction = None
+    try:
+        pred_resp = await default_client.get(
+            f"{AI_URL}/predict/{user.user_id}",
+            request_id=request_id
+        )
+        prediction = pred_resp.json()
+    except Exception as e:
+        logger.warning(f"AI prediction unavailable for user {user.user_id}: {e}")
 
-        balance_data = balance_resp.json()
-        transactions = txns_resp.json()
+    balance_data = balance_resp.json()
+    transactions = txns_resp.json()
 
-        # Calculate spending by category
-        spending_chart = []
-        category_totals = {}
-        for txn in transactions:
-            if txn.get("type") == "expense":
-                cat = txn.get("category", "other")
-                category_totals[cat] = category_totals.get(cat, 0) + txn.get("amount", 0)
+    # FIRST: Map transaction categories to Russian BEFORE any processing
+    for txn in transactions:
+        if txn.get("category"):
+            eng_cat = txn["category"]
+            txn["category"] = CATEGORY_MAP.get(eng_cat, eng_cat)
+            txn["category_icon"] = CATEGORY_ICONS.get(eng_cat, "💰")
+        else:
+            txn["category_icon"] = "💰"
+        txn["comment"] = txn.get("description", "")
+        txn["date"] = txn.get("timestamp", "")
 
-        for cat, amount in category_totals.items():
-            spending_chart.append({
-                "category": CATEGORY_MAP.get(cat, cat),
-                "amount": amount,
-                "icon": CATEGORY_ICONS.get(cat, "💸")
-            })
+    # NOW: Calculate spending by category (already in Russian)
+    spending_chart = []
+    category_totals = {}
+    total_expenses = 0
 
-        # Generate AI tips
-        ai_tips = []
-        if prediction:
-            risk = prediction.get("risk_level", "safe")
-            if risk == "critical":
-                ai_tips.extend(["🚨 Срочно сократите расходы!", "💡 Пересмотрите ежедневные траты"])
-            elif risk == "danger":
-                ai_tips.extend(["⚠️ Контролируйте бюджет внимательнее", "📊 Проанализируйте крупные расходы"])
-            else:
-                ai_tips.extend(["✅ Финансы под контролем", "💰 Продолжайте откладывать"])
+    for txn in transactions:
+        if txn.get("type") == "expense":
+            cat = txn.get("category", "Другое")
+            amount = txn.get("amount", 0)
+            category_totals[cat] = category_totals.get(cat, 0) + amount
+            total_expenses += amount
 
-        # Calculate stats
-        categories_used = len(set(txn.get("category") for txn in transactions if txn.get("type") == "expense"))
-        savings_rate = 0
-        if balance_data.get("total_income", 0) > 0:
-            savings = balance_data.get("total_income", 0) - balance_data.get("total_expenses", 0)
-            savings_rate = int((savings / balance_data.get("total_income", 1)) * 100)
+    for cat, amount in category_totals.items():
+        percent = (amount / total_expenses * 100) if total_expenses > 0 else 0
+        # Get icon from Russian category name
+        icon = "💸"
+        for eng, rus in CATEGORY_MAP.items():
+            if rus == cat:
+                icon = CATEGORY_ICONS.get(eng, "💸")
+                break
 
-        dashboard = {
-            "balance": {"current": balance_data.get("balance", 0)},
-            "income": {"month": balance_data.get("total_income", 0)},
-            "expenses": {"month": balance_data.get("total_expenses", 0)},
-            "transactions": transactions,
-            "forecast": None,
-            "ai_tips": ai_tips,
-            "spending_chart": spending_chart,
-            "stats": {
-                "transactions_count": balance_data.get("transaction_count", 0),
-                "savings_rate": savings_rate,
-                "categories_used": categories_used,
-                "achievements": 0
-            }
+        spending_chart.append({
+            "category": cat,
+            "amount": amount,
+            "percent": round(percent, 1),
+            "icon": icon
+        })
+
+    # Generate AI tips
+    ai_tips = []
+    if prediction:
+        risk = prediction.get("risk_level", "safe")
+        if risk == "critical":
+            ai_tips.extend(["🚨 Срочно сократите расходы!", "💡 Пересмотрите ежедневные траты"])
+        elif risk == "danger":
+            ai_tips.extend(["⚠️ Контролируйте бюджет внимательнее", "📊 Проанализируйте крупные расходы"])
+        else:
+            ai_tips.extend(["✅ Финансы под контролем", "💰 Продолжайте откладывать"])
+
+    # Calculate stats
+    categories_used = len(set(txn.get("category") for txn in transactions if txn.get("type") == "expense"))
+    savings_rate = 0
+    if balance_data.get("total_income", 0) > 0:
+        savings = balance_data.get("total_income", 0) - balance_data.get("total_expenses", 0)
+        savings_rate = int((savings / balance_data.get("total_income", 1)) * 100)
+
+    dashboard = {
+        "balance": {"current": balance_data.get("balance", 0)},
+        "income": {"month": balance_data.get("total_income", 0)},
+        "expenses": {"month": balance_data.get("total_expenses", 0)},
+        "transactions": transactions,
+        "forecast": None,
+        "ai_tips": ai_tips,
+        "spending_chart": spending_chart,
+        "stats": {
+            "transactions_count": balance_data.get("transaction_count", 0),
+            "savings_rate": savings_rate,
+            "categories_used": categories_used,
+            "achievements": 0
         }
+    }
 
-        # Add forecast
-        if prediction and prediction.get("days_left"):
-            days_left = int(prediction["days_left"])
-            daily_avg = int(balance_data.get("balance", 0) / days_left) if days_left > 0 else 0
-            dashboard["forecast"] = {"days_left": days_left, "daily_avg": daily_avg}
+    # Add forecast
+    if prediction and prediction.get("days_left"):
+        days_left = int(prediction["days_left"])
+        daily_avg = int(balance_data.get("balance", 0) / days_left) if days_left > 0 else 0
+        dashboard["forecast"] = {"days_left": days_left, "daily_avg": daily_avg}
 
-        return dashboard
+    return dashboard
 
 
 # ============================================================================
@@ -546,10 +618,13 @@ async def trigger_prediction(
     """Trigger AI prediction for authenticated user"""
     await apply_rate_limit(request, rate_limiter, "ai:predict", str(user.user_id))
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(f"{AI_URL}/predict/{user.user_id}")
-        resp.raise_for_status()
-        return resp.json()
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    resp = await long_timeout_client.post(
+        f"{AI_URL}/predict/{user.user_id}",
+        request_id=request_id
+    )
+    return resp.json()
 
 
 @app.get("/api/predict")
@@ -560,12 +635,15 @@ async def get_prediction(
     """Get AI prediction for authenticated user"""
     await apply_rate_limit(request, rate_limiter, "read:dashboard", str(user.user_id))
 
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.get(f"{AI_URL}/predict/{user.user_id}")
-        if resp.status_code == 404:
-            raise HTTPException(404, "No prediction found")
-        resp.raise_for_status()
-        return resp.json()
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    resp = await default_client.get(
+        f"{AI_URL}/predict/{user.user_id}",
+        request_id=request_id
+    )
+    if resp.status_code == 404:
+        raise HTTPException(404, "No prediction found")
+    return resp.json()
 
 
 # ============================================================================
@@ -601,10 +679,13 @@ async def admin_view_user_dashboard(
     admin: UserContext = Depends(get_current_admin)
 ):
     """Admin only: View any user's dashboard"""
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        balance_resp = await client.get(f"{TRANSACTIONS_URL}/balance/{user_id}")
-        balance_resp.raise_for_status()
-        return balance_resp.json()
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    balance_resp = await default_client.get(
+        f"{TRANSACTIONS_URL}/balance/{user_id}",
+        request_id=request_id
+    )
+    return balance_resp.json()
 
 
 if __name__ == "__main__":

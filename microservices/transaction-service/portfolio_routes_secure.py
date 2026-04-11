@@ -1,5 +1,6 @@
 """
 SECURE PORTFOLIO ROUTES - Race condition protection
+CRITICAL: All routes require authentication via gateway
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,11 +10,12 @@ import sys
 sys.path.append('/app')
 
 from shared.db import get_db
-from shared.models import User, Portfolio, Stock
+from shared.models import User, Portfolio, Stock, TradeHistory
 from shared.redis import publish_event, get_cache, set_cache, delete_cache
 from shared.market_data import get_market_data_provider
 from shared.logger import setup_logger
 from shared.security_hardening import validate_amount, validate_shares
+from shared.audit_logger import audit_logger
 from pydantic import BaseModel, Field
 
 logger = setup_logger("portfolio_secure")
@@ -26,6 +28,7 @@ class TradeRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10)
     shares: int = Field(gt=0, le=1_000_000)
     action: str = Field(pattern="^(buy|sell)$")
+    idempotency_key: str = Field(None, min_length=1, max_length=255)
 
 
 async def init_stocks(db: AsyncSession):
@@ -49,9 +52,13 @@ async def init_stocks(db: AsyncSession):
     await db.commit()
 
 
-@router.get("/portfolio")
+@router.get("/portfolio/{user_id}")
 async def get_portfolio(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Get user portfolio - user_id verified by gateway"""
+    """
+    Get user portfolio.
+    SECURITY: user_id must be verified by gateway before calling this endpoint.
+    Gateway extracts user_id from JWT token, not from request.
+    """
     cache_key = f"portfolio:{user_id}"
     cached = await get_cache(cache_key)
     if cached:
@@ -107,16 +114,18 @@ async def get_portfolio(user_id: int, db: AsyncSession = Depends(get_db)):
     return response
 
 
-@router.post("/trade")
+@router.post("/trade/{user_id}")
 async def execute_trade(
     request: Request,
-    trade: TradeRequest,
     user_id: int,
+    trade: TradeRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Execute trade with ATOMIC balance and position updates.
     CRITICAL: Uses database-level locking to prevent race conditions.
+    IDEMPOTENT: Same idempotency_key returns same trade result.
+    SECURITY: user_id must be verified by gateway (from JWT token).
     """
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -125,6 +134,30 @@ async def execute_trade(
         validated_shares = validate_shares(trade.shares)
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+    # CRITICAL: Check idempotency key to prevent duplicate trades
+    if trade.idempotency_key:
+        existing_result = await db.execute(
+            select(TradeHistory).where(
+                TradeHistory.idempotency_key == trade.idempotency_key,
+                TradeHistory.user_id == user_id
+            )
+        )
+        existing_trade = existing_result.scalar_one_or_none()
+        if existing_trade:
+            logger.info(
+                f"[{request_id}] Idempotent trade request: returning existing trade "
+                f"{existing_trade.id} for key {trade.idempotency_key}"
+            )
+            return {
+                "status": "success",
+                "action": existing_trade.action,
+                "ticker": existing_trade.ticker,
+                "shares": existing_trade.shares,
+                "price": round(existing_trade.price, 2),
+                "total": round(existing_trade.total_cost, 2),
+                "idempotent": True
+            }
 
     # Start atomic transaction
     async with db.begin():
@@ -193,6 +226,18 @@ async def execute_trade(
                 f"{trade.ticker} @ ${stock.price} = ${total_cost}"
             )
 
+            # Record trade in history
+            trade_record = TradeHistory(
+                user_id=user_id,
+                ticker=trade.ticker,
+                shares=validated_shares,
+                action="buy",
+                price=stock.price,
+                total_cost=total_cost,
+                idempotency_key=trade.idempotency_key
+            )
+            db.add(trade_record)
+
         elif trade.action == "sell":
             # Get position with lock
             pos_result = await db.execute(
@@ -223,8 +268,32 @@ async def execute_trade(
                 f"{trade.ticker} @ ${stock.price} = ${total_cost}"
             )
 
+            # Record trade in history
+            trade_record = TradeHistory(
+                user_id=user_id,
+                ticker=trade.ticker,
+                shares=validated_shares,
+                action="sell",
+                price=stock.price,
+                total_cost=total_cost,
+                idempotency_key=trade.idempotency_key
+            )
+            db.add(trade_record)
+
         # Commit transaction (releases all locks)
         await db.commit()
+
+    # Audit log trade execution
+    await audit_logger.log_trade_executed(
+        user_id=user_id,
+        ticker=trade.ticker,
+        action=trade.action,
+        shares=validated_shares,
+        price=stock.price,
+        total_cost=total_cost,
+        request_id=request_id,
+        idempotency_key=trade.idempotency_key
+    )
 
     # Publish event
     await publish_event("portfolio.updated", {

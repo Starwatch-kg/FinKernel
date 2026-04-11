@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { motion as Motion, AnimatePresence } from "framer-motion"
-import { getDashboard, marketEventAction, checkPortfolio } from "../api"
+import { getDashboard, marketEventAction } from "../api"
 
 const container = {
   hidden: {},
@@ -39,7 +39,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const load = () => { setLoading(true); setError(null); getDashboard().then(d => { setData(d); setLoading(false) }).catch(e => { setError(e.message||"Ошибка"); setLoading(false) }); checkPortfolio().catch(() => {}) }
+  const load = () => { setLoading(true); setError(null); getDashboard().then(d => { setData(d); setLoading(false) }).catch(e => { setError(e.message||"Ошибка"); setLoading(false) }) }
   useEffect(() => { load() }, [])
 
   if (loading) return <div style={s.loading}>Загрузка...</div>
@@ -49,7 +49,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
 
   return (
     <Motion.div style={s.page} variants={container} initial="hidden" animate="show">
-      {/* Balance Widget */}
+      {/* Balance Widget with Mini Chart */}
       <Motion.div
         variants={item}
         style={s.portfolioCard}
@@ -59,24 +59,95 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         <div style={s.portfolioHeader}>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={s.portfolioLabel}>ТЕКУЩИЙ БАЛАНС</div>
             <div style={s.portfolioValue}>
               <AnimatedNumber value={balance?.current || 0} /> ₽
             </div>
             <div style={s.portfolioPnl}>
-              <span style={{ color: "#21a038" }}>↑ {(income?.month || 0).toLocaleString("ru-RU")} ₽</span>
+              <span style={{ color: "#ffa000" }}>↑ {(income?.month || 0).toLocaleString("ru-RU")} ₽</span>
               {" "}
-              <span style={{ color: "#f44336" }}>↓ {(expenses?.month || 0).toLocaleString("ru-RU")} ₽</span>
+              <span style={{ color: "#ff8f00" }}>↓ {(expenses?.month || 0).toLocaleString("ru-RU")} ₽</span>
             </div>
           </div>
-          <Motion.img
-            src="/icons/free-icon-money-bag-7510557.png"
-            alt=""
-            style={{ width: 32, height: 32, opacity: 0.7 }}
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
+
+          {/* Mini Trend Chart */}
+          {transactions?.length > 0 && (
+            <div style={{ width: 120, height: 60 }}>
+              <svg width="120" height="60" viewBox="0 0 120 60">
+                {(() => {
+                  // Calculate balance trend from last 7 transactions
+                  const recentTxns = transactions.slice(0, 7).reverse()
+                  let runningBalance = balance?.current || 0
+                  const points = [runningBalance]
+
+                  // Calculate historical balances
+                  for (let i = recentTxns.length - 1; i >= 0; i--) {
+                    const txn = recentTxns[i]
+                    if (txn.type === "income") {
+                      runningBalance -= txn.amount
+                    } else {
+                      runningBalance += txn.amount
+                    }
+                    points.unshift(runningBalance)
+                  }
+
+                  const maxVal = Math.max(...points)
+                  const minVal = Math.min(...points)
+                  const range = maxVal - minVal || 1
+
+                  // Create path
+                  const pathData = points.map((val, i) => {
+                    const x = (i / (points.length - 1)) * 110 + 5
+                    const y = 50 - ((val - minVal) / range) * 40
+                    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+                  }).join(' ')
+
+                  return (
+                    <>
+                      <Motion.path
+                        d={pathData}
+                        fill="none"
+                        stroke="#ffdd2d"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                      />
+                      {points.map((val, i) => {
+                        const x = (i / (points.length - 1)) * 110 + 5
+                        const y = 50 - ((val - minVal) / range) * 40
+                        return (
+                          <Motion.circle
+                            key={i}
+                            cx={x}
+                            cy={y}
+                            r="2.5"
+                            fill="#ffa000"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.1 + i * 0.1, duration: 0.3 }}
+                          />
+                        )
+                      })}
+                    </>
+                  )
+                })()}
+              </svg>
+            </div>
+          )}
+
+          {!transactions?.length && (
+            <Motion.img
+              src="/icons/free-icon-money-bag-7510557.png"
+              alt=""
+              style={{ width: 32, height: 32, opacity: 0.7 }}
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
         </div>
       </Motion.div>
 
@@ -151,7 +222,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
                 <div style={{ fontWeight: 600 }}>{t.category}</div>
                 <div style={{ fontSize: 12, color: "rgba(0,0,0,0.4)" }}>{t.comment || t.date}</div>
               </div>
-              <span style={{ color: t.type === "income" ? "#21a038" : "#f44336", fontWeight: 700 }}>
+              <span style={{ color: t.type === "income" ? "#ffa000" : "#ff8f00", fontWeight: 700 }}>
                 {t.type === "income" ? "+" : "-"}{t.amount?.toLocaleString("ru-RU")} ₽
               </span>
             </div>
@@ -168,9 +239,86 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
       )}
       </AnimatePresence>
 
-      {/* Spending by Category */}
+      {/* Spending by Category with Chart */}
       <Motion.div variants={item} style={s.card}>
         <div style={s.cardLabel}>РАСХОДЫ ПО КАТЕГОРИЯМ</div>
+
+        {/* Pie Chart */}
+        {spending_chart?.length > 0 && (
+          <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
+            <div style={{ position: "relative", width: 140, height: 140, flexShrink: 0 }}>
+              <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>
+                {(() => {
+                  let currentAngle = 0
+                  const total = spending_chart.reduce((sum, cat) => sum + (cat.amount || 0), 0)
+                  const colors = ["#ffdd2d", "#ffa000", "#ff8f00", "#ff6f00", "#ff5722", "#e64a19"]
+                  return spending_chart.map((cat, i) => {
+                    const percent = (cat.amount / total) * 100
+                    const angle = (percent / 100) * 360
+                    const startAngle = currentAngle
+                    currentAngle += angle
+
+                    const radius = 60
+                    const centerX = 70
+                    const centerY = 70
+
+                    const startRad = (startAngle * Math.PI) / 180
+                    const endRad = (currentAngle * Math.PI) / 180
+
+                    const x1 = centerX + radius * Math.cos(startRad)
+                    const y1 = centerY + radius * Math.sin(startRad)
+                    const x2 = centerX + radius * Math.cos(endRad)
+                    const y2 = centerY + radius * Math.sin(endRad)
+
+                    const largeArc = angle > 180 ? 1 : 0
+
+                    return (
+                      <Motion.path
+                        key={i}
+                        d={`M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                        fill={colors[i % colors.length]}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
+                      />
+                    )
+                  })
+                })()}
+                <circle cx="70" cy="70" r="35" fill="#ffffff" />
+              </svg>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 2 }}>Всего</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>
+                  {spending_chart.reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString("ru-RU")} ₽
+                </div>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+              {spending_chart.slice(0, 6).map((cat, i) => {
+                const colors = ["#ffdd2d", "#ffa000", "#ff8f00", "#ff6f00", "#ff5722", "#e64a19"]
+                const total = spending_chart.reduce((sum, c) => sum + (c.amount || 0), 0)
+                const percent = ((cat.amount / total) * 100).toFixed(1)
+                return (
+                  <Motion.div
+                    key={i}
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
+                  >
+                    <div style={{ width: 12, height: 12, borderRadius: 2, background: colors[i % colors.length], flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: "rgba(0,0,0,0.6)", flex: 1 }}>{cat.icon} {cat.category}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{percent}%</span>
+                  </Motion.div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Bar Chart */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {spending_chart?.map((cat, ci) => (
             <Motion.div
@@ -224,13 +372,9 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
             whileHover={{ y: -4, scale: 1.03, boxShadow: "0 10px 28px rgba(0,0,0,0.1)" }}
             transition={{ type: "spring", stiffness: 350, damping: 18 }}
           >
-            <Motion.div
-              style={{ marginBottom: 4 }}
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-            >
+            <div style={{ marginBottom: 4 }}>
               <img src={st.icon} alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
-            </Motion.div>
+            </div>
             <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", marginBottom: 2 }}>{st.num}</div>
             <div style={{ fontSize: 11, color: "rgba(0,0,0,0.4)" }}>{st.label}</div>
           </Motion.div>
