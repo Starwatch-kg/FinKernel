@@ -1,23 +1,19 @@
+"""
+Обновленные модели БД с импортом из core
+"""
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, Boolean, Text, JSON
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 import os
 
-Base = declarative_base()
+from backend.core import Base
 
 class TransactionCategory(enum.Enum):
     food = "food"
     transport = "transport"
     entertainment = "entertainment"
-    shopping = "shopping"
-    health = "health"
     education = "education"
-    salary = "salary"
-    freelance = "freelance"
-    investment = "investment"
-    gift = "gift"
     other = "other"
 
 class User(Base):
@@ -49,7 +45,6 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     amount = Column(Float)
     category = Column(Enum(TransactionCategory))
-    transaction_type = Column(String, default="expense")  # "income" or "expense"
     description = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
@@ -59,13 +54,11 @@ class Achievement(Base):
     __tablename__ = "achievements"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)  # Используется в init_data.py
     title = Column(String)
     description = Column(String)
     icon = Column(String)
-    category = Column(String, default="other")  # savings, budget, discipline, streak
     xp_reward = Column(Integer, default=0)
-    condition_type = Column(String)  # transaction_count, balance_reached, streak, etc.
+    condition_type = Column(String)
     condition_value = Column(Integer)
 
 class UserAchievement(Base):
@@ -100,7 +93,7 @@ class Lesson(Base):
     title = Column(String)
     description = Column(String)
     content = Column(Text)
-    questions = Column(JSON)  # Список вопросов с вариантами ответов
+    questions = Column(JSON)
     xp_reward = Column(Integer, default=50)
     order = Column(Integer)
     required_level = Column(Integer, default=1)
@@ -152,10 +145,10 @@ class MarketEvent(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(Text)
-    event_type = Column(String)  # crash, boom, news
-    impact = Column(String)  # positive, negative, neutral
+    event_type = Column(String)
+    impact = Column(String)
     ticker = Column(String, nullable=True)
-    options = Column(JSON)  # Варианты действий
+    options = Column(JSON)
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     active = Column(Boolean, default=True)
@@ -179,7 +172,7 @@ class DailyMission(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(String)
-    mission_type = Column(String)  # transaction, lesson, login
+    mission_type = Column(String)
     target_value = Column(Integer)
     xp_reward = Column(Integer, default=50)
     date = Column(DateTime, default=datetime.utcnow)
@@ -203,7 +196,7 @@ class AdaptiveMastery(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     topic = Column(String, index=True)
-    mastery_level = Column(Float, default=0.0)  # 0.0 - 1.0
+    mastery_level = Column(Float, default=0.0)
     correct_answers = Column(Integer, default=0)
     total_answers = Column(Integer, default=0)
     last_practiced = Column(DateTime, default=datetime.utcnow)
@@ -218,18 +211,5 @@ class AdaptiveQuestion(Base):
     question_text = Column(Text)
     options = Column(JSON)
     correct_answer = Column(Integer)
-    difficulty = Column(Float, default=0.5)  # 0.0 - 1.0
+    difficulty = Column(Float, default=0.5)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb")
-
-engine = create_async_engine(DATABASE_URL, echo=True)
-async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-async def get_db():
-    async with async_session_maker() as session:
-        yield session

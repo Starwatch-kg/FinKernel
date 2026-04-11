@@ -1,6 +1,0 @@
-export { default as AnimatedPage, PageTransitionProvider } from './AnimatedPage'
-export { default as AnimatedCard } from './AnimatedCard'
-export { default as StaggerList } from './StaggerList'
-export { default as AnimatedNumber, AnimatedProgressBar } from './AnimatedNumber'
-export { default as Confetti } from './Confetti'
-export * from './variants'

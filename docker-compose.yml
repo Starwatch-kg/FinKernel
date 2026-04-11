@@ -1,64 +1,38 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:15-alpine
-    container_name: finkernel-db
+    container_name: fin_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-finuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finpass123}
-      POSTGRES_DB: ${POSTGRES_DB:-financedb}
+      POSTGRES_USER: finuser
+      POSTGRES_PASSWORD: finpass123
+      POSTGRES_DB: financedb
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - finkernel-network
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U finuser"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: finkernel-api
+    build: ./backend
+    container_name: fin_backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-finuser}:${POSTGRES_PASSWORD:-finpass123}@db:5432/${POSTGRES_DB:-financedb}
+      DATABASE_URL: postgresql+asyncpg://finuser:finpass123@db:5432/financedb
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:8001}
+      ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173,http://localhost:3000
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - finkernel-network
     volumes:
       - ./backend:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: finkernel-web
-    ports:
-      - "5174:5173"
-    depends_on:
-      - backend
-    networks:
-      - finkernel-network
-    environment:
-      VITE_API_URL: http://localhost:8001/api
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
-
 volumes:
-  postgres_data:
-
-networks:
-  finkernel-network:
-    driver: bridge
+  pgdata:

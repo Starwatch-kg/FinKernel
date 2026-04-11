@@ -27,13 +27,12 @@ wheels/
 *.db
 *.sqlite
 *.sqlite3
-
-# PostgreSQL
 pgdata/
 
 # Environment
 .env
 .env.local
+.env.production
 
 # IDE
 .vscode/
@@ -48,7 +47,26 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Node
 node_modules/
 frontend/node_modules/
-.env
-__pycache__/
+frontend/.vite/
+frontend/dist/
+
+# Backups
+*_backup/
+*.bak
+*_old.*
+*_new.*
+
+# Docker
+.docker/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
