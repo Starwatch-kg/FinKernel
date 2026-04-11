@@ -4,7 +4,7 @@ import time
 from enum import Enum
 from typing import Callable, Any, Optional
 from functools import wraps
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("circuit_breaker")
 

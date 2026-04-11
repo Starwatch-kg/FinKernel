@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
 from cryptography.hazmat.backends import default_backend
 import base64
 import os
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("encryption")
 

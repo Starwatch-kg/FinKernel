@@ -3,7 +3,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from logger import setup_logger
+from shared.logger import setup_logger
 import os
 
 logger = setup_logger("network_security")

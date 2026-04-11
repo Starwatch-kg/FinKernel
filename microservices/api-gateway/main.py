@@ -20,6 +20,8 @@ from shared.logger import setup_logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import Depends
+
+# Import auth utilities from current directory
 from auth_utils import hash_password, verify_password, create_access_token, get_user_id_from_token, is_admin_email
 
 # Validate configuration on startup

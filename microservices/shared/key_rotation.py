@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 import json
 from redis.asyncio import Redis
-from logger import setup_logger
+from shared.logger import setup_logger
 from secrets_manager import secrets_manager
 
 logger = setup_logger("key_rotation")

@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any, List
 from enum import Enum
 from redis.asyncio import Redis
 import json
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("alerting")
 

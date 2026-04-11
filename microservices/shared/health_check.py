@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Dict, Optional
 from datetime import datetime
 import asyncio
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("health_check")
 

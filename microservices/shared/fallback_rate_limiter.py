@@ -2,7 +2,7 @@
 import time
 from collections import defaultdict
 from typing import Dict, Tuple
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("fallback_rate_limiter")
 

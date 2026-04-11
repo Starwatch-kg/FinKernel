@@ -3,7 +3,7 @@ import asyncio
 import random
 from typing import Callable, Any, Type, Tuple
 from functools import wraps
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("retry")
 

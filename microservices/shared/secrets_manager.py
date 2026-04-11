@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import json
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("secrets_manager")
 

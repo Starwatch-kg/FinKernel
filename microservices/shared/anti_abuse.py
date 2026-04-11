@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from redis.asyncio import Redis
-from logger import setup_logger
+from shared.logger import setup_logger
 import json
 
 logger = setup_logger("anti_abuse")

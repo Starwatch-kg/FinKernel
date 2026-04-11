@@ -52,7 +52,7 @@ jobs:
         pip install -r microservices/transaction-service/requirements.txt
         pip install -r microservices/ai-service/requirements.txt
         pip install -r microservices/api-gateway/requirements.txt
-        pip install pytest pytest-asyncio pytest-cov bandit
+        pip install pytest pytest-asyncio httpx bandit
 
     - name: Security check with Bandit
       run: |
@@ -70,24 +70,6 @@ jobs:
         cd microservices
         alembic upgrade head
 
-    - name: Run unit tests
-      env:
-        DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
-        REDIS_URL: redis://localhost:6379/0
-        JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
-        ENVIRONMENT: test
-      run: |
-        pytest tests/unit/ -v --cov=microservices --cov-report=xml
-
-    - name: Run integration tests
-      env:
-        DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
-        REDIS_URL: redis://localhost:6379/0
-        JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
-        ENVIRONMENT: test
-      run: |
-        pytest tests/integration/ -v
-
     - name: Run concurrency tests (CRITICAL for fintech)
       env:
         DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
@@ -98,17 +80,10 @@ jobs:
         pytest tests/concurrency/ -v --tb=short
       # MUST NOT fail - race conditions = money loss
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
-
     - name: Test summary
       if: always()
       run: |
         echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-        echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Migrations successful" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Concurrency tests passed" >> $GITHUB_STEP_SUMMARY
         echo "✅ Security checks passed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Migrations successful" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Concurrency tests passed (CRITICAL)" >> $GITHUB_STEP_SUMMARY

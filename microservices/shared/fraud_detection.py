@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 import json
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("fraud_detection")
 

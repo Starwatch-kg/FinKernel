@@ -1,7 +1,7 @@
 """Retry logic with exponential backoff"""
 import asyncio
 from typing import Callable, Any, Optional, Type
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("retry")
 

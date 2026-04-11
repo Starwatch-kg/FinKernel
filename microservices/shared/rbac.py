@@ -5,7 +5,7 @@ from typing import List, Optional
 from auth_v2 import decode_token
 from redis.asyncio import Redis
 from auth_v2 import is_token_blacklisted
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("rbac")
 

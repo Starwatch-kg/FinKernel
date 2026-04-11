@@ -17,8 +17,9 @@ from shared.config import get_config
 config = context.config
 cfg = get_config()
 
-# Override sqlalchemy.url from environment
-config.set_main_option('sqlalchemy.url', cfg.database_url)
+# Override sqlalchemy.url from environment - use sync driver for migrations
+database_url = cfg.database_url.replace('postgresql+asyncpg://', 'postgresql://')
+config.set_main_option('sqlalchemy.url', database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

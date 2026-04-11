@@ -3,7 +3,7 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 from fastapi import Response
 import time
 from functools import wraps
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("metrics")
 

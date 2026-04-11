@@ -2,6 +2,7 @@ fastapi==0.104.1
 uvicorn==0.24.0
 httpx==0.25.2
 pydantic==2.5.0
+pydantic[email]
 redis==5.0.1
 sqlalchemy==2.0.23
 asyncpg==0.29.0
@@ -14,4 +15,4 @@ opentelemetry-instrumentation-fastapi==0.43b0
 opentelemetry-instrumentation-httpx==0.43b0
 opentelemetry-instrumentation-sqlalchemy==0.43b0
 opentelemetry-instrumentation-redis==0.43b0
-opentelemetry-exporter-jaeger==1.22.0
+opentelemetry-exporter-jaeger==1.21.0

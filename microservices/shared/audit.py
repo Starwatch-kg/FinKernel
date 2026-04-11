@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Index
 from sqlalchemy.ext.declarative import declarative_base
-from logger import setup_logger
+from shared.logger import setup_logger
 import json
 
 logger = setup_logger("audit")

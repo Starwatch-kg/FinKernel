@@ -2,7 +2,7 @@
 import time
 from typing import Optional
 from redis.asyncio import Redis
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("rate_limiter")
 

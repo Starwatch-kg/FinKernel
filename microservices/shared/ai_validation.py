@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
 from enum import Enum
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("ai_validation")
 

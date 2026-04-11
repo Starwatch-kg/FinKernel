@@ -3,7 +3,7 @@ import redis.asyncio as redis
 import json
 import os
 import time
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("redis")
 

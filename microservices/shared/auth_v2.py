@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Tuple
 import os
 from redis.asyncio import Redis
-from logger import setup_logger
+from shared.logger import setup_logger
 
 logger = setup_logger("auth_v2")
 
