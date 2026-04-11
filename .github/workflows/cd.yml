@@ -1,0 +1,120 @@
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Add server to known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to production
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+        DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      run: |
+        ssh $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+          set -e
+
+          echo "🚀 Starting deployment..."
+          cd ${{ secrets.DEPLOY_PATH }}
+
+          # Pull latest code
+          echo "📥 Pulling latest code..."
+          git fetch origin
+          git checkout main
+          git pull origin main
+
+          # Backup current state
+          echo "💾 Creating backup..."
+          docker-compose exec -T postgres pg_dump -U finuser financedb > backup_$(date +%Y%m%d_%H%M%S).sql
+
+          # Build new images (don't restart yet)
+          echo "🔨 Building new images..."
+          docker-compose build --no-cache
+
+          # If build fails, stop here (don't restart containers)
+          if [ $? -ne 0 ]; then
+            echo "❌ Build failed! Keeping current containers running."
+            exit 1
+          fi
+
+          # Run migrations
+          echo "🗄️ Running migrations..."
+          docker-compose run --rm transactions alembic upgrade head
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Migration failed! Keeping current containers running."
+            exit 1
+          fi
+
+          # Restart services in correct order
+          echo "🔄 Restarting services..."
+
+          # Stop services (except database and redis)
+          docker-compose stop gateway transactions ai
+
+          # Start database and redis first
+          docker-compose up -d postgres redis
+          sleep 5
+
+          # Start backend services
+          docker-compose up -d transactions ai
+          sleep 5
+
+          # Start gateway last
+          docker-compose up -d gateway
+          sleep 5
+
+          # Start nginx
+          docker-compose up -d nginx
+
+          # Health checks
+          echo "🏥 Running health checks..."
+          sleep 10
+
+          curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:8001/health || exit 1
+          curl -f http://localhost:8002/health || exit 1
+
+          echo "✅ Deployment successful!"
+
+          # Cleanup old images
+          docker image prune -f
+        ENDSSH
+
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "✅ Deployment to production successful!"
+
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed! Previous containers still running."
+        exit 1
+
+    - name: Deployment summary
+      if: always()
+      run: |
+        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: main" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
