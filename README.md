@@ -1,4 +1,4 @@
-# FinKernel - Financial Management Platform
+# FinKernel - Financial Management Platform ERGAN - TEAMS
 
 Современная платформа для управления личными финансами с AI-советами и аналитикой.
 
