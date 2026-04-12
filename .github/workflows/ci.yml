@@ -77,15 +77,35 @@ jobs:
           pip install pytest pytest-cov pytest-asyncio httpx
           find microservices -name "requirements.txt" -exec pip install -r {} \;
 
-      - name: Start services
+      - name: Initialize database
+        run: python microservices/shared/init_db.py
+        env:
+          DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
+
+      - name: Start API Gateway
         run: |
-          cd microservices/api-gateway && python main_secure.py &
-          sleep 5
+          cd microservices/api-gateway
+          nohup python main_secure.py > api.log 2>&1 &
+          echo $! > api.pid
         env:
           DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
           ENVIRONMENT: test
+
+      - name: Wait for API to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/health 2>/dev/null; then
+              echo "API is ready"
+              exit 0
+            fi
+            echo "Waiting for API... ($i/30)"
+            sleep 2
+          done
+          echo "API failed to start"
+          cat microservices/api-gateway/api.log
+          exit 1
 
       - name: Run tests
         run: pytest tests/ -v --cov=. --cov-report=xml
