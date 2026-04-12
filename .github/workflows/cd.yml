@@ -96,6 +96,18 @@ jobs:
           JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
           ENVIRONMENT: test
 
+      - name: Start Transaction Service
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:${PWD}/microservices"
+          cd microservices/transaction-service
+          nohup python main_secure.py > transaction.log 2>&1 &
+          echo $! > transaction.pid
+        env:
+          DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
+          ENVIRONMENT: test
+
       - name: Wait for API to be ready
         run: |
           for i in {1..30}; do
