@@ -1,3 +1,4 @@
+_________________ TestRateLimiting.test_transaction_rate_limit _________________
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
     yield
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
@@ -7,26 +8,29 @@
     raise exc from None
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
     response = await connection.handle_async_request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:101: in handle_async_request
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
+    return await self._connection.handle_async_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
     raise exc
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:78: in handle_async_request
-    stream = await self._connect(request)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:124: in _connect
-    stream = await self._network_backend.connect_tcp(**kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/auto.py:31: in connect_tcp
-    return await self._backend.connect_tcp(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:113: in connect_tcp
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:217: in _receive_event
+    data = await self._network_stream.read(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:32: in read
     with map_exceptions(exc_map):
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
     self.gen.throw(typ, value, traceback)
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
     raise to_exc(exc) from exc
-E   httpcore.ConnectError: All connection attempts failed
+E   httpcore.ReadError
 
 The above exception was the direct cause of the following exception:
-tests/integration/test_rate_limiting.py:253: in test_sliding_window_behavior
+tests/integration/test_rate_limiting.py:82: in test_transaction_rate_limit
     response = await client.post(
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
     return await self.request(
@@ -49,7 +53,125 @@ tests/integration/test_rate_limiting.py:253: in test_sliding_window_behavior
     self.gen.throw(typ, value, traceback)
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
     raise mapped_exc(message) from exc
-E   httpx.ConnectError: All connection attempts failed
+E   httpx.ReadError
+________________ TestRateLimitFallback.test_rate_limit_per_user ________________
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
+    yield
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:256: in handle_async_request
+    raise exc from None
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
+    response = await connection.handle_async_request(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
+    return await self._connection.handle_async_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
+    raise exc
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:217: in _receive_event
+    data = await self._network_stream.read(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:32: in read
+    with map_exceptions(exc_map):
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
+    raise to_exc(exc) from exc
+E   httpcore.ReadError
+
+The above exception was the direct cause of the following exception:
+tests/integration/test_rate_limiting.py:152: in test_rate_limit_per_user
+    await client.post(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
+    return await self.request(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1530: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1617: in send
+    response = await self._send_handling_auth(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1645: in _send_handling_auth
+    response = await self._send_handling_redirects(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1682: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1719: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:365: in handle_async_request
+    with map_httpcore_exceptions():
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+E   httpx.ReadError
+___________ TestRateLimitByEndpoint.test_ai_endpoints_stricter_limit ___________
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
+    yield
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:256: in handle_async_request
+    raise exc from None
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
+    response = await connection.handle_async_request(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
+    return await self._connection.handle_async_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
+    raise exc
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:217: in _receive_event
+    data = await self._network_stream.read(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:32: in read
+    with map_exceptions(exc_map):
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
+    raise to_exc(exc) from exc
+E   httpcore.ReadError
+
+The above exception was the direct cause of the following exception:
+tests/integration/test_rate_limiting.py:220: in test_ai_endpoints_stricter_limit
+    response = await client.post("/api/predict")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
+    return await self.request(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1530: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1617: in send
+    response = await self._send_handling_auth(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1645: in _send_handling_auth
+    response = await self._send_handling_redirects(
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1682: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1719: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:365: in handle_async_request
+    with map_httpcore_exceptions():
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+E   httpx.ReadError
+__________ TestRateLimitByEndpoint.test_read_endpoints_lenient_limit ___________
+tests/integration/test_rate_limiting.py:239: in test_read_endpoints_lenient_limit
+    assert response.status_code == 200
+E   assert 500 == 200
+E    +  where 500 = <Response [500 Internal Server Error]>.status_code
 =============================== warnings summary ===============================
 tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
   /home/runner/work/FinKernel/FinKernel/microservices/shared/models.py:20: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
@@ -61,3 +183,49 @@ tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_tra
     warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.15-final-0 _______________
+
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_transactions_no_double_spend - KeyError: 'balance'
+FAILED tests/concurrency/test_race_conditions.py::test_idempotency_prevents_duplicates - KeyError: 'balance'
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trades_no_overspend - KeyError: 'balance'
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_deletion_no_double_credit - KeyError: 'balance'
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trade_idempotency - KeyError: 'balance'
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_mixed_operations - KeyError: 'balance'
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_rate_limit - assert 200 == 429
+ +  where 200 = <Response [200 OK]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_wrong_password - httpx.ReadError
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_case_insensitive_email - httpx.ReadError
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_token_success - KeyError: 'refresh_token'
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_with_access_token_fails - KeyError: 'access_token'
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_valid_token_grants_access - KeyError: 'access_token'
+FAILED tests/e2e/test_auth_flow.py::TestTokenExpiration::test_access_token_short_lived - KeyError: 'expires_in'
+FAILED tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_cannot_access_other_user_transactions - httpx.RemoteProtocolError: Server disconnected without sending a response.
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_creation_logged - assert 500 == 200
+ +  where 500 = <Response [500 Internal Server Error]>.status_code
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_deletion_logged - KeyError: 'id'
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_balance_change_logged - KeyError: 'balance'
+FAILED tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_request_id - assert None is not None
+FAILED tests/integration/test_audit_logging.py::TestAuditLogFailure::test_operation_succeeds_even_if_audit_fails - assert 500 == 200
+ +  where 500 = <Response [500 Internal Server Error]>.status_code
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_register_rate_limit - assert 200 == 429
+ +  where 200 = <Response [200 OK]>.status_code
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_transaction_rate_limit - httpx.ReadError
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_rate_limit_per_user - httpx.ReadError
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_ai_endpoints_stricter_limit - httpx.ReadError
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_read_endpoints_lenient_limit - assert 500 == 200
+ +  where 500 = <Response [500 Internal Server Error]>.status_code
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_create_and_retrieve_transaction - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_affects_balance - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_concurrent_transactions_no_race_condition - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_validation - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_dashboard_aggregates_correctly - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_limit - ModuleNotFoundError: No module named 'tests'
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_max_limit - ModuleNotFoundError: No module named 'tests'
+============ 24 failed, 75 passed, 3 warnings, 10 errors in 46.41s =============
+Error: Process completed with exit code 1.

@@ -113,6 +113,7 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --cov=. --cov-report=xml
         env:
+          PYTHONPATH: ${{ github.workspace }}/microservices:${{ github.workspace }}
           DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
