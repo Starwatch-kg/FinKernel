@@ -94,6 +94,8 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET_KEY: test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long
+          TRANSACTIONS_URL: http://localhost:8001
+          AI_URL: http://localhost:8002
           ENVIRONMENT: test
 
       - name: Start Transaction Service
