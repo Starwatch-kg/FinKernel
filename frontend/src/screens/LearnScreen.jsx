@@ -63,7 +63,7 @@ function TextWithNewlines({ text }) {
   )
 }
 
-export default function AIAdvisorScreen({ onStartLesson }) {
+export default function AIAdvisorScreen({ onStartLesson, isMobile = false }) {
   const { setAiStatus } = useContext(DevContext)
   const [messages, setMessages] = useState([
     {
@@ -168,17 +168,21 @@ export default function AIAdvisorScreen({ onStartLesson }) {
       </Motion.div>
 
       {/* ── Main layout ── */}
-      <div style={{ ...s.layout, gridTemplateColumns: showTips ? "1fr 280px" : "1fr" }}>
+      <div style={{
+        ...s.layout,
+        ...(isMobile ? s.layoutMobile : {}),
+        gridTemplateColumns: isMobile ? "1fr" : (showTips ? "1fr 280px" : "1fr")
+      }}>
 
         {/* ── Chat column ── */}
         <Motion.div
-          style={s.chatCard}
+          style={{ ...s.chatCard, ...(isMobile ? s.chatCardMobile : {}) }}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
         >
           {/* Messages area */}
-          <div style={s.messagesArea}>
+          <div style={{ ...s.messagesArea, ...(isMobile ? s.messagesAreaMobile : {}) }}>
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
                 <Motion.div
@@ -509,6 +513,9 @@ const s = {
     minHeight: 0,
     transition: "grid-template-columns 0.3s",
   },
+  layoutMobile: {
+    gap: 12,
+  },
 
   // Chat card
   chatCard: {
@@ -521,6 +528,9 @@ const s = {
     overflow: "hidden",
     minHeight: 0,
   },
+  chatCardMobile: {
+    minHeight: "60vh",
+  },
 
   // Messages
   messagesArea: {
@@ -531,6 +541,10 @@ const s = {
     flexDirection: "column",
     gap: 14,
     scrollBehavior: "smooth",
+  },
+  messagesAreaMobile: {
+    padding: "16px 14px",
+    gap: 12,
   },
   msgRow: {
     display: "flex",

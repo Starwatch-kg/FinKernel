@@ -3,7 +3,7 @@ import { motion as Motion } from "framer-motion"
 import { getDashboard } from "../api"
 import { getSettings } from "../settings"
 
-export default function Sidebar({ active, onNavigate, userName, onLogout, refreshKey }) {
+export default function Sidebar({ active, onNavigate, userName, onLogout, refreshKey, isMobile = false }) {
   const [data, setData] = useState(null)
   const [localRefresh, setLocalRefresh] = useState(0)
   const [settings, setSettings] = useState(getSettings)
@@ -52,9 +52,9 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
 
   return (
     <Motion.div
-      style={s.sidebar}
-      initial={{ x: -40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
+      style={{ ...s.sidebar, ...(isMobile ? s.sidebarMobile : {}) }}
+      initial={isMobile ? { y: -18, opacity: 0 } : { x: -40, opacity: 0 }}
+      animate={isMobile ? { y: 0, opacity: 1 } : { x: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {/* Logo */}
@@ -67,7 +67,7 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
         <img src="/icons/F-Kernel.png" alt="FinFuture" style={{...s.logoImg, cursor: "pointer"}} onClick={() => onNavigate("home")} />
       </Motion.div>
 
-      <div style={s.divider} />
+      <div style={{ ...s.divider, ...(isMobile ? s.dividerMobile : {}) }} />
 
       {/* Balance Summary */}
       <Motion.div
@@ -99,15 +99,20 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
         )}
       </Motion.div>
 
-      <div style={s.divider} />
+      <div style={{ ...s.divider, ...(isMobile ? s.dividerMobile : {}) }} />
 
       {/* Navigation */}
-      <nav style={s.nav}>
+      <nav style={{ ...s.nav, ...(isMobile ? s.navMobile : {}) }}>
         {tabs.map((t, i) => (
           <Motion.button
             key={t.id}
             onClick={() => onNavigate(t.id)}
-            style={{ ...s.navBtn, ...(active === t.id ? s.navBtnActive : {}), position: "relative" }}
+            style={{
+              ...s.navBtn,
+              ...(isMobile ? s.navBtnMobile : {}),
+              ...(active === t.id ? s.navBtnActive : {}),
+              position: "relative",
+            }}
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 + i * 0.05, duration: 0.28 }}
@@ -124,13 +129,13 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               />
             )}
-            <img src={t.icon} alt="" style={s.navIconImg} />
-            <span>{t.label}</span>
+            <img src={t.icon} alt="" style={{ ...s.navIconImg, ...(isMobile ? s.navIconImgMobile : {}) }} />
+            <span style={isMobile ? s.navTextMobile : undefined}>{t.label}</span>
           </Motion.button>
         ))}
       </nav>
 
-      <div style={s.divider} />
+      <div style={{ ...s.divider, ...(isMobile ? s.dividerMobile : {}) }} />
 
       {/* Level & XP */}
       <Motion.div
@@ -180,11 +185,11 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
         </Motion.div>
       )}
 
-      <div style={{ flex: 1 }} />
+      <div style={{ flex: 1, minHeight: isMobile ? 0 : undefined }} />
 
       {/* User */}
       <Motion.div
-        style={s.userBox}
+        style={{ ...s.userBox, ...(isMobile ? s.userBoxMobile : {}) }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.3 }}
@@ -203,7 +208,7 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
       </Motion.div>
       <Motion.button
         onClick={onLogout}
-        style={s.logoutBtn}
+        style={{ ...s.logoutBtn, ...(isMobile ? s.logoutBtnMobile : {}) }}
         whileHover={{ background: "rgba(244,67,54,0.06)", color: "#f44336", borderColor: "rgba(244,67,54,0.2)" }}
         transition={{ duration: 0.2 }}
       >
@@ -228,6 +233,18 @@ const s = {
     zIndex: 100,
     overflowY: "auto",
   },
+  sidebarMobile: {
+    position: "sticky",
+    width: "100%",
+    top: 0,
+    bottom: "auto",
+    left: "auto",
+    borderRight: "none",
+    borderBottom: "1px solid rgba(0,0,0,0.08)",
+    padding: "12px 12px 10px",
+    zIndex: 200,
+    overflowY: "visible",
+  },
   logo: {
     display: "flex",
     alignItems: "center",
@@ -243,6 +260,9 @@ const s = {
     height: 1,
     background: "rgba(0,0,0,0.06)",
     margin: "12px 0",
+  },
+  dividerMobile: {
+    margin: "10px 0",
   },
   portfolioBox: {
     background: "#f6f7f8",
@@ -279,6 +299,12 @@ const s = {
     flexDirection: "column",
     gap: 2,
   },
+  navMobile: {
+    flexDirection: "row",
+    gap: 8,
+    overflowX: "auto",
+    paddingBottom: 4,
+  },
   navBtn: {
     display: "flex",
     alignItems: "center",
@@ -296,6 +322,16 @@ const s = {
     width: "100%",
     fontFamily: "inherit",
   },
+  navBtnMobile: {
+    minWidth: 112,
+    padding: "10px 12px",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    textAlign: "center",
+    flexShrink: 0,
+  },
   navBtnActive: {
     background: "rgba(255,221,45,0.15)",
     color: "#1a1a1a",
@@ -305,6 +341,14 @@ const s = {
     width: 22,
     height: 22,
     objectFit: "contain",
+  },
+  navIconImgMobile: {
+    width: 20,
+    height: 20,
+  },
+  navTextMobile: {
+    fontSize: 11,
+    lineHeight: 1.2,
   },
   levelBox: {
     padding: "12px 14px",
@@ -366,6 +410,9 @@ const s = {
     padding: "8px 4px",
     marginBottom: 4,
   },
+  userBoxMobile: {
+    padding: "8px 2px 0",
+  },
   avatar: {
     width: 36,
     height: 36,
@@ -408,5 +455,8 @@ const s = {
     fontFamily: "inherit",
     transition: "all 0.2s",
     width: "100%",
+  },
+  logoutBtnMobile: {
+    marginTop: 8,
   },
 }

@@ -43,7 +43,7 @@ function AnimatedNumber({ value, suffix = "" }) {
   return <>{display.toLocaleString("ru-RU")}{suffix}</>
 }
 
-export default function HomeScreen({ onStartLesson, onNavigate }) {
+export default function HomeScreen({ onStartLesson, onNavigate, isMobile = false }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -56,20 +56,20 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
   const { balance, income, expenses, transactions, forecast, ai_tips, spending_chart, stats } = data
 
   return (
-    <Motion.div style={s.page} variants={container} initial="hidden" animate="show">
+    <Motion.div style={{ ...s.page, ...(isMobile ? s.pageMobile : {}) }} variants={container} initial="hidden" animate="show">
       {/* Balance Widget with Mini Chart */}
       <Motion.div
         variants={item}
-        style={s.portfolioCard}
+        style={{ ...s.portfolioCard, ...(isMobile ? s.cardMobile : {}) }}
         onClick={() => onNavigate("transactions")}
         whileHover={{ y: -3, boxShadow: "0 10px 32px rgba(0,0,0,0.12)" }}
         whileTap={{ scale: 0.99 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        <div style={s.portfolioHeader}>
+        <div style={{ ...s.portfolioHeader, ...(isMobile ? s.portfolioHeaderMobile : {}) }}>
           <div style={{ flex: 1 }}>
             <div style={s.portfolioLabel}>ТЕКУЩИЙ БАЛАНС</div>
-            <div style={s.portfolioValue}>
+            <div style={{ ...s.portfolioValue, ...(isMobile ? s.portfolioValueMobile : {}) }}>
               <AnimatedNumber value={balance?.current || 0} /> с
             </div>
             <div style={s.portfolioPnl}>
@@ -81,7 +81,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
 
           {/* Mini Trend Chart */}
           {transactions?.length > 0 && (
-            <div style={{ width: 120, height: 60 }}>
+            <div style={{ width: isMobile ? 96 : 120, height: isMobile ? 52 : 60 }}>
               <svg width="120" height="60" viewBox="0 0 120 60">
                 {(() => {
                   // Calculate balance trend from last 7 transactions
@@ -160,7 +160,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
       </Motion.div>
 
       {/* Financial Chart */}
-      <Motion.div variants={item} style={s.chartCard}>
+      <Motion.div variants={item} style={{ ...s.chartCard, ...(isMobile ? s.cardMobile : {}) }}>
         <div style={s.cardLabel}>ФИНАНСОВАЯ ДИНАМИКА</div>
 
         {(() => {
@@ -383,7 +383,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
       </Motion.div>
 
       {/* Forecast + AI Tips */}
-      <div style={s.row}>
+      <div style={{ ...s.row, ...(isMobile ? s.rowMobile : {}) }}>
         <Motion.div variants={item} style={s.card} whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
           <div style={s.cardLabel}>ПРОГНОЗ</div>
           {forecast?.days_left !== undefined ? (
@@ -651,7 +651,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
       </Motion.div>
 
       {/* Stats */}
-      <Motion.div style={s.statsRow} variants={container}>
+      <Motion.div style={{ ...s.statsRow, ...(isMobile ? s.statsRowMobile : {}) }} variants={container}>
         {[
           { icon: "/icons/free-icon-money-bag-7510557.png", num: stats?.transactions_count || 0, label: "транзакций" },
           { icon: "/icons/free-icon-investment-5531695.png", num: `${(stats?.savings_rate || 0)}%`, label: "сбережений" },
@@ -660,7 +660,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
         ].map((st, i) => (
           <Motion.div
             key={i}
-            style={s.statCard}
+            style={{ ...s.statCard, ...(isMobile ? s.statCardMobile : {}) }}
             variants={statItem}
             whileHover={{ y: -4, scale: 1.03, boxShadow: "0 10px 28px rgba(0,0,0,0.1)" }}
             transition={{ type: "spring", stiffness: 350, damping: 18 }}
@@ -679,6 +679,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
 
 const s = {
   page: { maxWidth: 900, margin: "0 auto" },
+  pageMobile: { maxWidth: "100%" },
   loading: { color: "rgba(0,0,0,0.45)", padding: 40, textAlign: "center", fontSize: 16 },
   portfolioCard: {
     background: "#ffffff",
@@ -686,9 +687,16 @@ const s = {
     cursor: "pointer", border: "1px solid rgba(0,0,0,0.08)",
     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
   },
+  cardMobile: {
+    padding: "18px 16px",
+    borderRadius: 14,
+    marginBottom: 14,
+  },
   portfolioHeader: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  portfolioHeaderMobile: { alignItems: "flex-start", gap: 12 },
   portfolioLabel: { fontSize: 11, color: "rgba(0,0,0,0.4)", letterSpacing: 2, marginBottom: 8, fontWeight: 600 },
   portfolioValue: { fontSize: 32, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 },
+  portfolioValueMobile: { fontSize: 28 },
   portfolioPnl: { fontSize: 15, fontWeight: 600 },
   chartCard: {
     background: "#ffffff", borderRadius: 16, padding: "24px 28px", marginBottom: 20,
@@ -696,6 +704,7 @@ const s = {
     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
   },
   row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 },
+  rowMobile: { gridTemplateColumns: "1fr", gap: 14 },
   card: {
     background: "#ffffff", borderRadius: 16, padding: "20px 24px",
     border: "1px solid rgba(0,0,0,0.08)", marginBottom: 16,
@@ -726,9 +735,11 @@ const s = {
     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
   },
   statsRow: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
+  statsRowMobile: { gridTemplateColumns: "repeat(2, 1fr)", gap: 10 },
   statCard: {
     background: "#ffffff", borderRadius: 12, padding: "16px 12px",
     textAlign: "center", border: "1px solid rgba(0,0,0,0.08)",
     boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   },
+  statCardMobile: { padding: "14px 10px" },
 }

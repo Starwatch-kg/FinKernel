@@ -39,11 +39,18 @@ export default function App() {
   const [aiStatus, setAiStatus] = useState("")
   const [aiLog, setAiLog] = useState([])
   const [appSettings, setAppSettings] = useState(getSettings)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768)
 
   useEffect(() => {
     const handler = () => setAppSettings(getSettings())
     window.addEventListener("finfuture-settings", handler)
     return () => window.removeEventListener("finfuture-settings", handler)
+  }, [])
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
   }, [])
 
   // Toggle global no-animations class on <html>
@@ -151,7 +158,7 @@ export default function App() {
   // Step 3: Main app
   return (
     <DevContext.Provider value={{ devMode, timeOffset, unlockAll, aiStatus, setAiStatus: (msg) => { setAiStatus(msg); setAiLog(log => [...log.slice(-19), { time: new Date().toLocaleTimeString("ru-RU"), msg }]) }, aiLog }}>
-      <div style={s.layout}>
+      <div style={{ ...s.layout, ...(isMobile ? s.layoutMobile : {}) }}>
         {/* Admin panel - only visible for admin@admin.com */}
         {isAdmin() && (
           <>
@@ -206,13 +213,14 @@ export default function App() {
           userName={user}
           onLogout={handleLogout}
           refreshKey={refreshKey}
+          isMobile={isMobile}
         />
-        <main style={s.main}>
+        <main style={{ ...s.main, ...(isMobile ? s.mainMobile : {}) }}>
           {appSettings.animations ? (
             <AnimatePresence mode="wait">
               {screen === "home" && (
                 <Motion.div key={`home-${refreshKey}`} {...pageVariants}>
-                  <HomeScreen onStartLesson={handleStartLesson} onNavigate={handleNavigate} />
+                  <HomeScreen onStartLesson={handleStartLesson} onNavigate={handleNavigate} isMobile={isMobile} />
                 </Motion.div>
               )}
               {screen === "transactions" && (
@@ -222,7 +230,7 @@ export default function App() {
               )}
               {screen === "ai-advisor" && (
                 <Motion.div key="ai-advisor" {...pageVariants}>
-                  <AIAdvisorScreen onStartLesson={handleStartLesson} />
+                  <AIAdvisorScreen onStartLesson={handleStartLesson} isMobile={isMobile} />
                 </Motion.div>
               )}
               {screen === "lesson" && (
@@ -248,9 +256,9 @@ export default function App() {
             </AnimatePresence>
           ) : (
             <>
-              {screen === "home" && <HomeScreen onStartLesson={handleStartLesson} onNavigate={handleNavigate} />}
+              {screen === "home" && <HomeScreen onStartLesson={handleStartLesson} onNavigate={handleNavigate} isMobile={isMobile} />}
               {screen === "transactions" && <TransactionsScreen onRefresh={() => setRefreshKey(k => k + 1)} />}
-              {screen === "ai-advisor" && <AIAdvisorScreen onStartLesson={handleStartLesson} />}
+              {screen === "ai-advisor" && <AIAdvisorScreen onStartLesson={handleStartLesson} isMobile={isMobile} />}
               {screen === "lesson" && <LessonScreen lessonId={lessonId} aiLessonData={aiLessonData} onComplete={handleLessonComplete} onBack={handleBack} />}
               {screen === "achievements" && <AchievementsScreen />}
               {screen === "about" && <AboutScreen />}
@@ -285,12 +293,20 @@ const s = {
     fontFamily: "Inter, sans-serif",
     color: "#1a1a1a",
   },
+  layoutMobile: {
+    flexDirection: "column",
+  },
   main: {
     flex: 1,
     marginLeft: 260,
     minHeight: "100vh",
     padding: "24px 32px",
     overflowY: "auto",
+  },
+  mainMobile: {
+    marginLeft: 0,
+    minHeight: "auto",
+    padding: "16px 14px 24px",
   },
   devBtn: {
     position: "fixed", bottom: 8, right: 8, zIndex: 9999,
