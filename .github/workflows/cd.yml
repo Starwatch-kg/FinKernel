@@ -78,12 +78,15 @@ jobs:
           find microservices -name "requirements.txt" -exec pip install -r {} \;
 
       - name: Initialize database
-        run: python microservices/shared/init_db.py
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:${PWD}/microservices"
+          python microservices/shared/init_db.py
         env:
           DATABASE_URL: postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb
 
       - name: Start API Gateway
         run: |
+          export PYTHONPATH="${PYTHONPATH}:${PWD}/microservices"
           cd microservices/api-gateway
           nohup python main_secure.py > api.log 2>&1 &
           echo $! > api.pid
