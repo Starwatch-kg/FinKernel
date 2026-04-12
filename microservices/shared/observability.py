@@ -4,8 +4,13 @@ import time
 from functools import wraps
 
 from fastapi import Response
-from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Gauge, Histogram,
-                               generate_latest)
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 from shared.logger import setup_logger
 
 logger = setup_logger("metrics")

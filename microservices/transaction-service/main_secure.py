@@ -17,6 +17,7 @@ from adaptive_routes import router as adaptive_router
 from learning_routes import router as learning_router
 from market_routes import router as market_router
 from onboarding_routes import router as onboarding_router
+
 # Import route modules
 from portfolio_routes_secure import router as portfolio_router
 from shared.audit_logger import audit_logger

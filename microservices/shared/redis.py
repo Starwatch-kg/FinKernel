@@ -17,8 +17,7 @@ client = redis.Redis(connection_pool=pool)
 
 # Import metrics if available
 try:
-    from metrics import (redis_operation_duration_seconds,
-                         redis_operations_total)
+    from metrics import redis_operation_duration_seconds, redis_operations_total
 
     _metrics_available = True
 except ImportError:

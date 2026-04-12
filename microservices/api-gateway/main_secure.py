@@ -21,11 +21,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 sys.path.append("/app")
 
 from shared.audit_logger import audit_logger
-from shared.auth_secure import (UserContext, create_access_token,
-                                create_refresh_token, decode_token,
-                                get_current_admin, get_current_user,
-                                hash_password, is_admin_email, verify_password,
-                                verify_resource_ownership)
+from shared.auth_secure import (
+    UserContext,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_current_admin,
+    get_current_user,
+    hash_password,
+    is_admin_email,
+    verify_password,
+    verify_resource_ownership,
+)
 from shared.db import get_db
 from shared.http_client import default_client, long_timeout_client
 from shared.logger import setup_logger
@@ -33,11 +40,14 @@ from shared.models import User
 from shared.rate_limit_global import GlobalRateLimiter, apply_rate_limit
 from shared.redis import client as redis_client
 from shared.redis import delete_cache
-from shared.schemas import (PredictionResponse, TransactionCreate,
-                            TransactionResponse)
-from shared.security_hardening import (RateLimitExceeded, RequestIDMiddleware,
-                                       SecurityHeadersMiddleware,
-                                       sanitize_string, validate_amount)
+from shared.schemas import PredictionResponse, TransactionCreate, TransactionResponse
+from shared.security_hardening import (
+    RateLimitExceeded,
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+    sanitize_string,
+    validate_amount,
+)
 from shared.startup import validate_startup
 
 # Validate configuration on startup

@@ -12,8 +12,13 @@ sys.path.append("/app")
 from pydantic import BaseModel
 from shared.db import get_db
 from shared.logger import setup_logger
-from shared.models import (Achievement, DailyMission, MarketEvent, User,
-                           UserMarketResponse)
+from shared.models import (
+    Achievement,
+    DailyMission,
+    MarketEvent,
+    User,
+    UserMarketResponse,
+)
 from shared.redis import get_cache, publish_event, set_cache
 
 logger = setup_logger("market_events")
