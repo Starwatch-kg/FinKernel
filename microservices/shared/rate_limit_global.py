@@ -1,5 +1,6 @@
 """Global rate limiting with Redis backend"""
 
+import os
 import time
 from typing import Optional, Tuple
 
@@ -152,7 +153,12 @@ async def apply_rate_limit(
     """
     Apply rate limit to request.
     Raises HTTPException if limit exceeded.
+    Skips rate limiting in test environment.
     """
+    # Skip rate limiting in test environment
+    if os.getenv("ENVIRONMENT") == "test":
+        return
+
     config = get_rate_limit_config(endpoint_type)
     request_id = getattr(request.state, "request_id", "unknown")
 

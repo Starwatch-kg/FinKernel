@@ -9,19 +9,20 @@ timeout: 300.0s
 timeout method: signal
 timeout func_only: False
 collecting ... collected 109 items
+
 tests/concurrency/test_race_conditions.py::test_concurrent_transactions_no_double_spend FAILED [  0%]
 tests/concurrency/test_race_conditions.py::test_idempotency_prevents_duplicates FAILED [  1%]
 tests/concurrency/test_race_conditions.py::test_concurrent_trades_no_overspend PASSED [  2%]
 tests/concurrency/test_race_conditions.py::test_concurrent_deletion_no_double_credit FAILED [  3%]
 tests/concurrency/test_race_conditions.py::test_concurrent_trade_idempotency FAILED [  4%]
-tests/concurrency/test_race_conditions.py::test_concurrent_mixed_operations PASSED [  5%]
-tests/e2e/test_auth_flow.py::TestRegistration::test_register_success PASSED [  6%]
-tests/e2e/test_auth_flow.py::TestRegistration::test_register_duplicate_email PASSED [  7%]
+tests/concurrency/test_race_conditions.py::test_concurrent_mixed_operations FAILED [  5%]
+tests/e2e/test_auth_flow.py::TestRegistration::test_register_success FAILED [  6%]
+tests/e2e/test_auth_flow.py::TestRegistration::test_register_duplicate_email FAILED [  7%]
 tests/e2e/test_auth_flow.py::TestRegistration::test_register_weak_password PASSED [  8%]
 tests/e2e/test_auth_flow.py::TestRegistration::test_register_invalid_email PASSED [  9%]
 tests/e2e/test_auth_flow.py::TestRegistration::test_register_rate_limit FAILED [ 10%]
-tests/e2e/test_auth_flow.py::TestLogin::test_login_success PASSED        [ 11%]
-tests/e2e/test_auth_flow.py::TestLogin::test_login_wrong_password FAILED [ 11%]
+tests/e2e/test_auth_flow.py::TestLogin::test_login_success FAILED        [ 11%]
+tests/e2e/test_auth_flow.py::TestLogin::test_login_wrong_password PASSED [ 11%]
 tests/e2e/test_auth_flow.py::TestLogin::test_login_nonexistent_user PASSED [ 12%]
 tests/e2e/test_auth_flow.py::TestLogin::test_login_case_insensitive_email FAILED [ 13%]
 tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_token_success FAILED [ 14%]
@@ -31,50 +32,50 @@ tests/e2e/test_auth_flow.py::TestAuthorization::test_protected_endpoint_requires
 tests/e2e/test_auth_flow.py::TestAuthorization::test_valid_token_grants_access FAILED [ 18%]
 tests/e2e/test_auth_flow.py::TestAuthorization::test_invalid_token_rejected PASSED [ 19%]
 tests/e2e/test_auth_flow.py::TestAuthorization::test_malformed_auth_header_rejected PASSED [ 20%]
-tests/e2e/test_auth_flow.py::TestAdminAuthorization::test_admin_endpoint_requires_admin PASSED [ 21%]
+tests/e2e/test_auth_flow.py::TestAdminAuthorization::test_admin_endpoint_requires_admin FAILED [ 21%]
 tests/e2e/test_auth_flow.py::TestTokenExpiration::test_access_token_short_lived FAILED [ 22%]
 tests/e2e/test_auth_flow.py::TestSecurityHeaders::test_security_headers_present PASSED [ 22%]
 tests/e2e/test_auth_flow.py::TestAuditLogging::test_failed_login_logged PASSED [ 23%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_create_and_retrieve_transaction PASSED [ 24%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_affects_balance PASSED [ 25%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance FAILED [ 26%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected FAILED [ 27%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency FAILED [ 28%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_concurrent_transactions_no_race_condition PASSED [ 29%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_validation PASSED [ 30%]
-tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_dashboard_aggregates_correctly PASSED [ 31%]
-tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_limit PASSED [ 32%]
-tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_max_limit PASSED [ 33%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_create_and_retrieve_transaction ERROR [ 24%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_affects_balance ERROR [ 25%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance ERROR [ 26%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected ERROR [ 27%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency ERROR [ 28%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_concurrent_transactions_no_race_condition ERROR [ 29%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_validation ERROR [ 30%]
+tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_dashboard_aggregates_correctly ERROR [ 31%]
+tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_limit ERROR [ 32%]
+tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_max_limit ERROR [ 33%]
 tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_unauthenticated_request_rejected PASSED [ 33%]
-tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_cannot_access_other_user_transactions PASSED [ 34%]
-tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_creation_logged PASSED [ 35%]
+tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_cannot_access_other_user_transactions FAILED [ 34%]
+tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_creation_logged FAILED [ 35%]
 tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_deletion_logged FAILED [ 36%]
-tests/integration/test_audit_logging.py::TestAuditLogging::test_trade_execution_logged PASSED [ 37%]
+tests/integration/test_audit_logging.py::TestAuditLogging::test_trade_execution_logged FAILED [ 37%]
 tests/integration/test_audit_logging.py::TestAuditLogging::test_failed_login_logged PASSED [ 38%]
 tests/integration/test_audit_logging.py::TestAuditLogging::test_multiple_failed_logins_logged PASSED [ 39%]
-tests/integration/test_audit_logging.py::TestAuditLogging::test_balance_change_logged PASSED [ 40%]
+tests/integration/test_audit_logging.py::TestAuditLogging::test_balance_change_logged FAILED [ 40%]
 tests/integration/test_audit_logging.py::TestAuditLogRetention::test_audit_logs_stored_in_redis PASSED [ 41%]
 tests/integration/test_audit_logging.py::TestAuditLogRetention::test_audit_logs_queryable_by_user PASSED [ 42%]
 tests/integration/test_audit_logging.py::TestAuditLogRetention::test_audit_logs_queryable_by_time PASSED [ 43%]
-tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_request_id PASSED [ 44%]
+tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_request_id FAILED [ 44%]
 tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_timestamp PASSED [ 44%]
-tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_user_id PASSED [ 45%]
+tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_user_id FAILED [ 45%]
 tests/integration/test_audit_logging.py::TestAuditLogSeverity::test_critical_operations_high_severity PASSED [ 46%]
 tests/integration/test_audit_logging.py::TestAuditLogSeverity::test_security_events_appropriate_severity PASSED [ 47%]
 tests/integration/test_audit_logging.py::TestAuditLogSeverity::test_normal_operations_info_severity PASSED [ 48%]
-tests/integration/test_audit_logging.py::TestAuditLogFailure::test_operation_succeeds_even_if_audit_fails PASSED [ 49%]
+tests/integration/test_audit_logging.py::TestAuditLogFailure::test_operation_succeeds_even_if_audit_fails FAILED [ 49%]
 tests/integration/test_audit_logging.py::TestAuditLogCompliance::test_all_financial_operations_logged PASSED [ 50%]
 tests/integration/test_audit_logging.py::TestAuditLogCompliance::test_audit_logs_immutable PASSED [ 51%]
 tests/integration/test_audit_logging.py::TestAuditLogCompliance::test_audit_logs_retained_30_days PASSED [ 52%]
 tests/integration/test_rate_limiting.py::TestRateLimiting::test_login_rate_limit PASSED [ 53%]
 tests/integration/test_rate_limiting.py::TestRateLimiting::test_register_rate_limit FAILED [ 54%]
-tests/integration/test_rate_limiting.py::TestRateLimiting::test_transaction_rate_limit PASSED [ 55%]
-tests/integration/test_rate_limiting.py::TestRateLimiting::test_rate_limit_headers PASSED [ 55%]
+tests/integration/test_rate_limiting.py::TestRateLimiting::test_transaction_rate_limit FAILED [ 55%]
+tests/integration/test_rate_limiting.py::TestRateLimiting::test_rate_limit_headers FAILED [ 55%]
 tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_fallback_limiter_when_redis_down PASSED [ 56%]
-tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_rate_limit_per_user PASSED [ 57%]
+tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_rate_limit_per_user FAILED [ 57%]
 tests/integration/test_rate_limiting.py::TestRateLimitRecovery::test_rate_limit_window_reset PASSED [ 58%]
 tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_ai_endpoints_stricter_limit FAILED [ 59%]
-tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_read_endpoints_lenient_limit PASSED [ 60%]
+tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_read_endpoints_lenient_limit FAILED [ 60%]
 tests/integration/test_rate_limiting.py::TestRateLimitSlidingWindow::test_sliding_window_behavior PASSED [ 61%]
 tests/unit/test_portfolio_service.py::TestTradeBuy::test_buy_trade_success PASSED [ 62%]
 tests/unit/test_portfolio_service.py::TestTradeBuy::test_buy_trade_insufficient_funds PASSED [ 63%]
@@ -118,1278 +119,591 @@ tests/unit/test_transaction_service.py::TestIdempotency::test_different_idempote
 tests/unit/test_transaction_service.py::TestTransactionValidation::test_validate_transaction_type PASSED [ 98%]
 tests/unit/test_transaction_service.py::TestTransactionValidation::test_validate_category PASSED [ 99%]
 tests/unit/test_transaction_service.py::TestTransactionValidation::test_sanitize_description PASSED [100%]
+
+==================================== ERRORS ====================================
+__ ERROR at setup of TestTransactionE2E.test_create_and_retrieve_transaction ___
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"57b0ae23-3366-456c-86d2-68433157bd3c"}
+____ ERROR at setup of TestTransactionE2E.test_transaction_affects_balance _____
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"4be4263b-8e40-4f4e-8db9-77c064e7d641"}
+_ ERROR at setup of TestTransactionE2E.test_delete_transaction_reverses_balance _
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"27d390fd-1a2d-499c-8998-bc780a61ebc3"}
+____ ERROR at setup of TestTransactionE2E.test_insufficient_funds_rejected _____
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"a4ac6581-84a7-40d7-a214-e2b05dffe9b6"}
+______ ERROR at setup of TestTransactionE2E.test_transaction_idempotency _______
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"14905c56-6450-43a6-8e65-f7910a3e7ff5"}
+_ ERROR at setup of TestTransactionE2E.test_concurrent_transactions_no_race_condition _
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"3041c78c-502e-4fc5-aa8c-6d0510a96cb9"}
+_______ ERROR at setup of TestTransactionE2E.test_transaction_validation _______
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"b4ac8ecb-ea8a-41fe-a5a0-5f6b1a88b564"}
+___ ERROR at setup of TestTransactionE2E.test_dashboard_aggregates_correctly ___
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"83ef0315-868d-4523-9974-2ff151762077"}
+______ ERROR at setup of TestTransactionPagination.test_transaction_limit ______
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"8d4ab8a5-5ba5-49f1-b20b-fb0545c33a15"}
+____ ERROR at setup of TestTransactionPagination.test_transaction_max_limit ____
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:458: in setup
+    return super().setup()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:743: in pytest_fixture_setup
+    hook_result = yield
+                  ^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:313: in _asyncgen_fixture_wrapper
+    result = runner.run(setup(), context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pytest_asyncio/plugin.py:309: in setup
+    res = await gen_obj.__anext__()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:46: in auth_client
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"5fa0c65d-d41f-4ca1-989a-f1c1b3c7e0ec"}
 =================================== FAILURES ===================================
 _________________ test_concurrent_transactions_no_double_spend _________________
-tests/concurrency/test_race_conditions.py:73: in test_concurrent_transactions_no_double_spend
-    assert (
-E   AssertionError: Expected 5 failed, got 0
-E   assert 0 == (10 - 5)
+tests/concurrency/test_race_conditions.py:70: in test_concurrent_transactions_no_double_spend
+    assert successful == int(
+E   AssertionError: Expected 5 successful, got 10
+E   assert 10 == 5
+E    +  where 5 = int((5000.0 / 1000))
 _____________________ test_idempotency_prevents_duplicates _____________________
 tests/concurrency/test_race_conditions.py:122: in test_idempotency_prevents_duplicates
     assert (
 E   AssertionError: All requests should return same transaction
 E   assert 10 == 1
 E    +  where 10 = len({6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
-E    +    where {6, 7, 8, 9, 10, 11, 12, 13, 14, 15} = set([6, 15, 10, 8, 14, 9, 11, 13, 7, 12])
+E    +    where {6, 7, 8, 9, 10, 11, 12, 13, 14, 15} = set([6, 12, 7, 10, 15, 11, 14, 8, 13, 9])
 __________________ test_concurrent_deletion_no_double_credit ___________________
-tests/concurrency/test_race_conditions.py:232: in test_concurrent_deletion_no_double_credit
-    assert successful == 1, f"Expected 1 successful deletion, got {successful}"
-E   AssertionError: Expected 1 successful deletion, got 0
-E   assert 0 == 1
+tests/concurrency/test_race_conditions.py:193: in test_concurrent_deletion_no_double_credit
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"880a3e64-189f-478a-a64c-77670adda8bc"}
 ______________________ test_concurrent_trade_idempotency _______________________
-tests/concurrency/test_race_conditions.py:276: in test_concurrent_trade_idempotency
-    assert all(r.status_code == 200 for r in responses)
-E   assert False
-E    +  where False = all(<generator object test_concurrent_trade_idempotency.<locals>.<genexpr> at 0x7f85e7b53850>)
+tests/concurrency/test_race_conditions.py:250: in test_concurrent_trade_idempotency
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"9cd653b7-565f-4d10-9a97-1df180d31f1d"}
+_______________________ test_concurrent_mixed_operations _______________________
+tests/concurrency/test_race_conditions.py:301: in test_concurrent_mixed_operations
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"2cf01d68-ef83-43b3-b669-0f8001d38810"}
+____________________ TestRegistration.test_register_success ____________________
+tests/e2e/test_auth_flow.py:33: in test_register_success
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
+________________ TestRegistration.test_register_duplicate_email ________________
+tests/e2e/test_auth_flow.py:57: in test_register_duplicate_email
+    assert response1.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
 __________________ TestRegistration.test_register_rate_limit ___________________
-tests/e2e/test_auth_flow.py:140: in test_register_rate_limit
-    assert response.status_code == 429
-E   assert 200 == 429
-E    +  where 200 = <Response [200 OK]>.status_code
-_____________________ TestLogin.test_login_wrong_password ______________________
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
-    yield
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
-    resp = await self._pool.handle_async_request(req)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:256: in handle_async_request
-    raise exc from None
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
-    response = await connection.handle_async_request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
-    return await self._connection.handle_async_request(request)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
-    raise exc
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
-    ) = await self._receive_response_headers(**kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
-    event = await self._receive_event(timeout=timeout)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:217: in _receive_event
-    data = await self._network_stream.read(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:32: in read
-    with map_exceptions(exc_map):
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
-    self.gen.throw(typ, value, traceback)
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
-    raise to_exc(exc) from exc
-E   httpcore.ReadError
-The above exception was the direct cause of the following exception:
-tests/e2e/test_auth_flow.py:184: in test_login_wrong_password
-    response = await client.post(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
-    return await self.request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1530: in request
-    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1617: in send
-    response = await self._send_handling_auth(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1645: in _send_handling_auth
-    response = await self._send_handling_redirects(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1682: in _send_handling_redirects
-    response = await self._send_single_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1719: in _send_single_request
-    response = await transport.handle_async_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:365: in handle_async_request
-    with map_httpcore_exceptions():
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
-    self.gen.throw(typ, value, traceback)
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
-    raise mapped_exc(message) from exc
-E   httpx.ReadError
+tests/e2e/test_auth_flow.py:137: in test_register_rate_limit
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
+_________________________ TestLogin.test_login_success _________________________
+tests/e2e/test_auth_flow.py:164: in test_login_success
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = <Response [401 Unauthorized]>.status_code
 _________________ TestLogin.test_login_case_insensitive_email __________________
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
-    yield
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
-    resp = await self._pool.handle_async_request(req)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:256: in handle_async_request
-    raise exc from None
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
-    response = await connection.handle_async_request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
-    return await self._connection.handle_async_request(request)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
-    raise exc
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
-    raise exc
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:106: in handle_async_request
-    ) = await self._receive_response_headers(**kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
-    event = await self._receive_event(timeout=timeout)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:231: in _receive_event
-    raise RemoteProtocolError(msg)
-E   httpcore.RemoteProtocolError: Server disconnected without sending a response.
-The above exception was the direct cause of the following exception:
-tests/integration/test_rate_limiting.py:220: in test_ai_endpoints_stricter_limit
-    response = await client.post("/api/predict")
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
-    return await self.request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1530: in request
-    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1617: in send
-    response = await self._send_handling_auth(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1645: in _send_handling_auth
-    response = await self._send_handling_redirects(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1682: in _send_handling_redirects
-    response = await self._send_single_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1719: in _send_single_request
-    response = await transport.handle_async_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:365: in handle_async_request
-    with map_httpcore_exceptions():
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
-    self.gen.throw(typ, value, traceback)
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
-    raise mapped_exc(message) from exc
-E   httpx.RemoteProtocolError: Server disconnected without sending a response.
-=============================== warnings summary ===============================
-tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
-  /home/runner/work/FinKernel/FinKernel/microservices/shared/models.py:20: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
-    Base = declarative_base()
-tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
-tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
-  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pydantic/_internal/_config.py:268: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
-    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================================ tests coverage ================================
-_______________ coverage: platform linux, python 3.11.15-final-0 _______________
-Coverage XML written to file coverage.xml
-=========================== short test summary info ============================
-FAILED tests/concurrency/test_race_conditions.py::test_concurrent_transactions_no_double_spend - AssertionError: Expected 5 failed, got 0
-assert 0 == (10 - 5)
-FAILED tests/concurrency/test_race_conditions.py::test_idempotency_prevents_duplicates - AssertionError: All requests should return same transaction
-assert 10 == 1
- +  where 10 = len({6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
- +    where {6, 7, 8, 9, 10, 11, 12, 13, 14, 15} = set([6, 15, 10, 8, 14, 9, 11, 13, 7, 12])
-FAILED tests/concurrency/test_race_conditions.py::test_concurrent_deletion_no_double_credit - AssertionError: Expected 1 successful deletion, got 0
-assert 0 == 1
-FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trade_idempotency - assert False
- +  where False = all(<generator object test_concurrent_trade_idempotency.<locals>.<genexpr> at 0x7f85e7b53850>)
-FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_rate_limit - assert 200 == 429
- +  where 200 = <Response [200 OK]>.status_code
-FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_wrong_password - httpx.ReadError
-FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_case_insensitive_email - httpx.ReadError
-FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_token_success - AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"2bb46054-5dd4-4f7a-8644-d0cd734e82e1"}
-assert 500 == 200
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_with_access_token_fails - AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"024f1c8f-d1c6-421e-86b9-13dfc5d192f8"}
-assert 500 == 200
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_valid_token_grants_access - AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"06d7afac-01b6-454c-b559-3f398bec0fb2"}
-assert 500 == 200
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/e2e/test_auth_flow.py::TestTokenExpiration::test_access_token_short_lived - KeyError: 'expires_in'
-FAILED tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance - assert 500 == 200
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected - assert 500 == 400
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency - assert 31 == 32
-FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_deletion_logged - assert 500 == 200
- +  where 500 = <Response [500 Internal Server Error]>.status_code
-FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_register_rate_limit - assert 200 == 429
- +  where 200 = <Response [200 OK]>.status_code
-FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_ai_endpoints_stricter_limit - httpx.RemoteProtocolError: Server disconnected without sending a response.
-============ 17 failed, 92 passed, 3 warnings in 150.01s (0:02:30) =============
-    ) = await self._receive_response_headers(**kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:177: in _receive_response_headers
-    event = await self._receive_event(timeout=timeout)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:217: in _receive_event
-    data = await self._network_stream.read(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_backends/anyio.py:32: in read
-    with map_exceptions(exc_map):
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
-    self.gen.throw(typ, value, traceback)
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
-    raise to_exc(exc) from exc
-E   httpcore.ReadError
-The above exception was the direct cause of the following exception:
-tests/e2e/test_auth_flow.py:221: in test_login_case_insensitive_email
-    response = await client.post(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1848: in post
-    return await self.request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1530: in request
-    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1617: in send
-    response = await self._send_handling_auth(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1645: in _send_handling_auth
-    response = await self._send_handling_redirects(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1682: in _send_handling_redirects
-    response = await self._send_single_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1719: in _send_single_request
-    response = await transport.handle_async_request(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:365: in handle_async_request
-    with map_httpcore_exceptions():
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/contextlib.py:158: in __exit__
-    self.gen.throw(typ, value, traceback)
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:83: in map_httpcore_exceptions
-    raise mapped_exc(message) from exc
-E   httpx.ReadError
+tests/e2e/test_auth_flow.py:225: in test_login_case_insensitive_email
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = <Response [401 Unauthorized]>.status_code
 _________________ TestTokenRefresh.test_refresh_token_success __________________
 tests/e2e/test_auth_flow.py:242: in test_refresh_token_success
     assert (
-E   AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"2bb46054-5dd4-4f7a-8644-d0cd734e82e1"}
-E   assert 500 == 200
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+E   AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"7e63d1cd-8948-40ec-9d66-d93327f6aa27"}
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
 ____________ TestTokenRefresh.test_refresh_with_access_token_fails _____________
 tests/e2e/test_auth_flow.py:281: in test_refresh_with_access_token_fails
     assert (
-E   AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"024f1c8f-d1c6-421e-86b9-13dfc5d192f8"}
-E   assert 500 == 200
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+E   AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"f75fb94c-1a30-43ca-a587-48739ee2f786"}
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
 _______________ TestAuthorization.test_valid_token_grants_access _______________
 tests/e2e/test_auth_flow.py:319: in test_valid_token_grants_access
     assert (
-E   AssertionError: Registration failed: 500 - {"error":"internal_error","message":"An internal error occurred","request_id":"06d7afac-01b6-454c-b559-3f398bec0fb2"}
-E   assert 500 == 200
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+E   AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"e30d8739-7b52-4443-b009-2b9e4f328cee"}
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
+__________ TestAdminAuthorization.test_admin_endpoint_requires_admin ___________
+tests/e2e/test_auth_flow.py:367: in test_admin_endpoint_requires_admin
+    token = register_response.json()["access_token"]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'access_token'
 ______________ TestTokenExpiration.test_access_token_short_lived _______________
 tests/e2e/test_auth_flow.py:391: in test_access_token_short_lived
     assert data["expires_in"] == 900  # 15 minutes in seconds
            ^^^^^^^^^^^^^^^^^^
 E   KeyError: 'expires_in'
-_________ TestTransactionE2E.test_delete_transaction_reverses_balance __________
-tests/e2e/test_transaction_flow.py:122: in test_delete_transaction_reverses_balance
-    assert delete_response.status_code == 200
-E   assert 500 == 200
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
-_____________ TestTransactionE2E.test_insufficient_funds_rejected ______________
-tests/e2e/test_transaction_flow.py:147: in test_insufficient_funds_rejected
-    assert response.status_code == 400
-E   assert 500 == 400
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
-_______________ TestTransactionE2E.test_transaction_idempotency ________________
-tests/e2e/test_transaction_flow.py:186: in test_transaction_idempotency
-    assert response1.json()["id"] == response2.json()["id"]
-E   assert 31 == 32
+______ TestTransactionSecurity.test_cannot_access_other_user_transactions ______
+tests/e2e/test_transaction_flow.py:377: in test_cannot_access_other_user_transactions
+    auth_data1 = await register_and_get_token(client)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"39ce162b-9584-47db-9f2a-301c7fad8d4b"}
+______________ TestAuditLogging.test_transaction_creation_logged _______________
+tests/integration/test_audit_logging.py:31: in test_transaction_creation_logged
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"70e0b99f-be20-4b6f-82b0-a5bf02318032"}
 ______________ TestAuditLogging.test_transaction_deletion_logged _______________
-tests/integration/test_audit_logging.py:73: in test_transaction_deletion_logged
-    assert delete_response.status_code == 200
-E   assert 500 == 200
-E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+tests/integration/test_audit_logging.py:55: in test_transaction_deletion_logged
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"04337389-769c-4adc-a3e8-735146b7e5dd"}
+_________________ TestAuditLogging.test_trade_execution_logged _________________
+tests/integration/test_audit_logging.py:85: in test_trade_execution_logged
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"b94be4da-1900-4290-aa86-1740776d739d"}
+_________________ TestAuditLogging.test_balance_change_logged __________________
+tests/integration/test_audit_logging.py:148: in test_balance_change_logged
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"22d07d09-ddfd-405d-a221-458ba139462d"}
+____________ TestAuditLogContent.test_audit_log_contains_request_id ____________
+tests/integration/test_audit_logging.py:205: in test_audit_log_contains_request_id
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"40fb8a9d-1cb1-494b-bf8c-253ac44e3b0b"}
+_____________ TestAuditLogContent.test_audit_log_contains_user_id ______________
+tests/integration/test_audit_logging.py:236: in test_audit_log_contains_user_id
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"1e68254a-dbd6-4d64-bd0f-4a34fd3bde35"}
+_______ TestAuditLogFailure.test_operation_succeeds_even_if_audit_fails ________
+tests/integration/test_audit_logging.py:287: in test_operation_succeeds_even_if_audit_fails
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"689af8e7-bd13-4e2d-9e9b-33b0e399a6ec"}
 __________________ TestRateLimiting.test_register_rate_limit ___________________
-tests/integration/test_rate_limiting.py:69: in test_register_rate_limit
-    assert response.status_code == 429
-E   assert 200 == 429
-E    +  where 200 = <Response [200 OK]>.status_code
+tests/integration/test_rate_limiting.py:66: in test_register_rate_limit
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = <Response [429 Too Many Requests]>.status_code
+_________________ TestRateLimiting.test_transaction_rate_limit _________________
+tests/integration/test_rate_limiting.py:76: in test_transaction_rate_limit
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"6f57a087-0083-4e13-b52c-5c99f6883600"}
+___________________ TestRateLimiting.test_rate_limit_headers ___________________
+tests/integration/test_rate_limiting.py:104: in test_rate_limit_headers
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"d38313ce-966c-4d66-8253-e7170ba2d498"}
+________________ TestRateLimitFallback.test_rate_limit_per_user ________________
+tests/integration/test_rate_limiting.py:143: in test_rate_limit_per_user
+    auth_data1 = await register_and_get_token(client)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"6c8a6cce-8778-4ad5-b254-119398295fd9"}
 ___________ TestRateLimitByEndpoint.test_ai_endpoints_stricter_limit ___________
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:66: in map_httpcore_exceptions
-    yield
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_transports/default.py:366: in handle_async_request
-    resp = await self._pool.handle_async_request(req)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:256: in handle_async_request
-    raise exc from None
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection_pool.py:236: in handle_async_request
-    response = await connection.handle_async_request(
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/connection.py:103: in handle_async_request
-    return await self._connection.handle_async_request(request)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpcore/_async/http11.py:136: in handle_async_request
+tests/integration/test_rate_limiting.py:214: in test_ai_endpoints_stricter_limit
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"fecdc9f7-c714-4fda-8895-302511276617"}
+__________ TestRateLimitByEndpoint.test_read_endpoints_lenient_limit ___________
+tests/integration/test_rate_limiting.py:233: in test_read_endpoints_lenient_limit
+    auth_data = await register_and_get_token(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:33: in register_and_get_token
+    return await _do_register(client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/helpers.py:41: in _do_register
+    raise Exception(
+E   Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"a576408c-e1fb-4f4f-93f2-9d56ff9a5f96"}
+=============================== warnings summary ===============================
+tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
+  /home/runner/work/FinKernel/FinKernel/microservices/shared/models.py:20: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
+tests/unit/test_transaction_service.py::TestTransactionCreation::test_create_transaction_success
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pydantic/_internal/_config.py:268: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.15-final-0 _______________
+
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_transactions_no_double_spend - AssertionError: Expected 5 successful, got 10
+assert 10 == 5
+ +  where 5 = int((5000.0 / 1000))
+FAILED tests/concurrency/test_race_conditions.py::test_idempotency_prevents_duplicates - AssertionError: All requests should return same transaction
+assert 10 == 1
+ +  where 10 = len({6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
+ +    where {6, 7, 8, 9, 10, 11, 12, 13, 14, 15} = set([6, 12, 7, 10, 15, 11, 14, 8, 13, 9])
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_deletion_no_double_credit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"880a3e64-189f-478a-a64c-77670adda8bc"}
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trade_idempotency - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"9cd653b7-565f-4d10-9a97-1df180d31f1d"}
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_mixed_operations - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 291 seconds","request_id":"2cf01d68-ef83-43b3-b669-0f8001d38810"}
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_success - assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_duplicate_email - assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_rate_limit - assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_success - assert 401 == 200
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_case_insensitive_email - assert 401 == 200
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_token_success - AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"7e63d1cd-8948-40ec-9d66-d93327f6aa27"}
+assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_with_access_token_fails - AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"f75fb94c-1a30-43ca-a587-48739ee2f786"}
+assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_valid_token_grants_access - AssertionError: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"e30d8739-7b52-4443-b009-2b9e4f328cee"}
+assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/e2e/test_auth_flow.py::TestAdminAuthorization::test_admin_endpoint_requires_admin - KeyError: 'access_token'
+FAILED tests/e2e/test_auth_flow.py::TestTokenExpiration::test_access_token_short_lived - KeyError: 'expires_in'
+FAILED tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_cannot_access_other_user_transactions - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"39ce162b-9584-47db-9f2a-301c7fad8d4b"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_creation_logged - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"70e0b99f-be20-4b6f-82b0-a5bf02318032"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_deletion_logged - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"04337389-769c-4adc-a3e8-735146b7e5dd"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_trade_execution_logged - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"b94be4da-1900-4290-aa86-1740776d739d"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_balance_change_logged - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"22d07d09-ddfd-405d-a221-458ba139462d"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_request_id - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"40fb8a9d-1cb1-494b-bf8c-253ac44e3b0b"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_user_id - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"1e68254a-dbd6-4d64-bd0f-4a34fd3bde35"}
+FAILED tests/integration/test_audit_logging.py::TestAuditLogFailure::test_operation_succeeds_even_if_audit_fails - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"689af8e7-bd13-4e2d-9e9b-33b0e399a6ec"}
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_register_rate_limit - assert 429 == 200
+ +  where 429 = <Response [429 Too Many Requests]>.status_code
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_transaction_rate_limit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"6f57a087-0083-4e13-b52c-5c99f6883600"}
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_rate_limit_headers - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"d38313ce-966c-4d66-8253-e7170ba2d498"}
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_rate_limit_per_user - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"6c8a6cce-8778-4ad5-b254-119398295fd9"}
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_ai_endpoints_stricter_limit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"fecdc9f7-c714-4fda-8895-302511276617"}
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_read_endpoints_lenient_limit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 288 seconds","request_id":"a576408c-e1fb-4f4f-93f2-9d56ff9a5f96"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_create_and_retrieve_transaction - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"57b0ae23-3366-456c-86d2-68433157bd3c"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_affects_balance - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"4be4263b-8e40-4f4e-8db9-77c064e7d641"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 290 seconds","request_id":"27d390fd-1a2d-499c-8998-bc780a61ebc3"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"a4ac6581-84a7-40d7-a214-e2b05dffe9b6"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"14905c56-6450-43a6-8e65-f7910a3e7ff5"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_concurrent_transactions_no_race_condition - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"3041c78c-502e-4fc5-aa8c-6d0510a96cb9"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_validation - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"b4ac8ecb-ea8a-41fe-a5a0-5f6b1a88b564"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_dashboard_aggregates_correctly - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"83ef0315-868d-4523-9974-2ff151762077"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_limit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"8d4ab8a5-5ba5-49f1-b20b-fb0545c33a15"}
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_max_limit - Exception: Registration failed: 429 - {"error":"http_error","message":"Rate limit exceeded. Retry after 289 seconds","request_id":"5fa0c65d-d41f-4ca1-989a-f1c1b3c7e0ec"}
+============ 29 failed, 70 passed, 3 warnings, 10 errors in 15.05s =============
 Error: Process completed with exit code 1.
-
-
-=== API Gateway Logs ===
-2026-04-12 09:04:25 | INFO     | startup | ✓ Configuration validated successfully
-2026-04-12 09:04:25 | INFO     | startup | ✓ Redis client available
-2026-04-12 09:04:25 | INFO     | startup | ✓ SQLAlchemy available
-2026-04-12 09:04:25 | INFO     | startup | ============================================================
-2026-04-12 09:04:25 | INFO     | startup | Service ready to start
-2026-04-12 09:04:25 | INFO     | startup | ============================================================
-/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py:204: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
-  @validator("password")
-/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py:240: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
-  @validator("amount")
-/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py:244: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
-  @validator("description")
-INFO:     Started server process [3345]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:43290 - "GET /health HTTP/1.1" 200 OK
-2026-04-12 09:04:29 | INFO     | gateway_secure | New user registered: test_130226e8@test.com (id=1)
-INFO:     127.0.0.1:43302 - "POST /api/auth/register HTTP/1.1" 200 OK
-2026-04-12 09:04:29 | INFO     | auth_secure | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:29 | WARNING  | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Network error on attempt 1: GET http://localhost:8002/predict/1 - ConnectError: All connection attempts failed
-2026-04-12 09:04:29 | INFO     | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:30 | WARNING  | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Network error on attempt 2: GET http://localhost:8002/predict/1 - ConnectError: All connection attempts failed
-2026-04-12 09:04:30 | INFO     | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:31 | WARNING  | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] Network error on attempt 3: GET http://localhost:8002/predict/1 - ConnectError: All connection attempts failed
-2026-04-12 09:04:31 | ERROR    | http_client | [1b7f62a6-07ae-42f0-bc2e-2369f272ef1c] All 3 retry attempts failed for GET http://localhost:8002/predict/1
-2026-04-12 09:04:31 | WARNING  | gateway_secure | AI prediction unavailable for user 1: All connection attempts failed
-INFO:     127.0.0.1:43302 - "GET /api/dashboard HTTP/1.1" 200 OK
-2026-04-12 09:04:31 | INFO     | auth_secure | [c899fe87-3fad-4eea-be32-29f06ce54e96] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [3e264470-e82d-4a1d-8bee-65e430cff77f] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [2f64ea0c-1404-4a31-bbcc-bd2cad01f2bd] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [52e1e417-0cc4-4acc-8948-3cf4fa9bb4cf] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [8b40194e-e636-45e4-9c3b-d3ea858d4bf2] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [ca762c57-9f38-40fa-8bfb-a9a0e9a943a5] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [c3202082-6272-46a2-9137-bd13033c7311] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [17497157-4a2b-4190-98e1-7cb50a1e4d1f] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [889638d4-ab9d-4017-891b-dd7faaed997e] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-2026-04-12 09:04:31 | INFO     | auth_secure | [40fc0802-5e15-4ec9-8f10-b873f605ab74] Authenticated user_id=1, email=test_130226e8@test.com, admin=False
-INFO:     127.0.0.1:43302 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57014 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57070 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57052 - "POST /api/transactions HTTP/1.1" 200 OK
-2026-04-12 09:04:31 | ERROR    | gateway_secure | [52e1e417-0cc4-4acc-8948-3cf4fa9bb4cf] Unhandled exception: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57026 - "POST /api/transactions HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/applications.py", line 1106, in __call__
-    await super().__call__(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2026-04-12 09:04:31 | ERROR    | gateway_secure | [889638d4-ab9d-4017-891b-dd7faaed997e] Unhandled exception: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57066 - "POST /api/transactions HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/applications.py", line 1106, in __call__
-    await super().__call__(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2026-04-12 09:04:31 | ERROR    | gateway_secure | [2f64ea0c-1404-4a31-bbcc-bd2cad01f2bd] Unhandled exception: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57022 - "POST /api/transactions HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/applications.py", line 1106, in __call__
-    await super().__call__(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2026-04-12 09:04:31 | ERROR    | gateway_secure | [8b40194e-e636-45e4-9c3b-d3ea858d4bf2] Unhandled exception: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57040 - "POST /api/transactions HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/applications.py", line 1106, in __call__
-    await super().__call__(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2026-04-12 09:04:31 | ERROR    | gateway_secure | [ca762c57-9f38-40fa-8bfb-a9a0e9a943a5] Unhandled exception: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57044 - "POST /api/transactions HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 98, in receive
-    return self.receive_nowait()
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 93, in receive_nowait
-    raise WouldBlock
-anyio.WouldBlock
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 78, in call_next
-    message = await recv_stream.receive()
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/anyio/streams/memory.py", line 118, in receive
-    raise EndOfStream
-anyio.EndOfStream
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/applications.py", line 1106, in __call__
-    await super().__call__(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
-    await self.app(scope, receive, _send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/cors.py", line 83, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 17, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 108, in __call__
-    response = await self.dispatch_func(request, call_next)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/security_hardening.py", line 63, in dispatch
-    response = await call_next(request)
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 84, in call_next
-    raise app_exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/base.py", line 70, in coro
-    await self.app(scope, receive_or_disconnect, send_no_error)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
-    await self.app(scope, receive, sender)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
-    raise e
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
-    await route.handle(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 274, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/api-gateway/main_secure.py", line 414, in create_transaction
-    resp = await default_client.post(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 39, in post
-    return await self._request_with_retry(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/FinKernel/FinKernel/microservices/shared/http_client.py", line 110, in _request_with_retry
-    response.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_models.py", line 758, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '400 Bad Request' for url 'http://localhost:8001/transactions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-INFO:     127.0.0.1:57060 - "POST /api/transactions HTTP/1.1" 200 OK
-2026-04-12 09:04:32 | INFO     | gateway_secure | New user registered: test_b584fe6a@test.com (id=2)
-INFO:     127.0.0.1:57072 - "POST /api/auth/register HTTP/1.1" 200 OK
-2026-04-12 09:04:32 | INFO     | auth_secure | [05533bb7-428e-4d14-8af8-346c8b934aaf] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:32 | WARNING  | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] Network error on attempt 1: GET http://localhost:8002/predict/2 - ConnectError: All connection attempts failed
-2026-04-12 09:04:32 | INFO     | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:32 | WARNING  | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] Network error on attempt 2: GET http://localhost:8002/predict/2 - ConnectError: All connection attempts failed
-2026-04-12 09:04:32 | INFO     | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:33 | WARNING  | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] Network error on attempt 3: GET http://localhost:8002/predict/2 - ConnectError: All connection attempts failed
-2026-04-12 09:04:33 | ERROR    | http_client | [05533bb7-428e-4d14-8af8-346c8b934aaf] All 3 retry attempts failed for GET http://localhost:8002/predict/2
-2026-04-12 09:04:33 | WARNING  | gateway_secure | AI prediction unavailable for user 2: All connection attempts failed
-INFO:     127.0.0.1:57072 - "GET /api/dashboard HTTP/1.1" 200 OK
-2026-04-12 09:04:33 | INFO     | auth_secure | [d811f56c-f40b-427f-9395-ef8bceefd051] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [45865cac-2c88-4800-93e9-fc9e540854a8] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [755d42e2-dd57-4d49-8888-133717c9247e] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [6466556c-6b1e-472a-99c5-70239f8b5bda] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [252035cc-400d-473a-85ba-1c6bedb0bb43] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [31bfe3c4-f2ed-49f5-92b0-fc00189832c8] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [854ee864-e930-44a8-a4f7-abeca569891e] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [de0a1b5d-3f48-4348-aec2-b3c6e3803a72] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [6fb8d7d2-a704-48e5-834d-f7ba3bd748a0] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-2026-04-12 09:04:33 | INFO     | auth_secure | [945149ea-1ec2-4537-8dd7-45d70b984ac1] Authenticated user_id=2, email=test_b584fe6a@test.com, admin=False
-INFO:     127.0.0.1:57072 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57170 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57110 - "POST /api/transactions HTTP/1.1" 200 OK
-2026-04-12 09:04:41 | INFO     | auth_secure | [9d781139-fc41-4916-b643-2fa1dd9ca1db] Authenticated user_id=4, email=test_a93e02c1@test.com, admin=False
-INFO:     127.0.0.1:57134 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57094 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57144 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57174 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57158 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57124 - "POST /api/transactions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57086 - "POST /api/transactions HTTP/1.1" 200 OK
-2026-04-12 09:04:34 | INFO     | gateway_secure | New user registered: test_0a3a310d@test.com (id=3)
-INFO:     127.0.0.1:57176 - "POST /api/auth/register HTTP/1.1" 200 OK
-2026-04-12 09:04:34 | INFO     | auth_secure | [0f656450-3ae3-414c-a86c-537eea35f156] Authenticated user_id=3, email=test_0a3a310d@test.com, admin=False
-2026-04-12 09:04:34 | WARNING  | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] Network error on attempt 1: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:34 | INFO     | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:35 | WARNING  | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] Network error on attempt 2: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:35 | INFO     | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:36 | WARNING  | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] Network error on attempt 3: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:36 | ERROR    | http_client | [0f656450-3ae3-414c-a86c-537eea35f156] All 3 retry attempts failed for GET http://localhost:8002/predict/3
-2026-04-12 09:04:36 | WARNING  | gateway_secure | AI prediction unavailable for user 3: All connection attempts failed
-INFO:     127.0.0.1:57176 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57212 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57228 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57242 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57256 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57270 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57274 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57290 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57212 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57212 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57212 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57204 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57212 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57228 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57182 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57188 - "POST /api/trade HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57176 - "POST /api/trade HTTP/1.1" 404 Not Found
-2026-04-12 09:04:36 | INFO     | auth_secure | [763b3dcd-d229-416e-8755-6163addba63e] Authenticated user_id=3, email=test_0a3a310d@test.com, admin=False
-2026-04-12 09:04:36 | WARNING  | http_client | [763b3dcd-d229-416e-8755-6163addba63e] Network error on attempt 1: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:36 | INFO     | http_client | [763b3dcd-d229-416e-8755-6163addba63e] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:36 | WARNING  | http_client | [763b3dcd-d229-416e-8755-6163addba63e] Network error on attempt 2: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:36 | INFO     | http_client | [763b3dcd-d229-416e-8755-6163addba63e] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:37 | WARNING  | http_client | [763b3dcd-d229-416e-8755-6163addba63e] Network error on attempt 3: GET http://localhost:8002/predict/3 - ConnectError: All connection attempts failed
-2026-04-12 09:04:37 | ERROR    | http_client | [763b3dcd-d229-416e-8755-6163addba63e] All 3 retry attempts failed for GET http://localhost:8002/predict/3
-2026-04-12 09:04:37 | WARNING  | gateway_secure | AI prediction unavailable for user 3: All connection attempts failed
-INFO:     127.0.0.1:57176 - "GET /api/dashboard HTTP/1.1" 200 OK
-2026-04-12 09:04:38 | INFO     | gateway_secure | New user registered: test_a93e02c1@test.com (id=4)
-INFO:     127.0.0.1:57304 - "POST /api/auth/register HTTP/1.1" 200 OK
-2026-04-12 09:04:38 | INFO     | auth_secure | [b4de993d-cce2-45b7-a32d-67e8473ba303] Authenticated user_id=4, email=test_a93e02c1@test.com, admin=False
-2026-04-12 09:04:38 | WARNING  | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] Network error on attempt 1: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:38 | INFO     | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:38 | WARNING  | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] Network error on attempt 2: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:38 | INFO     | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:39 | WARNING  | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] Network error on attempt 3: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:39 | ERROR    | http_client | [b4de993d-cce2-45b7-a32d-67e8473ba303] All 3 retry attempts failed for GET http://localhost:8002/predict/4
-2026-04-12 09:04:39 | WARNING  | gateway_secure | AI prediction unavailable for user 4: All connection attempts failed
-INFO:     127.0.0.1:57304 - "GET /api/dashboard HTTP/1.1" 200 OK
-2026-04-12 09:04:39 | INFO     | auth_secure | [c98e2fd5-0a0a-4d3d-a839-f4e95caef5f6] Authenticated user_id=4, email=test_a93e02c1@test.com, admin=False
-INFO:     127.0.0.1:57304 - "POST /api/transactions HTTP/1.1" 200 OK
-2026-04-12 09:04:39 | INFO     | auth_secure | [13b22d91-b8a4-4526-9924-c71378935fff] Authenticated user_id=4, email=test_a93e02c1@test.com, admin=False
-2026-04-12 09:04:39 | WARNING  | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] Network error on attempt 1: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:39 | INFO     | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] Retrying in 0.50s (attempt 1/3)
-2026-04-12 09:04:40 | WARNING  | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] Network error on attempt 2: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:40 | INFO     | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] Retrying in 1.00s (attempt 2/3)
-2026-04-12 09:04:41 | WARNING  | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] Network error on attempt 3: GET http://localhost:8002/predict/4 - ConnectError: All connection attempts failed
-2026-04-12 09:04:41 | ERROR    | http_client | [13b22d91-b8a4-4526-9924-c71378935fff] All 3 retry attempts failed for GET http://localhost:8002/predict/4
-2026-04-12 09:04:41 | WARNING  | gateway_secure | AI prediction unavailable for user 4: All connection attempts failed
-INFO:     127.0.0.1:57304 - "GET /api/dashboard HTTP/1.1" 200 OK
-2026-04-12 09:04:41 | INFO     | auth_secure | [0d280b60-c72a-49cd-9f02-2851b3805d6f] Authenticated user_id=4, email=test_a93e02c1
