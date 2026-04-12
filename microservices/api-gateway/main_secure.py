@@ -422,7 +422,9 @@ async def create_transaction(
     # Check for errors from transaction service
     if resp.status_code != 200:
         error_data = resp.json() if resp.content else {"detail": "Transaction failed"}
-        raise HTTPException(resp.status_code, error_data.get("detail", "Transaction failed"))
+        raise HTTPException(
+            resp.status_code, error_data.get("detail", "Transaction failed")
+        )
 
     result = resp.json()
 
