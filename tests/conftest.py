@@ -5,6 +5,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+import pytest_asyncio
 
 # Add microservices to Python path
 microservices_path = Path(__file__).parent.parent / "microservices"
@@ -22,24 +23,6 @@ os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("BASE_URL", "http://localhost:8000")
 
 
-# Configure pytest-asyncio
-@pytest.fixture(scope="session")
-def event_loop_policy():
-    return (
-        asyncio.WindowsProactorEventLoopPolicy()
-        if sys.platform == "win32"
-        else asyncio.DefaultEventLoopPolicy()
-    )
-
-
-@pytest.fixture(scope="session")
-def event_loop(event_loop_policy):
-    policy = event_loop_policy
-    loop = policy.new_event_loop()
-    yield loop
-    loop.close()
-
-
 # Base URL for API tests
 @pytest.fixture
 def base_url():
@@ -47,7 +30,7 @@ def base_url():
 
 
 # HTTP client fixture
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(base_url):
     """Async HTTP client for API tests"""
     async with httpx.AsyncClient(base_url=base_url, timeout=10.0) as client:
@@ -55,7 +38,7 @@ async def client(base_url):
 
 
 # Authenticated client fixture
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_client(client):
     """Async HTTP client with authentication"""
     from tests.helpers import register_and_get_token
