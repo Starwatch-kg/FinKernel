@@ -4,9 +4,10 @@ Database Migration: Add Security Constraints and Audit Tables
 Run with: alembic upgrade head
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers
 revision = "security_hardening_v1"

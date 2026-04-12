@@ -1,11 +1,12 @@
 """Network Security Middleware"""
 
-from fastapi import Request, HTTPException
+import os
+
+from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
+from shared.logger import setup_logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from shared.logger import setup_logger
-import os
 
 logger = setup_logger("network_security")
 

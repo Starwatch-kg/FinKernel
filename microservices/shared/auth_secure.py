@@ -1,13 +1,14 @@
 """Production-grade authentication and authorization system"""
 
-import jwt
-import bcrypt
-from datetime import datetime, timedelta
-from typing import Optional, Dict
-from fastapi import HTTPException, Header, Request
-from functools import wraps
 import os
 import sys
+from datetime import datetime, timedelta
+from functools import wraps
+from typing import Dict, Optional
+
+import bcrypt
+import jwt
+from fastapi import Header, HTTPException, Request
 
 sys.path.append("/app")
 

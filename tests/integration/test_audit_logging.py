@@ -3,12 +3,13 @@ Integration tests for audit logging.
 Tests that critical operations are properly logged.
 """
 
-import pytest
-from httpx import AsyncClient
-import uuid
 import json
 import sys
+import uuid
 from pathlib import Path
+
+import pytest
+from httpx import AsyncClient
 
 # Add tests directory to path
 tests_path = Path(__file__).parent.parent

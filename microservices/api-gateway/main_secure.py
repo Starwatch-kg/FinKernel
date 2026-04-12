@@ -5,48 +5,40 @@ All endpoints require authentication.
 No IDOR vulnerabilities.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Request, Query
+import os
+import sys
+from typing import Optional
+
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, EmailStr, constr, validator, Field
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, EmailStr, Field, constr, validator
 from sqlalchemy import select
-import httpx
-import sys
-import os
-from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.redis import client as redis_client, delete_cache
-from shared.schemas import TransactionCreate, TransactionResponse, PredictionResponse
-from shared.db import get_db
-from shared.models import User
-from shared.startup import validate_startup
-from shared.logger import setup_logger
-from shared.auth_secure import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    create_refresh_token,
-    get_current_user,
-    get_current_admin,
-    verify_resource_ownership,
-    is_admin_email,
-    UserContext,
-    decode_token,
-)
-from shared.security_hardening import (
-    SecurityHeadersMiddleware,
-    RequestIDMiddleware,
-    sanitize_string,
-    validate_amount,
-    RateLimitExceeded,
-)
-from shared.rate_limit_global import GlobalRateLimiter, apply_rate_limit
 from shared.audit_logger import audit_logger
+from shared.auth_secure import (UserContext, create_access_token,
+                                create_refresh_token, decode_token,
+                                get_current_admin, get_current_user,
+                                hash_password, is_admin_email, verify_password,
+                                verify_resource_ownership)
+from shared.db import get_db
 from shared.http_client import default_client, long_timeout_client
+from shared.logger import setup_logger
+from shared.models import User
+from shared.rate_limit_global import GlobalRateLimiter, apply_rate_limit
+from shared.redis import client as redis_client
+from shared.redis import delete_cache
+from shared.schemas import (PredictionResponse, TransactionCreate,
+                            TransactionResponse)
+from shared.security_hardening import (RateLimitExceeded, RequestIDMiddleware,
+                                       SecurityHeadersMiddleware,
+                                       sanitize_string, validate_amount)
+from shared.startup import validate_startup
 
 # Validate configuration on startup
 config = validate_startup()

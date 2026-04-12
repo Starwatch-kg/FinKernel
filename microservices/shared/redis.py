@@ -1,9 +1,10 @@
 """Shared Redis client with proper error handling"""
 
-import redis.asyncio as redis
 import json
 import os
 import time
+
+import redis.asyncio as redis
 from shared.logger import setup_logger
 
 logger = setup_logger("redis")
@@ -16,7 +17,8 @@ client = redis.Redis(connection_pool=pool)
 
 # Import metrics if available
 try:
-    from metrics import redis_operations_total, redis_operation_duration_seconds
+    from metrics import (redis_operation_duration_seconds,
+                         redis_operations_total)
 
     _metrics_available = True
 except ImportError:

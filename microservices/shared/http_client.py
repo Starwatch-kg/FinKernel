@@ -3,9 +3,10 @@ Resilient HTTP client with retry logic and circuit breaker.
 Used for inter-service communication.
 """
 
-import httpx
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import httpx
 from shared.logger import setup_logger
 
 logger = setup_logger("http_client")

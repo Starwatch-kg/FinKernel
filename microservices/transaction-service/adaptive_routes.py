@@ -1,18 +1,19 @@
 """Adaptive AI System Routes"""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from datetime import datetime, timedelta
-import sys
 import json
+import sys
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.db import get_db
-from shared.models import User, AdaptiveProfile, AdaptiveAnswer
-from shared.redis import get_cache, set_cache, publish_event
 from pydantic import BaseModel
+from shared.db import get_db
+from shared.models import AdaptiveAnswer, AdaptiveProfile, User
+from shared.redis import get_cache, publish_event, set_cache
 
 router = APIRouter()
 

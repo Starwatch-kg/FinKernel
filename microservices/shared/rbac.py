@@ -1,11 +1,11 @@
 """Role-Based Access Control (RBAC) System"""
 
 from functools import wraps
-from fastapi import HTTPException, Header, Request
 from typing import List, Optional
-from auth_v2 import decode_token
+
+from auth_v2 import decode_token, is_token_blacklisted
+from fastapi import Header, HTTPException, Request
 from redis.asyncio import Redis
-from auth_v2 import is_token_blacklisted
 from shared.logger import setup_logger
 
 logger = setup_logger("rbac")

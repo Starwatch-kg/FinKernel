@@ -3,13 +3,14 @@ Integration tests for rate limiting.
 Tests Redis-based rate limiting and fallback behavior.
 """
 
-import pytest
 import asyncio
-from httpx import AsyncClient
-import uuid
-from unittest.mock import patch, AsyncMock
 import sys
+import uuid
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from httpx import AsyncClient
 
 # Add tests directory to path
 tests_path = Path(__file__).parent.parent

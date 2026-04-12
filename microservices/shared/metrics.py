@@ -1,15 +1,11 @@
 """Prometheus metrics for all services"""
 
-from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 import time
+
+from fastapi import Request, Response
+from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Gauge, Histogram,
+                               generate_latest)
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # HTTP Metrics
 http_requests_total = Counter(

@@ -4,29 +4,29 @@ Race condition protection with database-level locking.
 Atomic financial operations.
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from datetime import datetime
 import sys
+from datetime import datetime
+
+from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.db import get_db
-from shared.models import User, Transaction, TransactionType
-from shared.redis import publish_event, delete_cache
-from shared.schemas import TransactionCreate, TransactionResponse
-from shared.startup import validate_startup
-from shared.logger import setup_logger
-from shared.security_hardening import RequestIDMiddleware, validate_amount
-from shared.audit_logger import audit_logger
-
-# Import route modules
-from portfolio_routes_secure import router as portfolio_router
-from learning_routes import router as learning_router
 from adaptive_routes import router as adaptive_router
+from learning_routes import router as learning_router
 from market_routes import router as market_router
 from onboarding_routes import router as onboarding_router
+# Import route modules
+from portfolio_routes_secure import router as portfolio_router
+from shared.audit_logger import audit_logger
+from shared.db import get_db
+from shared.logger import setup_logger
+from shared.models import Transaction, TransactionType, User
+from shared.redis import delete_cache, publish_event
+from shared.schemas import TransactionCreate, TransactionResponse
+from shared.security_hardening import RequestIDMiddleware, validate_amount
+from shared.startup import validate_startup
 
 config = validate_startup()
 logger = setup_logger("transaction_service_secure")

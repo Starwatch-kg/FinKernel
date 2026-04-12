@@ -1,24 +1,20 @@
 """Market Events and Gamification Routes"""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from datetime import datetime, timedelta
 import sys
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.db import get_db
-from shared.models import (
-    MarketEvent,
-    UserMarketResponse,
-    Achievement,
-    DailyMission,
-    User,
-)
-from shared.redis import get_cache, set_cache, publish_event
-from shared.logger import setup_logger
 from pydantic import BaseModel
+from shared.db import get_db
+from shared.logger import setup_logger
+from shared.models import (Achievement, DailyMission, MarketEvent, User,
+                           UserMarketResponse)
+from shared.redis import get_cache, publish_event, set_cache
 
 logger = setup_logger("market_events")
 router = APIRouter()

@@ -1,12 +1,13 @@
 """Fraud Detection Layer with risk scoring"""
 
-from datetime import datetime, timedelta
-from typing import Optional, Dict, List
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 import json
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+from redis.asyncio import Redis
 from shared.logger import setup_logger
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = setup_logger("fraud_detection")
 

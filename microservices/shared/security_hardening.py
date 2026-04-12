@@ -1,12 +1,13 @@
 """Security hardening utilities"""
 
-import re
 import html
-from typing import Any, Dict
+import re
 import secrets
+import uuid
+from typing import Any, Dict
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-import uuid
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

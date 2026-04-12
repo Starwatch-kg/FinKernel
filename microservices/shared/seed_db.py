@@ -1,14 +1,14 @@
 """Seed test data"""
 
 import asyncio
+import random
 import sys
 from datetime import datetime, timedelta
-import random
 
 sys.path.append("/app")
 
 from shared.db import async_session
-from shared.models import User, Transaction
+from shared.models import Transaction, User
 
 
 async def seed():

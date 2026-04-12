@@ -1,20 +1,12 @@
 """Shared SQLAlchemy models"""
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    ForeignKey,
-    Enum,
-    Boolean,
-    JSON,
-)
+import enum
+from datetime import datetime
+
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Enum, Float,
+                        ForeignKey, Integer, String)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
-import enum
 
 Base = declarative_base()
 

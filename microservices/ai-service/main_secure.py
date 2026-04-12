@@ -2,23 +2,24 @@
 SECURE AI SERVICE - Prompt injection protection
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime, timedelta
 import sys
 import time
+from datetime import datetime, timedelta
+
+from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
+from engine_secure import PredictionEngine
 from shared.db import get_db
-from shared.models import User, Transaction, Prediction, RiskLevel
+from shared.logger import setup_logger
+from shared.models import Prediction, RiskLevel, Transaction, User
 from shared.redis import get_cache, set_cache
 from shared.schemas import PredictionResponse
-from shared.startup import validate_startup
-from shared.logger import setup_logger
 from shared.security_hardening import RequestIDMiddleware, sanitize_for_llm
-from engine_secure import PredictionEngine
+from shared.startup import validate_startup
 
 config = validate_startup()
 logger = setup_logger("ai_service_secure")

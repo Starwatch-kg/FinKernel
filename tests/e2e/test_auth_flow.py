@@ -3,10 +3,11 @@ End-to-end tests for authentication flow.
 Tests registration, login, token refresh, and authorization.
 """
 
+import time
+import uuid
+
 import pytest
 from httpx import AsyncClient
-import uuid
-import time
 
 BASE_URL = "http://localhost:8000"
 

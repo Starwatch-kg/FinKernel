@@ -1,13 +1,14 @@
 """Enterprise Audit Logging System"""
 
 import asyncio
-from datetime import datetime
-from typing import Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Index
-from sqlalchemy.ext.declarative import declarative_base
-from shared.logger import setup_logger
 import json
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from shared.logger import setup_logger
+from sqlalchemy import JSON, Column, DateTime, Index, Integer, String
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.declarative import declarative_base
 
 logger = setup_logger("audit")
 

@@ -1,9 +1,10 @@
 """Health check system with degradation detection"""
 
+import asyncio
+from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
-from datetime import datetime
-import asyncio
+
 from shared.logger import setup_logger
 
 logger = setup_logger("health_check")

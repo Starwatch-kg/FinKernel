@@ -2,10 +2,11 @@
 
 import time
 from typing import Optional, Tuple
+
+from fastapi import HTTPException, Request
 from redis.asyncio import Redis
-from fastapi import Request, HTTPException
-from shared.logger import setup_logger
 from shared.fallback_limiter import fallback_limiter
+from shared.logger import setup_logger
 
 logger = setup_logger("rate_limiter")
 

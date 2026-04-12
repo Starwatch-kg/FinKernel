@@ -3,13 +3,14 @@ End-to-end tests for transaction flow.
 Tests complete transaction lifecycle through API gateway.
 """
 
-import pytest
 import asyncio
-from httpx import AsyncClient
+import sys
 import uuid
 from datetime import datetime
-import sys
 from pathlib import Path
+
+import pytest
+from httpx import AsyncClient
 
 # Add tests directory to path
 tests_path = Path(__file__).parent.parent

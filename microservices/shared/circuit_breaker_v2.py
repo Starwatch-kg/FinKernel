@@ -2,8 +2,9 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Optional, Callable, Any
 from enum import Enum
+from typing import Any, Callable, Optional
+
 from shared.logger import setup_logger
 
 logger = setup_logger("circuit_breaker")

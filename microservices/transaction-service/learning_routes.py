@@ -1,17 +1,18 @@
 """Learning System Routes"""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from datetime import datetime
 import sys
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.db import get_db
-from shared.models import Module, Lesson, UserProgress, User
-from shared.redis import get_cache, set_cache, publish_event
 from pydantic import BaseModel
+from shared.db import get_db
+from shared.models import Lesson, Module, User, UserProgress
+from shared.redis import get_cache, publish_event, set_cache
 
 router = APIRouter()
 

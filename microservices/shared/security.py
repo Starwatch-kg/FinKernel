@@ -1,9 +1,9 @@
 """Security utilities - input sanitization, CSRF, etc."""
 
-import re
 import html
-from typing import Any, Dict
+import re
 import secrets
+from typing import Any, Dict
 
 
 def sanitize_string(value: str, max_length: int = 1000) -> str:

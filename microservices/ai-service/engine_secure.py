@@ -2,11 +2,12 @@
 SECURE PREDICTION ENGINE - Prompt injection protection
 """
 
-import numpy as np
-from typing import List, Dict, Tuple, Optional
-import sys
 import json
 import re
+import sys
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 
 sys.path.append("/app")
 

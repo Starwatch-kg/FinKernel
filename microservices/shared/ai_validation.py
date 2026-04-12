@@ -1,8 +1,9 @@
 """AI Output Validation and Hardening"""
 
-from pydantic import BaseModel, Field, validator
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field, validator
 from shared.logger import setup_logger
 
 logger = setup_logger("ai_validation")

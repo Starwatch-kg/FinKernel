@@ -2,12 +2,13 @@
 SECURE OPENROUTER CLIENT - Prompt injection protection
 """
 
-import os
-import json
 import asyncio
-from typing import Optional, Dict, Any
-from openai import AsyncOpenAI
+import json
+import os
 import sys
+from typing import Any, Dict, Optional
+
+from openai import AsyncOpenAI
 
 sys.path.append("/app")
 

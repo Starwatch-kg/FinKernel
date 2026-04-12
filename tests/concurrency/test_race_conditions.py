@@ -4,12 +4,13 @@ CRITICAL: These tests MUST pass to prevent money loss
 Updated with idempotency tests
 """
 
-import pytest
 import asyncio
-from httpx import AsyncClient
-import uuid
 import sys
+import uuid
 from pathlib import Path
+
+import pytest
+from httpx import AsyncClient
 
 # Add tests directory to path
 tests_path = Path(__file__).parent.parent

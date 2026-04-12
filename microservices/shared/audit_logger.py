@@ -5,7 +5,8 @@ Logs are immutable and stored separately for compliance.
 
 import json
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from shared.logger import setup_logger
 from shared.redis import client as redis_client
 

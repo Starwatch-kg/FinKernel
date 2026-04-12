@@ -1,9 +1,10 @@
 """Request Validation and Size Limiting"""
 
-from fastapi import Request, HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
-from shared.logger import setup_logger
 import json
+
+from fastapi import HTTPException, Request
+from shared.logger import setup_logger
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = setup_logger("request_validation")
 

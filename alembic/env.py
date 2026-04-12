@@ -4,16 +4,18 @@
 # Then: alembic revision --autogenerate -m "Initial migration"
 # Then: alembic upgrade head
 
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 sys.path.append("/app")
 
-from shared.models import Base
 from shared.config import get_config
+from shared.models import Base
 
 config = context.config
 cfg = get_config()

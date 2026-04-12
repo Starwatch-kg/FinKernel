@@ -1,12 +1,13 @@
 """Key Rotation System with versioned keys"""
 
-import jwt
-from datetime import datetime, timedelta
-from typing import Optional, Dict, List
 import json
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+import jwt
 from redis.asyncio import Redis
-from shared.logger import setup_logger
 from secrets_manager import secrets_manager
+from shared.logger import setup_logger
 
 logger = setup_logger("key_rotation")
 

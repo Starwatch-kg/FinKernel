@@ -2,9 +2,10 @@
 Helper functions for tests
 """
 
-import uuid
-import httpx
 import os
+import uuid
+
+import httpx
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 

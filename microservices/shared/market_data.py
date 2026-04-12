@@ -1,8 +1,8 @@
 """Deterministic market data provider - NO random generation in production"""
 
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional
 import math
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
 
 
 class MarketDataProvider:

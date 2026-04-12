@@ -1,10 +1,11 @@
 """Celery Worker"""
 
-from celery import Celery
-import httpx
-import redis
 import json
 import os
+
+import httpx
+import redis
+from celery import Celery
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 AI_URL = os.getenv("AI_URL", "http://ai:8002")

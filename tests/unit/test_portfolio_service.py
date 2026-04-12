@@ -3,9 +3,10 @@ Unit tests for portfolio service.
 Tests trade execution, idempotency, and portfolio management.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture

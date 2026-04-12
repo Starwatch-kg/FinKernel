@@ -1,9 +1,10 @@
-import sys
-import os
-from pathlib import Path
-import pytest
 import asyncio
+import os
+import sys
+from pathlib import Path
+
 import httpx
+import pytest
 
 # Add microservices to Python path
 microservices_path = Path(__file__).parent.parent / "microservices"

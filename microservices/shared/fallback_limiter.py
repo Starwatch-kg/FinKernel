@@ -4,8 +4,9 @@ Prevents complete bypass of rate limiting on Redis failure.
 """
 
 import time
-from typing import Dict, Tuple, Optional
 from collections import defaultdict
+from typing import Dict, Optional, Tuple
+
 from shared.logger import setup_logger
 
 logger = setup_logger("fallback_rate_limiter")

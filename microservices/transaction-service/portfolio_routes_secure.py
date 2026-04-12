@@ -3,22 +3,23 @@ SECURE PORTFOLIO ROUTES - Race condition protection
 CRITICAL: All routes require authentication via gateway
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime
 import sys
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.append("/app")
 
-from shared.db import get_db
-from shared.models import User, Portfolio, Stock, TradeHistory
-from shared.redis import publish_event, get_cache, set_cache, delete_cache
-from shared.market_data import get_market_data_provider
-from shared.logger import setup_logger
-from shared.security_hardening import validate_amount, validate_shares
-from shared.audit_logger import audit_logger
 from pydantic import BaseModel, Field
+from shared.audit_logger import audit_logger
+from shared.db import get_db
+from shared.logger import setup_logger
+from shared.market_data import get_market_data_provider
+from shared.models import Portfolio, Stock, TradeHistory, User
+from shared.redis import delete_cache, get_cache, publish_event, set_cache
+from shared.security_hardening import validate_amount, validate_shares
 
 logger = setup_logger("portfolio_secure")
 market_data = get_market_data_provider()
