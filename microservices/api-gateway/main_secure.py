@@ -491,6 +491,38 @@ async def delete_transaction(
 
 
 # ============================================================================
+# TRADE ENDPOINT - AUTHENTICATION REQUIRED
+# ============================================================================
+
+
+@app.post("/api/trade")
+async def execute_trade(
+    request: Request,
+    trade: dict,
+    user: UserContext = Depends(get_current_user),
+):
+    """
+    Execute stock trade for authenticated user.
+    User ID comes from JWT token ONLY.
+    """
+    await apply_rate_limit(request, rate_limiter, "finance:trade", str(user.user_id))
+
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    # Forward trade request to transaction service with authenticated user ID
+    resp = await default_client.post(
+        f"{TRANSACTIONS_URL}/trade/{user.user_id}",
+        json=trade,
+        request_id=request_id,
+    )
+
+    if resp.status_code != 200:
+        raise HTTPException(resp.status_code, resp.json().get("detail", "Trade failed"))
+
+    return resp.json()
+
+
+# ============================================================================
 # DASHBOARD ENDPOINT - AUTHENTICATION REQUIRED
 # ============================================================================
 
