@@ -239,6 +239,7 @@ class TestTokenRefresh:
                 "/api/auth/register",
                 json={"email": email, "name": "Test User", "password": "Test123!@#"},
             )
+            assert register_response.status_code == 200, f"Registration failed: {register_response.status_code} - {register_response.text}"
             refresh_token = register_response.json()["refresh_token"]
 
             # Refresh token
@@ -275,6 +276,7 @@ class TestTokenRefresh:
                 "/api/auth/register",
                 json={"email": email, "name": "Test User", "password": "Test123!@#"},
             )
+            assert register_response.status_code == 200, f"Registration failed: {register_response.status_code} - {register_response.text}"
             access_token = register_response.json()["access_token"]
 
             # Try to refresh with access token
@@ -310,6 +312,7 @@ class TestAuthorization:
                 "/api/auth/register",
                 json={"email": email, "name": "Test User", "password": "Test123!@#"},
             )
+            assert register_response.status_code == 200, f"Registration failed: {register_response.status_code} - {register_response.text}"
             token = register_response.json()["access_token"]
 
             # Access protected endpoint with token
