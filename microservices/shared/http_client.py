@@ -100,14 +100,13 @@ class ResilientHttpClient:
                     else:
                         raise ValueError(f"Unsupported HTTP method: {method}")
 
-                    # Success - return immediately
+                    # Success or client error - return immediately (don't retry 4xx)
                     if response.status_code < 500:
                         if attempt > 0:
                             logger.info(
                                 f"[{request_id}] Request succeeded on attempt {attempt + 1}: "
                                 f"{method} {url}"
                             )
-                        response.raise_for_status()
                         return response
 
                     # Server error - retry

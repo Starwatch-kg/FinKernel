@@ -269,7 +269,9 @@ async def register(
     request: Request, req: RegisterRequest, db: AsyncSession = Depends(get_db)
 ):
     """Register new user - rate limited"""
-    await apply_rate_limit(request, rate_limiter, "auth:register", req.email)
+    # Rate limit by IP address to prevent registration abuse
+    client_ip = request.client.host if request.client else "unknown"
+    await apply_rate_limit(request, rate_limiter, "auth:register", client_ip)
 
     # Sanitize inputs
     email = sanitize_string(req.email, 255).lower()

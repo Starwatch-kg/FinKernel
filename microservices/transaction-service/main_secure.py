@@ -68,23 +68,23 @@ async def create_transaction(
         logger.warning(f"[{request_id}] Invalid amount: {e}")
         raise HTTPException(400, str(e))
 
-    # CRITICAL: Check idempotency key to prevent duplicate transactions
-    if txn.idempotency_key:
-        existing_result = await db.execute(
-            select(Transaction).where(
-                Transaction.idempotency_key == txn.idempotency_key
-            )
-        )
-        existing_txn = existing_result.scalar_one_or_none()
-        if existing_txn:
-            logger.info(
-                f"[{request_id}] Idempotent request: returning existing transaction "
-                f"{existing_txn.id} for key {txn.idempotency_key}"
-            )
-            return existing_txn
-
     # Start database transaction
     async with db.begin():
+        # CRITICAL: Check idempotency key INSIDE transaction to prevent race conditions
+        if txn.idempotency_key:
+            existing_result = await db.execute(
+                select(Transaction)
+                .where(Transaction.idempotency_key == txn.idempotency_key)
+                .with_for_update()  # Lock to prevent concurrent duplicates
+            )
+            existing_txn = existing_result.scalar_one_or_none()
+            if existing_txn:
+                logger.info(
+                    f"[{request_id}] Idempotent request: returning existing transaction "
+                    f"{existing_txn.id} for key {txn.idempotency_key}"
+                )
+                return existing_txn
+
         # CRITICAL: Lock user row for update to prevent race conditions
         result = await db.execute(
             select(User)
