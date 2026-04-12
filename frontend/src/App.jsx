@@ -17,7 +17,7 @@ import AchievementsScreen from "./screens/AchievementsScreen"
 import SettingsScreen from "./screens/SettingsScreen"
 import AboutScreen from "./screens/AboutScreen"
 import AuthScreen from "./screens/AuthScreen"
-import Tutorial from "./components/Tutorial"
+import OnboardingScreen from "./screens/OnboardingScreen"
 import { clearAuth, isAdmin } from "./api"
 import { getSettings } from "./settings"
 
@@ -32,7 +32,7 @@ export default function App() {
   const [aiLessonData, setAiLessonData] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [initializing, setInitializing] = useState(true)
-  const [showTutorial, setShowTutorial] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const [devMode, setDevMode] = useState(false)
   const [timeOffset, setTimeOffset] = useState(0)
   const [unlockAll, setUnlockAll] = useState(false)
@@ -61,23 +61,27 @@ export default function App() {
     const savedEmail = localStorage.getItem("finfuture_email")
     if (savedName && savedEmail) {
       setUser(savedName)
+      // Check if onboarding is needed for existing user
+      if (!localStorage.getItem("finfuture_onboarding_done")) {
+        setShowOnboarding(true)
+      }
     }
     setInitializing(false)
   }, [])
 
   const handleAuth = (name, isNewUser = false) => {
     setUser(name)
-    // Show tutorial for new users
-    if (isNewUser && !localStorage.getItem("finfuture_tutorial_done")) {
-      setShowTutorial(true)
+    // Show onboarding for new users
+    if (isNewUser && !localStorage.getItem("finfuture_onboarding_done")) {
+      setShowOnboarding(true)
     }
   }
 
   const handleLogout = () => {
     setUser(null)
-    setShowTutorial(false)
+    setShowOnboarding(false)
     clearAuth()
-    localStorage.removeItem("finfuture_tutorial_done")
+    localStorage.removeItem("finfuture_onboarding_done")
   }
 
   const handleNavigate = (id) => {
@@ -127,7 +131,24 @@ export default function App() {
     )
   }
 
-  // Step 2: Main app
+  // Step 2: Onboarding screen (separate page)
+  if (showOnboarding) {
+    return (
+      <div style={s.fullPage}>
+        <OnboardingScreen
+          userName={user}
+          onComplete={(result) => {
+            setShowOnboarding(false)
+            localStorage.setItem("finfuture_onboarding_done", "1")
+            setRefreshKey(k => k + 1)
+          }}
+          onLogout={handleLogout}
+        />
+      </div>
+    )
+  }
+
+  // Step 3: Main app
   return (
     <DevContext.Provider value={{ devMode, timeOffset, unlockAll, aiStatus, setAiStatus: (msg) => { setAiStatus(msg); setAiLog(log => [...log.slice(-19), { time: new Date().toLocaleTimeString("ru-RU"), msg }]) }, aiLog }}>
       <div style={s.layout}>
@@ -179,12 +200,6 @@ export default function App() {
           </>
         )}
 
-        {showTutorial && (
-          <Tutorial
-            userName={user}
-            onComplete={() => setShowTutorial(false)}
-          />
-        )}
         <Sidebar
           active={tab}
           onNavigate={handleNavigate}

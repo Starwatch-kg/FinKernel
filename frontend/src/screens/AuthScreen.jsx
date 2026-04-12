@@ -108,17 +108,6 @@ export default function AuthScreen({ onAuth }) {
           </button>
         </form>
 
-        <div style={s.dividerRow}>
-          <div style={s.dividerLine} />
-          <span style={s.dividerText}>или</span>
-          <div style={s.dividerLine} />
-        </div>
-
-        <button style={s.tbankBtn} type="button" onClick={() => {}}>
-          <img src="/icons/F-Kernel.png" alt="FinFuture" style={{ height: 20 }} />
-          {mode === "login" ? "Войти через FinFuture ID" : "Регистрация через FinFuture ID"}
-        </button>
-
         <button style={s.toggle}
           onClick={() => { setMode(m => m === "login" ? "register" : "login"); setError("") }}>
           {mode === "login" ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти"}

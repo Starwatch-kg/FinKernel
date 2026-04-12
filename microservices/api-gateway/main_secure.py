@@ -549,29 +549,46 @@ async def get_dashboard(
     """
     Get dashboard for authenticated user.
     NO user_id parameter - uses JWT token.
+    OPTIMIZED: Parallel requests + caching
     """
     await apply_rate_limit(request, rate_limiter, "read:dashboard", str(user.user_id))
 
     request_id = getattr(request.state, "request_id", "unknown")
 
-    # Fetch data with resilient client
-    balance_resp = await default_client.get(
+    # Check cache first (30 seconds TTL)
+    cache_key = f"dashboard:{user.user_id}"
+    try:
+        cached = await redis_client.get(cache_key)
+        if cached:
+            import json
+            return json.loads(cached)
+    except Exception:
+        pass
+
+    # Fetch data in parallel for better performance
+    import asyncio
+    balance_task = default_client.get(
         f"{TRANSACTIONS_URL}/balance/{user.user_id}", request_id=request_id
     )
-    txns_resp = await default_client.get(
+    txns_task = default_client.get(
         f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit=10",
         request_id=request_id,
     )
+    pred_task = default_client.get(
+        f"{AI_URL}/predict/{user.user_id}", request_id=request_id
+    )
 
-    # Try to get AI prediction (non-critical)
+    # Wait for all requests in parallel
+    results = await asyncio.gather(balance_task, txns_task, pred_task, return_exceptions=True)
+    balance_resp, txns_resp, pred_resp = results
+
+    # Handle prediction failure gracefully
     prediction = None
-    try:
-        pred_resp = await default_client.get(
-            f"{AI_URL}/predict/{user.user_id}", request_id=request_id
-        )
-        prediction = pred_resp.json()
-    except Exception as e:
-        logger.warning(f"AI prediction unavailable for user {user.user_id}: {e}")
+    if not isinstance(pred_resp, Exception):
+        try:
+            prediction = pred_resp.json()
+        except Exception as e:
+            logger.warning(f"AI prediction parse error for user {user.user_id}: {e}")
 
     balance_data = balance_resp.json()
     transactions = txns_resp.json()
@@ -670,6 +687,13 @@ async def get_dashboard(
         )
         dashboard["forecast"] = {"days_left": days_left, "daily_avg": daily_avg}
 
+    # Cache result for 30 seconds
+    try:
+        import json
+        await redis_client.setex(cache_key, 30, json.dumps(dashboard))
+    except Exception:
+        pass
+
     return dashboard
 
 
@@ -748,6 +772,117 @@ async def admin_view_user_dashboard(
         f"{TRANSACTIONS_URL}/balance/{user_id}", request_id=request_id
     )
     return balance_resp.json()
+
+
+@app.get("/api/achievements")
+async def get_achievements(
+    request: Request, user: UserContext = Depends(get_current_user)
+):
+    """Get user achievements"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{TRANSACTIONS_URL}/achievements",
+            params={"userId": str(user.user_id)},
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch achievements: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch achievements")
+
+
+@app.get("/api/daily-missions")
+async def get_daily_missions(
+    request: Request, user: UserContext = Depends(get_current_user)
+):
+    """Get daily missions"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{TRANSACTIONS_URL}/daily-missions",
+            params={"userId": str(user.user_id)},
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch daily missions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch daily missions")
+
+
+@app.get("/api/progress")
+async def get_progress(
+    request: Request, user: UserContext = Depends(get_current_user)
+):
+    """Get user progress and level"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{TRANSACTIONS_URL}/progress",
+            params={"userId": str(user.user_id)},
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch progress: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch progress")
+
+
+@app.get("/api/onboarding/questions")
+async def get_onboarding_questions(request: Request):
+    """Get onboarding questions"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{TRANSACTIONS_URL}/onboarding/questions",
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch onboarding questions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch onboarding questions")
+
+
+@app.get("/api/onboarding/status")
+async def get_onboarding_status(
+    request: Request, userId: str, user: UserContext = Depends(get_current_user)
+):
+    """Check onboarding status"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{TRANSACTIONS_URL}/onboarding/status",
+            params={"userId": str(user.user_id)},
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch onboarding status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch onboarding status")
+
+
+@app.post("/api/onboarding/submit")
+async def submit_onboarding(
+    request: Request, data: dict, user: UserContext = Depends(get_current_user)
+):
+    """Submit onboarding answers"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.post(
+            f"{TRANSACTIONS_URL}/onboarding/submit",
+            json={"userId": str(user.user_id), "answers": data.get("answers", {})},
+            request_id=request_id
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to submit onboarding: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit onboarding")
 
 
 if __name__ == "__main__":

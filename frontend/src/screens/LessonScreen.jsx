@@ -603,7 +603,7 @@ function PracticeScreen({ screen, buyTicker, buyShares, buyDone, onSelectTicker,
                 >
                   <span style={{ fontSize: 24 }}>{st.emoji}</span>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{st.name}</div>
-                  <div style={{ fontSize: 11, color: "rgba(0,0,0,0.4)" }}>{st.price?.toLocaleString("ru-RU")} ₽</div>
+                  <div style={{ fontSize: 11, color: "rgba(0,0,0,0.4)" }}>{st.price?.toLocaleString("ru-RU")} с</div>
                 </button>
               )
             })}
@@ -620,7 +620,7 @@ function PracticeScreen({ screen, buyTicker, buyShares, buyDone, onSelectTicker,
                 <button style={s.shareBtn} onClick={() => onSetShares(buyShares + 1)}>+</button>
               </div>
               <div style={s.totalRow}>
-                Итого: {(buyShares * (stockData[buyTicker]?.price || 0)).toLocaleString("ru-RU")} ₽
+                Итого: {(buyShares * (stockData[buyTicker]?.price || 0)).toLocaleString("ru-RU")} с
               </div>
               <button style={s.buyBtn} onClick={onBuy}>Купить 🛒</button>
             </div>
@@ -714,7 +714,7 @@ function InflationCalc({ params }) {
               ...s.widgetItemValue,
               color: y === 0 ? "#21a038" : values[y] < initial * 0.7 ? "#f44336" : "#ffdd2d",
             }}>
-              {values[y]?.toLocaleString("ru-RU")} ₽
+              {values[y]?.toLocaleString("ru-RU")} с
             </div>
           </div>
         ))}
@@ -741,9 +741,9 @@ function CompoundCalc({ params }) {
         {results.map(r => (
           <div key={r.years} style={s.widgetItem}>
             <div style={s.widgetItemLabel}>{r.years} лет</div>
-            <div style={s.widgetItemValue}>{r.total.toLocaleString("ru-RU")} ₽</div>
+            <div style={s.widgetItemValue}>{r.total.toLocaleString("ru-RU")} с</div>
             <div style={{ fontSize: 10, color: "rgba(0,0,0,0.3)" }}>
-              вложено: {r.invested.toLocaleString("ru-RU")} ₽
+              вложено: {r.invested.toLocaleString("ru-RU")} с
             </div>
           </div>
         ))}
@@ -817,8 +817,8 @@ function DividendCalc({ params }) {
       ))}
       <div style={{ marginTop: 12, padding: "12px", background: "rgba(255,221,45,0.1)", borderRadius: 8, textAlign: "center" }}>
         <div style={{ fontSize: 12, color: "rgba(0,0,0,0.45)" }}>Годовой дивидендный доход</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "#ffdd2d" }}>{Math.round(totalDividend).toLocaleString("ru-RU")} ₽/год</div>
-        <div style={{ fontSize: 11, color: "rgba(0,0,0,0.3)" }}>{Math.round(totalDividend / 12).toLocaleString("ru-RU")} ₽/мес</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#ffdd2d" }}>{Math.round(totalDividend).toLocaleString("ru-RU")} с/год</div>
+        <div style={{ fontSize: 11, color: "rgba(0,0,0,0.3)" }}>{Math.round(totalDividend / 12).toLocaleString("ru-RU")} с/мес</div>
       </div>
     </div>
   )

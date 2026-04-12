@@ -1,84 +1,86 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
+import { motion as Motion } from "framer-motion"
 import { getOnboardingQuestions, submitOnboarding } from "../api"
-
-/**
- * OnboardingScreen — "Инвестиционный квест"
- *
- * Flow: Welcome → 10 scenario-based questions → Animated result
- * Design: NOT a boring exam — gamified quest with scenarios
- * Time: ~3-4 minutes (20 sec per question average)
- */
 
 export default function OnboardingScreen({ onComplete, userName, onLogout }) {
   const [phase, setPhase] = useState("welcome") // welcome | quiz | result
   const [questions, setQuestions] = useState([])
   const [currentQ, setCurrentQ] = useState(0)
-  const [selected, setSelected] = useState(null)
-  const [revealed, setRevealed] = useState(false)
-  const [answers, setAnswers] = useState([])
+  const [answers, setAnswers] = useState({})
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [loadingQuestions, setLoadingQuestions] = useState(true)
   const [error, setError] = useState(null)
-  const _timerRef = useRef(null)
-  const startTimeRef = useRef(null)
 
   const fetchQuestions = () => {
     setLoadingQuestions(true)
     setError(null)
     getOnboardingQuestions()
-      .then(data => { setQuestions(data.questions || []); setLoadingQuestions(false) })
-      .catch(() => { setError("Не удалось загрузить тест. Проверьте соединение."); setLoadingQuestions(false) })
+      .then(data => {
+        setQuestions(data.questions || [])
+        setLoadingQuestions(false)
+      })
+      .catch(() => {
+        setError("Не удалось загрузить вопросы")
+        setLoadingQuestions(false)
+      })
   }
 
   useEffect(() => { fetchQuestions() }, [])
 
   const startQuiz = () => {
     setPhase("quiz")
-    startTimeRef.current = Date.now()
   }
 
-  const handleSelect = (idx) => {
-    if (revealed) return
-    setSelected(idx)
-  }
+  const handleAnswer = (questionId, answerId) => {
+    const question = questions.find(q => q.id === questionId)
 
-  const handleConfirm = () => {
-    if (selected === null) return
-    setRevealed(true)
-
-    // Record answer with timing
-    const timeMs = Date.now() - (startTimeRef.current || Date.now())
-    const answer = {
-      question_id: questions[currentQ].id,
-      selected_index: selected,
-      time_ms: timeMs,
+    if (question.type === "multiple") {
+      // Toggle selection for multiple choice
+      const current = answers[questionId] || []
+      const newAnswers = current.includes(answerId)
+        ? current.filter(id => id !== answerId)
+        : [...current, answerId]
+      setAnswers({ ...answers, [questionId]: newAnswers })
+    } else if (question.type === "input") {
+      // Direct input
+      setAnswers({ ...answers, [questionId]: answerId })
+    } else {
+      // Single choice
+      setAnswers({ ...answers, [questionId]: answerId })
     }
-    setAnswers(prev => [...prev, answer])
   }
 
   const handleNext = () => {
     if (currentQ < questions.length - 1) {
       setCurrentQ(currentQ + 1)
-      setSelected(null)
-      setRevealed(false)
-      startTimeRef.current = Date.now()
     } else {
-      // Submit test
+      // Submit
       setLoading(true)
-      const allAnswers = [...answers]
-      // Include current answer if not already added
-      if (allAnswers.length <= currentQ) {
-        allAnswers.push({
-          question_id: questions[currentQ].id,
-          selected_index: selected,
-          time_ms: Date.now() - (startTimeRef.current || Date.now()),
+      submitOnboarding(answers)
+        .then(res => {
+          setResult(res)
+          setPhase("result")
+          setLoading(false)
         })
-      }
-      submitOnboarding(allAnswers)
-        .then(res => { setResult(res); setPhase("result"); setLoading(false) })
-        .catch(() => { setLoading(false); setError("Не удалось отправить ответы. Проверьте соединение.") })
+        .catch(() => {
+          setLoading(false)
+          setError("Не удалось отправить ответы")
+        })
     }
+  }
+
+  const canProceed = () => {
+    const q = questions[currentQ]
+    if (!q) return false
+    const answer = answers[q.id]
+    if (q.type === "multiple") {
+      return answer && answer.length > 0
+    }
+    if (q.type === "input") {
+      return answer && answer.toString().trim().length > 0
+    }
+    return answer !== undefined
   }
 
   const accountBadge = (
@@ -86,44 +88,62 @@ export default function OnboardingScreen({ onComplete, userName, onLogout }) {
       <div style={s.accountAvatar}>{userName?.[0]?.toUpperCase() || "?"}</div>
       <div style={s.accountInfo}>
         <div style={s.accountName}>{userName}</div>
-        <div style={s.accountEmail}>{localStorage.getItem("pulse_email") || ""}</div>
+        <div style={s.accountEmail}>{localStorage.getItem("finfuture_email") || ""}</div>
       </div>
       {onLogout && (
-        <button onClick={onLogout} style={s.accountLogout} title="Сменить аккаунт">
+        <button onClick={onLogout} style={s.accountLogout}>
           Сменить
         </button>
       )}
     </div>
   )
 
-  // ─── LOADING / ERROR ───
   if (loadingQuestions) {
-    return (<div style={s.page}>{accountBadge}<div style={s.loadingCard}><div style={{ fontSize: 48, marginBottom: 16 }}>📝</div><div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>Загрузка вопросов...</div></div></div>)
-  }
-  if (error) {
-    return (<div style={s.page}>{accountBadge}<div style={s.loadingCard}><div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div><div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a", marginBottom: 16 }}>{error}</div><button style={s.startBtn} onClick={fetchQuestions}>Попробовать снова</button></div></div>)
+    return (
+      <div style={s.page}>
+        {accountBadge}
+        <div style={s.loadingCard}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📝</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>Загрузка...</div>
+        </div>
+      </div>
+    )
   }
 
-  // ─── WELCOME SCREEN ───
+  if (error) {
+    return (
+      <div style={s.page}>
+        {accountBadge}
+        <div style={s.loadingCard}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a", marginBottom: 16 }}>{error}</div>
+          <button style={s.startBtn} onClick={fetchQuestions}>Попробовать снова</button>
+        </div>
+      </div>
+    )
+  }
+
+  // WELCOME
   if (phase === "welcome") {
     return (
       <div style={s.page}>
         {accountBadge}
         <div style={s.welcomeCard}>
-          <div style={s.questBadge}>ИНВЕСТИЦИОННЫЙ КВЕСТ</div>
-          <div style={s.welcomeIcon}>🎯</div>
-          <div style={s.welcomeTitle}>Узнаем твой уровень!</div>
+          <div style={s.questBadge}>ФИНАНСОВЫЙ ПРОФИЛЬ</div>
+          <div style={s.welcomeIcon}>💰</div>
+          <div style={s.welcomeTitle}>Настроим ваши финансы!</div>
           <div style={s.welcomeText}>
-            10 ситуаций из мира инвестиций.{"\n"}
-            Никаких скучных определений — только решения.{"\n"}
-            Это займёт 3-4 минуты.
+            Ответьте на несколько вопросов, чтобы мы могли:{"\n"}
+            • Автоматически учитывать вашу зарплату{"\n"}
+            • Давать персональные рекомендации{"\n"}
+            • Помочь достичь финансовых целей
           </div>
 
           <div style={s.welcomeFeatures}>
             {[
-              { icon: "📊", text: "Определим уровень знаний" },
-              { icon: "🎯", text: "Найдём сильные стороны" },
-              { icon: "📚", text: "Составим персональный план" },
+              { icon: "💵", text: "Автоматический учёт дохода" },
+              { icon: "🎯", text: "Персональные цели" },
+              { icon: "🤖", text: "AI-рекомендации" },
             ].map((f, i) => (
               <div key={i} style={s.welcomeFeature}>
                 <span style={{ fontSize: 20 }}>{f.icon}</span>
@@ -133,139 +153,76 @@ export default function OnboardingScreen({ onComplete, userName, onLogout }) {
           </div>
 
           <button style={s.startBtn} onClick={startQuiz}>
-            Начать квест →
+            Начать настройку →
           </button>
 
           <button style={s.skipBtn} onClick={() => onComplete(null)}>
-            Пропустить и начать с нуля
+            Пропустить
           </button>
         </div>
       </div>
     )
   }
 
-  // ─── RESULT SCREEN ───
+  // RESULT
   if (phase === "result" && result) {
-    const level = result.level || {}
-    const topicScores = result.topic_scores || {}
-
     return (
       <div style={s.page}>
         {accountBadge}
         <div style={s.resultCard}>
-          {/* Level Badge */}
-          <div style={{
-            ...s.levelBadge,
-            background: `linear-gradient(135deg, ${level.color || "#21a038"}22, ${level.color || "#21a038"}11)`,
-            borderColor: `${level.color || "#21a038"}44`,
-          }}>
-            <div style={s.levelIcon}>{level.icon}</div>
-            <div style={s.levelName}>{level.name_full || level.name}</div>
-            <div style={s.levelDesc}>{level.description}</div>
-          </div>
+          <div style={s.resultIcon}>✅</div>
+          <div style={s.resultTitle}>Профиль настроен!</div>
 
-          {/* Score */}
-          <div style={s.scoreSection}>
-            <div style={s.scoreCircle}>
-              <div style={s.scoreNum}>{result.total_correct}</div>
-              <div style={s.scoreOf}>из {result.total_questions}</div>
-            </div>
-            <div style={s.scorePct}>{result.score_pct}% правильно</div>
-          </div>
-
-          {/* Topic Breakdown */}
-          <div style={s.topicSection}>
-            <div style={s.sectionLabel}>ТВОИ НАВЫКИ</div>
-            {Object.entries(topicScores).map(([id, data]) => (
-              <div key={id} style={s.topicRow}>
-                <span style={s.topicIcon}>{data.icon || "📊"}</span>
-                <span style={s.topicName}>{data.name || id}</span>
-                <div style={s.topicBar}>
-                  <div style={{
-                    ...s.topicFill,
-                    width: `${Math.max(data.score * 100, 5)}%`,
-                    background: data.score >= 0.7 ? "#21a038" : data.score >= 0.4 ? "#FFD600" : "#f44336",
-                  }} />
+          {result.profile && (
+            <div style={s.profileSummary}>
+              {result.profile.monthly_income && (
+                <div style={s.summaryItem}>
+                  <span style={s.summaryLabel}>Ежемесячный доход:</span>
+                  <span style={s.summaryValue}>{result.profile.monthly_income.toLocaleString("ru-RU")} с</span>
                 </div>
-                <span style={{
-                  ...s.topicPct,
-                  color: data.score >= 0.7 ? "#21a038" : data.score >= 0.4 ? "#FFD600" : "#f44336",
-                }}>
-                  {Math.round(data.score * 100)}%
-                </span>
-              </div>
-            ))}
-          </div>
+              )}
+              {result.profile.savings_percent > 0 && (
+                <div style={s.summaryItem}>
+                  <span style={s.summaryLabel}>Цель накоплений:</span>
+                  <span style={s.summaryValue}>{result.profile.savings_percent}% от дохода</span>
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Strong / Weak */}
-          <div style={s.swRow}>
-            {result.strong_topics?.length > 0 && (
-              <div style={s.swCard}>
-                <div style={s.swTitle}>💪 Сильные темы</div>
-                {result.strong_topics.map((t, i) => (
-                  <div key={i} style={s.swItem}>
-                    <span>{t.icon}</span> {t.name}
-                  </div>
-                ))}
-              </div>
-            )}
-            {result.weak_topics?.length > 0 && (
-              <div style={s.swCard}>
-                <div style={s.swTitle}>📌 Подтянуть</div>
-                {result.weak_topics.map((t, i) => (
-                  <div key={i} style={s.swItem}>
-                    <span>{t.icon}</span> {t.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Learning Plan */}
-          {result.learning_plan?.length > 0 && (
-            <div style={s.planSection}>
-              <div style={s.sectionLabel}>ТВОЙ ПЛАН ОБУЧЕНИЯ</div>
-              {result.learning_plan.map((step, i) => (
-                <div key={i} style={s.planStep}>
-                  <div style={{
-                    ...s.planDot,
-                    background: step.priority === "high" ? "#FFD600" : step.priority === "focus" ? "#f44336" : "rgba(255,255,255,0.2)",
-                  }}>
-                    {i + 1}
-                  </div>
-                  <div style={s.planInfo}>
-                    <div style={s.planAction}>{step.action}</div>
-                    <div style={s.planReason}>{step.reason}</div>
-                  </div>
-                  {step.priority === "focus" && (
-                    <span style={s.focusBadge}>Фокус</span>
-                  )}
+          {result.recommendations && result.recommendations.length > 0 && (
+            <div style={s.recommendations}>
+              <div style={s.sectionLabel}>РЕКОМЕНДАЦИИ</div>
+              {result.recommendations.map((rec, i) => (
+                <div key={i} style={s.recItem}>
+                  <span style={s.recIcon}>💡</span>
+                  <span style={s.recText}>{rec}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* XP Bonus */}
-          <div style={s.xpBonus}>
-            ⚡ +{result.xp_bonus} XP за прохождение квеста!
-          </div>
+          {result.xp_bonus && (
+            <div style={s.xpBonus}>
+              ⚡ +{result.xp_bonus} XP за настройку профиля!
+            </div>
+          )}
 
           <button style={s.startBtn} onClick={() => onComplete(result)}>
-            Начать обучение →
+            Начать пользоваться →
           </button>
         </div>
       </div>
     )
   }
 
-  // ─── QUIZ SCREEN ───
+  // QUIZ
   if (loading) {
     return (
       <div style={s.page}>
         <div style={s.loadingCard}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a", marginBottom: 8 }}>Анализируем ответы...</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>Составляем персональный план</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>💾</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>Сохраняем профиль...</div>
         </div>
       </div>
     )
@@ -275,65 +232,81 @@ export default function OnboardingScreen({ onComplete, userName, onLogout }) {
   if (!q) return null
 
   const progress = ((currentQ + 1) / questions.length) * 100
-  const difficultyLabel = q.difficulty === 1 ? "Базовый" : q.difficulty === 2 ? "Средний" : "Продвинутый"
-  const typeEmoji = {
-    scenario: "📖", news_reaction: "📰", decision: "🤔",
-    portfolio_choice: "💼", analysis: "🔬", crisis: "🌪️",
-    calculation: "🧮", emotional: "🧠",
-  }
 
   return (
     <div style={s.page}>
       {accountBadge}
-      {/* Top bar */}
+
       <div style={s.topBar}>
         <div style={s.questLabel}>
-          {typeEmoji[q.type] || "📊"} Вопрос {currentQ + 1} из {questions.length}
+          Вопрос {currentQ + 1} из {questions.length}
         </div>
         <div style={s.progressBar}>
           <div style={{ ...s.progressFill, width: `${progress}%` }} />
         </div>
-        <div style={s.diffBadge}>{difficultyLabel}</div>
       </div>
 
       <div style={s.quizCard}>
-        {/* Scenario */}
-        <div style={s.scenario}>{q.scenario}</div>
-
-        {/* Question */}
         <div style={s.question}>{q.question}</div>
 
-        {/* Options */}
-        <div style={s.options}>
-          {q.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => handleSelect(i)}
-              disabled={revealed}
-              style={{
-                ...s.optionBtn,
-                ...(selected !== null && selected !== i && !revealed ? s.optionDimmed : {}),
-                ...(selected === i && !revealed ? s.optionSelected : {}),
-                ...(revealed && selected === i ? s.optionRevealed : {}),
-              }}
-            >
-              <span style={s.optionLetter}>{String.fromCharCode(65 + i)}</span>
-              <span style={s.optionText}>{typeof opt === "string" ? opt : opt.text}</span>
-            </button>
-          ))}
-        </div>
+        {q.type === "input" ? (
+          <div style={s.inputWrapper}>
+            <input
+              type={q.input_type || "text"}
+              placeholder={q.placeholder || ""}
+              value={answers[q.id] || ""}
+              onChange={(e) => handleAnswer(q.id, e.target.value)}
+              min={q.min}
+              max={q.max}
+              style={s.input}
+            />
+            {q.suffix && <span style={s.inputSuffix}>{q.suffix}</span>}
+            {q.id === 3 && answers[1] && answers[3] && (
+              <div style={s.calculatedAmount}>
+                ≈ {Math.round((parseFloat(answers[1]) || 0) * (parseFloat(answers[3]) || 0) / 100).toLocaleString('ru-RU')} с в месяц
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={s.options}>
+            {q.options.map((opt) => {
+              const isSelected = q.type === "multiple"
+                ? (answers[q.id] || []).includes(opt.id)
+                : answers[q.id] === opt.id
 
-        {/* Confirm / Next */}
-        {!revealed && selected !== null && (
-          <button style={s.confirmBtn} onClick={handleConfirm}>
-            Подтвердить
-          </button>
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleAnswer(q.id, opt.id)}
+                  style={{
+                    ...s.optionBtn,
+                    ...(isSelected ? s.optionSelected : {}),
+                  }}
+                >
+                  <span style={s.optionCheck}>
+                    {isSelected ? "✓" : ""}
+                  </span>
+                  <span style={s.optionText}>{opt.text}</span>
+                </button>
+              )
+            })}
+          </div>
         )}
-        {revealed && (
-          <button style={s.nextBtn} onClick={handleNext}>
-            {currentQ < questions.length - 1 ? "Следующий вопрос →" : "Узнать результат 🎯"}
-          </button>
+
+        {q.type === "multiple" && (
+          <div style={s.hint}>Можно выбрать несколько вариантов</div>
         )}
+
+        <button
+          style={{
+            ...s.nextBtn,
+            ...(canProceed() ? {} : s.nextBtnDisabled)
+          }}
+          onClick={handleNext}
+          disabled={!canProceed()}
+        >
+          {currentQ < questions.length - 1 ? "Далее →" : "Завершить"}
+        </button>
       </div>
     </div>
   )
@@ -349,9 +322,7 @@ const s = {
     padding: "20px",
     background: "#f6f7f8",
     fontFamily: "Inter, sans-serif",
-    color: "#1a1a1a",
   },
-  // ─── Welcome ───
   welcomeCard: {
     background: "#ffffff",
     borderRadius: 24,
@@ -376,180 +347,201 @@ const s = {
   welcomeIcon: { fontSize: 56, marginBottom: 16 },
   welcomeTitle: { fontSize: 28, fontWeight: 800, color: "#1a1a1a", marginBottom: 12 },
   welcomeText: {
-    fontSize: 15, color: "rgba(0,0,0,0.55)", lineHeight: 1.7,
-    marginBottom: 28, whiteSpace: "pre-line",
+    fontSize: 15,
+    color: "rgba(0,0,0,0.55)",
+    lineHeight: 1.7,
+    marginBottom: 28,
+    whiteSpace: "pre-line",
+    textAlign: "left",
   },
   welcomeFeatures: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 },
   welcomeFeature: {
-    display: "flex", alignItems: "center", gap: 12,
-    padding: "10px 16px", background: "#f6f7f8",
-    borderRadius: 10, textAlign: "left",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 16px",
+    background: "#f6f7f8",
+    borderRadius: 10,
+    textAlign: "left",
   },
   welcomeFeatureText: { fontSize: 14, color: "#1a1a1a" },
   startBtn: {
-    width: "100%", padding: "16px 0", border: "none", borderRadius: 14,
-    background: "#ffdd2d", color: "#1a1a1a", fontSize: 16, fontWeight: 700,
-    cursor: "pointer", fontFamily: "inherit", marginBottom: 12,
-    transition: "all 0.2s",
+    width: "100%",
+    padding: "16px 0",
+    border: "none",
+    borderRadius: 14,
+    background: "#ffdd2d",
+    color: "#1a1a1a",
+    fontSize: 16,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    marginBottom: 12,
   },
   skipBtn: {
-    background: "transparent", border: "none", color: "rgba(0,0,0,0.35)",
-    fontSize: 13, cursor: "pointer", fontFamily: "inherit", padding: "8px 0",
+    background: "transparent",
+    border: "none",
+    color: "rgba(0,0,0,0.35)",
+    fontSize: 13,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    padding: "8px 0",
   },
-  // ─── Quiz ───
   topBar: {
-    width: "100%", maxWidth: 620,
-    display: "flex", alignItems: "center", gap: 12,
+    width: "100%",
+    maxWidth: 620,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
     marginBottom: 20,
   },
   questLabel: { fontSize: 13, color: "rgba(0,0,0,0.45)", flexShrink: 0 },
   progressBar: {
-    flex: 1, height: 6, background: "rgba(0,0,0,0.06)",
-    borderRadius: 3, overflow: "hidden",
+    flex: 1,
+    height: 6,
+    background: "rgba(0,0,0,0.06)",
+    borderRadius: 3,
+    overflow: "hidden",
   },
   progressFill: {
-    height: "100%", background: "linear-gradient(90deg, #ffdd2d, #ffa000)",
-    borderRadius: 3, transition: "width 0.4s ease",
-  },
-  diffBadge: {
-    fontSize: 10, padding: "3px 10px", borderRadius: 6,
-    background: "rgba(0,0,0,0.04)", color: "rgba(0,0,0,0.45)",
-    fontWeight: 600, flexShrink: 0,
+    height: "100%",
+    background: "linear-gradient(90deg, #ffdd2d, #ffa000)",
+    borderRadius: 3,
+    transition: "width 0.4s ease",
   },
   quizCard: {
-    background: "#ffffff", borderRadius: 20, padding: "32px 28px",
-    maxWidth: 620, width: "100%",
+    background: "#ffffff",
+    borderRadius: 20,
+    padding: "32px 28px",
+    maxWidth: 620,
+    width: "100%",
     border: "1px solid rgba(0,0,0,0.08)",
     boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
   },
-  scenario: {
-    fontSize: 15, color: "rgba(0,0,0,0.65)", lineHeight: 1.7,
-    marginBottom: 16, padding: "16px", background: "#f6f7f8",
-    borderRadius: 12, borderLeft: "3px solid #ffdd2d", whiteSpace: "pre-line",
-  },
   question: {
-    fontSize: 18, fontWeight: 700, color: "#1a1a1a", marginBottom: 20, lineHeight: 1.5,
+    fontSize: 20,
+    fontWeight: 700,
+    color: "#1a1a1a",
+    marginBottom: 24,
+    lineHeight: 1.4,
   },
-  options: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 },
+  options: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 },
   optionBtn: {
-    width: "100%", padding: "14px 16px",
+    width: "100%",
+    padding: "14px 16px",
     border: "1px solid rgba(0,0,0,0.1)",
-    borderRadius: 12, background: "#ffffff",
-    color: "#1a1a1a", fontSize: 14, cursor: "pointer",
-    textAlign: "left", fontFamily: "inherit",
-    display: "flex", alignItems: "center", gap: 12,
-    transition: "all 0.2s", outline: "none", boxShadow: "none",
-  },
-  optionDimmed: {
-    opacity: 0.5, borderColor: "rgba(0,0,0,0.06)",
+    borderRadius: 12,
+    background: "#ffffff",
+    color: "#1a1a1a",
+    fontSize: 15,
+    cursor: "pointer",
+    textAlign: "left",
+    fontFamily: "inherit",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    transition: "all 0.2s",
+    outline: "none",
   },
   optionSelected: {
-    borderColor: "#ffdd2d", background: "rgba(255,221,45,0.1)",
+    borderColor: "#ffdd2d",
+    background: "rgba(255,221,45,0.1)",
     boxShadow: "0 0 0 2px #ffdd2d",
   },
-  optionRevealed: {
-    borderColor: "rgba(0,0,0,0.12)", opacity: 0.7,
+  optionCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: "50%",
+    border: "2px solid rgba(0,0,0,0.1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 14,
+    fontWeight: 700,
+    flexShrink: 0,
+    color: "#ffdd2d",
   },
-  optionLetter: {
-    width: 28, height: 28, borderRadius: "50%",
-    background: "rgba(0,0,0,0.05)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 12, fontWeight: 700, flexShrink: 0,
-  },
-  optionText: { flex: 1, lineHeight: 1.5 },
-  confirmBtn: {
-    width: "100%", padding: "14px 0", border: "none", borderRadius: 12,
-    background: "#ffdd2d", color: "#1a1a1a", fontSize: 15, fontWeight: 700,
-    cursor: "pointer", fontFamily: "inherit",
+  optionText: { flex: 1, lineHeight: 1.4 },
+  hint: {
+    fontSize: 12,
+    color: "rgba(0,0,0,0.4)",
+    marginBottom: 16,
+    textAlign: "center",
   },
   nextBtn: {
-    width: "100%", padding: "14px 0", border: "none", borderRadius: 12,
-    background: "#ffdd2d", color: "#1a1a1a", fontSize: 15, fontWeight: 700,
-    cursor: "pointer", fontFamily: "inherit",
+    width: "100%",
+    padding: "14px 0",
+    border: "none",
+    borderRadius: 12,
+    background: "#ffdd2d",
+    color: "#1a1a1a",
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "inherit",
   },
-  // ─── Loading ───
+  nextBtnDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
   loadingCard: {
-    textAlign: "center", padding: 40,
-  },
-  // ─── Result ───
-  confettiOverlay: {
-    position: "fixed", inset: 0, display: "flex",
-    alignItems: "center", justifyContent: "center",
-    fontSize: 120, opacity: 0.3, pointerEvents: "none",
-    zIndex: 1000,
+    textAlign: "center",
+    padding: 40,
   },
   resultCard: {
-    background: "#ffffff", borderRadius: 24, padding: "36px 28px",
-    maxWidth: 560, width: "100%",
+    background: "#ffffff",
+    borderRadius: 24,
+    padding: "36px 28px",
+    maxWidth: 560,
+    width: "100%",
     border: "1px solid rgba(0,0,0,0.08)",
     boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-    maxHeight: "90vh", overflowY: "auto",
+    textAlign: "center",
   },
-  levelBadge: {
-    padding: "24px 20px", borderRadius: 16,
-    border: "1px solid", textAlign: "center", marginBottom: 24,
+  resultIcon: { fontSize: 64, marginBottom: 16 },
+  resultTitle: { fontSize: 24, fontWeight: 800, color: "#1a1a1a", marginBottom: 24 },
+  profileSummary: {
+    background: "#f6f7f8",
+    borderRadius: 12,
+    padding: "16px",
+    marginBottom: 24,
+    textAlign: "left",
   },
-  levelIcon: { fontSize: 48, marginBottom: 8 },
-  levelName: { fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 6 },
-  levelDesc: { fontSize: 13, color: "rgba(0,0,0,0.55)", lineHeight: 1.6 },
-  // Score
-  scoreSection: { textAlign: "center", marginBottom: 24 },
-  scoreCircle: {
-    width: 80, height: 80, borderRadius: "50%",
-    border: "3px solid #ffdd2d",
-    display: "inline-flex", flexDirection: "column",
-    alignItems: "center", justifyContent: "center",
+  summaryItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "8px 0",
+    borderBottom: "1px solid rgba(0,0,0,0.06)",
+  },
+  summaryLabel: { fontSize: 13, color: "rgba(0,0,0,0.55)" },
+  summaryValue: { fontSize: 14, fontWeight: 700, color: "#1a1a1a" },
+  recommendations: { marginBottom: 24, textAlign: "left" },
+  sectionLabel: {
+    fontSize: 11,
+    color: "rgba(0,0,0,0.4)",
+    letterSpacing: 2,
+    marginBottom: 12,
+    fontWeight: 700,
+  },
+  recItem: {
+    display: "flex",
+    gap: 10,
+    padding: "10px 12px",
+    background: "rgba(255,221,45,0.08)",
+    borderRadius: 10,
     marginBottom: 8,
   },
-  scoreNum: { fontSize: 28, fontWeight: 800, color: "#b8860b" },
-  scoreOf: { fontSize: 11, color: "rgba(0,0,0,0.4)" },
-  scorePct: { fontSize: 14, color: "rgba(0,0,0,0.5)" },
-  // Topics
-  topicSection: { marginBottom: 24 },
-  sectionLabel: {
-    fontSize: 11, color: "rgba(0,0,0,0.4)",
-    letterSpacing: 2, marginBottom: 12, fontWeight: 700,
-  },
-  topicRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
-  topicIcon: { fontSize: 16, width: 24, textAlign: "center" },
-  topicName: { fontSize: 12, color: "rgba(0,0,0,0.55)", width: 100, flexShrink: 0 },
-  topicBar: {
-    flex: 1, height: 6, background: "rgba(0,0,0,0.06)",
-    borderRadius: 3, overflow: "hidden",
-  },
-  topicFill: { height: "100%", borderRadius: 3, transition: "width 0.5s" },
-  topicPct: { fontSize: 12, fontWeight: 700, width: 36, textAlign: "right" },
-  // Strong / Weak
-  swRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 },
-  swCard: {
-    padding: "14px", background: "#f6f7f8",
-    borderRadius: 12, border: "1px solid rgba(0,0,0,0.06)",
-  },
-  swTitle: { fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 8 },
-  swItem: { fontSize: 12, color: "rgba(0,0,0,0.55)", padding: "3px 0", display: "flex", gap: 6 },
-  // Plan
-  planSection: { marginBottom: 24 },
-  planStep: { display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 },
-  planDot: {
-    width: 28, height: 28, borderRadius: "50%",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 12, fontWeight: 700, color: "#1a1a1a", flexShrink: 0,
-  },
-  planInfo: { flex: 1 },
-  planAction: { fontSize: 14, fontWeight: 600, color: "#1a1a1a", marginBottom: 2 },
-  planReason: { fontSize: 12, color: "rgba(0,0,0,0.4)" },
-  focusBadge: {
-    fontSize: 10, padding: "2px 8px", borderRadius: 4,
-    background: "rgba(244,67,54,0.08)", color: "#f44336",
-    fontWeight: 700, flexShrink: 0,
-  },
-  // XP
+  recIcon: { fontSize: 18, flexShrink: 0 },
+  recText: { fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 },
   xpBonus: {
-    padding: "12px 16px", background: "rgba(255,221,45,0.15)",
-    borderRadius: 10, color: "#b8860b", fontSize: 14, fontWeight: 700,
-    textAlign: "center", marginBottom: 20,
+    padding: "12px 16px",
+    background: "rgba(255,221,45,0.15)",
+    borderRadius: 10,
+    color: "#b8860b",
+    fontSize: 14,
+    fontWeight: 700,
+    marginBottom: 20,
   },
-  // ─── Account badge (bottom-left) ───
   accountBadge: {
     position: "fixed",
     bottom: 20,
@@ -577,9 +569,7 @@ const s = {
     fontSize: 14,
     flexShrink: 0,
   },
-  accountInfo: {
-    overflow: "hidden",
-  },
+  accountInfo: { overflow: "hidden" },
   accountName: {
     fontSize: 12,
     fontWeight: 600,
@@ -606,5 +596,41 @@ const s = {
     fontFamily: "inherit",
     marginLeft: 4,
     flexShrink: 0,
+  },
+  inputWrapper: {
+    position: "relative",
+    marginBottom: 20,
+  },
+  input: {
+    width: "100%",
+    padding: "16px 20px",
+    border: "2px solid rgba(0,0,0,0.1)",
+    borderRadius: 12,
+    fontSize: 18,
+    fontFamily: "inherit",
+    fontWeight: 600,
+    color: "#1a1a1a",
+    outline: "none",
+    transition: "all 0.2s",
+    boxSizing: "border-box",
+    /* Remove number input arrows */
+    MozAppearance: "textfield",
+  },
+  inputSuffix: {
+    position: "absolute",
+    right: 20,
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: 18,
+    fontWeight: 600,
+    color: "rgba(0,0,0,0.3)",
+    pointerEvents: "none",
+  },
+  calculatedAmount: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#21a038",
+    fontWeight: 600,
+    textAlign: "center",
   },
 }

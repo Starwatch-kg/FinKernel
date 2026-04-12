@@ -110,6 +110,18 @@ input::placeholder {
   color: rgba(0, 0, 0, 0.3);
 }
 
+/* Remove number input arrows (Chrome, Safari, Edge, Opera) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove number input arrows (Firefox) */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Range slider */
 input[type="range"] {
   -webkit-appearance: none;
@@ -279,6 +291,20 @@ button:active:not(:disabled) {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* GPU acceleration for animations */
+.card-hover,
+.stat-hover,
+[class*="Motion"] {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize SVG rendering */
+svg {
+  shape-rendering: geometricPrecision;
 }
 
 /* ── Interactive card hover ─────────────────────────────────────────────────── */

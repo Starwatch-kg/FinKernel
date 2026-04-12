@@ -4,11 +4,11 @@ import { getAchievements } from "../api"
 
 const gridContainer = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.03, delayChildren: 0 } },
 }
 const achCard = {
-  hidden: { opacity: 0, scale: 0.75, y: 16 },
-  show:   { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 380, damping: 22 } },
+  hidden: { opacity: 0, scale: 0.9 },
+  show:   { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
 }
 
 export default function AchievementsScreen() {
@@ -113,16 +113,12 @@ export default function AchievementsScreen() {
                 borderColor: ach.unlocked ? "rgba(33,160,56,0.2)" : "rgba(0,0,0,0.06)",
                 boxShadow: ach.unlocked ? "0 2px 12px rgba(33,160,56,0.1)" : "none",
               }}
-              whileHover={ach.unlocked ? { y: -5, scale: 1.03, boxShadow: "0 12px 32px rgba(33,160,56,0.18)" } : { scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 350, damping: 18 }}
+              whileHover={ach.unlocked ? { y: -3, scale: 1.02 } : {}}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              <Motion.div
-                style={s.achIcon}
-                animate={ach.unlocked ? { rotate: [0, -8, 8, 0] } : {}}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
+              <div style={s.achIcon}>
                 {ach.unlocked ? ach.icon : "🔒"}
-              </Motion.div>
+              </div>
               <div style={s.achName}>{ach.name}</div>
               <div style={s.achDesc}>{ach.description}</div>
               {ach.unlocked && (
@@ -160,7 +156,7 @@ const s = {
     background: "#fff", color: "rgba(0,0,0,0.55)", fontSize: 13,
     cursor: "pointer", fontFamily: "inherit", fontWeight: 500,
   },
-  filterActive: { background: "#1a1a1a", color: "#fff", borderColor: "#1a1a1a" },
+  filterActive: { background: "#ffdd2d", color: "#1a1a1a", borderColor: "#ffdd2d" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 },
   achCard: {
     borderRadius: 16, padding: "24px 18px", textAlign: "center",

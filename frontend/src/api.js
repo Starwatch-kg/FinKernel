@@ -198,6 +198,16 @@ export const completeLesson = (lessonId, correctAnswers = 0, totalQuestions = 0)
 export const getAchievements = () => apiFetch(`${BASE}/achievements`)
 export const getDailyMissions = () => apiFetch(`${BASE}/daily-missions`)
 
+// ─── Onboarding ───
+export const getOnboardingQuestions = () => apiFetch(`${BASE}/onboarding/questions`)
+export const submitOnboarding = (answers) =>
+  apiFetch(`${BASE}/onboarding/submit`, POST_JSON({
+    userId: localStorage.getItem("finfuture_email") || "1",
+    answers
+  }))
+export const getOnboardingStatus = () =>
+  apiFetch(`${BASE}/onboarding/status?userId=${localStorage.getItem("finfuture_email") || "1"}`)
+
 // ─── Data ───
 export const getDiary = (limit = 20) => apiFetch(`${BASE}/diary?limit=${limit}`)
 export const getLevels = () => apiFetch(`${BASE}/levels`)

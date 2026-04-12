@@ -11,6 +11,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
 )
@@ -49,12 +50,25 @@ class User(Base):
     password_hash = Column(String)
     balance = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Onboarding profile fields
+    monthly_income = Column(Float, nullable=True)
+    financial_goal = Column(String, nullable=True)  # purchase, emergency, invest, debt, control
+    savings_target_percent = Column(Float, nullable=True)
+    income_frequency = Column(String, nullable=True)  # monthly, biweekly, weekly, irregular
+    onboarding_completed = Column(Boolean, default=False)
+    onboarding_completed_at = Column(DateTime, nullable=True)
+
     transactions = relationship("Transaction", back_populates="user")
     predictions = relationship("Prediction", back_populates="user")
 
 
 class Transaction(Base):
     __tablename__ = "transactions"
+    __table_args__ = (
+        # Composite index for common queries (user_id + timestamp)
+        Index('idx_user_timestamp', 'user_id', 'timestamp'),
+    )
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     amount = Column(Float)

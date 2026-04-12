@@ -4,15 +4,15 @@ import { getDashboard, marketEventAction } from "../api"
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.05, delayChildren: 0 } },
 }
 const item = {
-  hidden: { opacity: 0, y: 20 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 10 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
 }
 const statItem = {
-  hidden: { opacity: 0, scale: 0.8, y: 10 },
-  show:   { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 20 } },
+  hidden: { opacity: 0, scale: 0.95 },
+  show:   { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
 }
 
 function AnimatedNumber({ value, suffix = "" }) {
@@ -20,12 +20,20 @@ function AnimatedNumber({ value, suffix = "" }) {
   const ref = useRef(null)
   useEffect(() => {
     const target = parseFloat(String(value).replace(/[^\d.-]/g, "")) || 0
-    const duration = 700
+    const duration = 500
     const start = Date.now()
+    const frameRate = 1000 / 30 // 30 FPS instead of 60
+    let lastUpdate = start
     const tick = () => {
-      const elapsed = Date.now() - start
+      const now = Date.now()
+      if (now - lastUpdate < frameRate) {
+        ref.current = requestAnimationFrame(tick)
+        return
+      }
+      lastUpdate = now
+      const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
+      const eased = 1 - Math.pow(1 - progress, 2)
       setDisplay(Math.round(eased * target))
       if (progress < 1) ref.current = requestAnimationFrame(tick)
     }
@@ -62,12 +70,12 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
           <div style={{ flex: 1 }}>
             <div style={s.portfolioLabel}>ТЕКУЩИЙ БАЛАНС</div>
             <div style={s.portfolioValue}>
-              <AnimatedNumber value={balance?.current || 0} /> ₽
+              <AnimatedNumber value={balance?.current || 0} /> с
             </div>
             <div style={s.portfolioPnl}>
-              <span style={{ color: "#ffa000" }}>↑ {(income?.month || 0).toLocaleString("ru-RU")} ₽</span>
+              <span style={{ color: "#21a038" }}>↑ {(income?.month || 0).toLocaleString("ru-RU")} с</span>
               {" "}
-              <span style={{ color: "#ff8f00" }}>↓ {(expenses?.month || 0).toLocaleString("ru-RU")} ₽</span>
+              <span style={{ color: "#f44336" }}>↓ {(expenses?.month || 0).toLocaleString("ru-RU")} с</span>
             </div>
           </div>
 
@@ -151,6 +159,216 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
         </div>
       </Motion.div>
 
+      {/* Financial Chart */}
+      <Motion.div variants={item} style={s.chartCard}>
+        <div style={s.cardLabel}>ФИНАНСОВАЯ ДИНАМИКА</div>
+
+        {(() => {
+          // Group transactions by date and calculate cumulative balance
+          const last30Days = []
+          const today = new Date()
+
+          for (let i = 29; i >= 0; i--) {
+            const date = new Date(today)
+            date.setDate(date.getDate() - i)
+            const dateStr = date.toISOString().split('T')[0]
+
+            const dayTransactions = (transactions || []).filter(t => {
+              const tDate = new Date(t.date).toISOString().split('T')[0]
+              return tDate === dateStr
+            })
+
+            const dayIncome = dayTransactions
+              .filter(t => t.type === 'income')
+              .reduce((sum, t) => sum + (t.amount || 0), 0)
+
+            const dayExpense = dayTransactions
+              .filter(t => t.type === 'expense')
+              .reduce((sum, t) => sum + (t.amount || 0), 0)
+
+            last30Days.push({
+              date: dateStr,
+              income: dayIncome,
+              expense: dayExpense,
+              net: dayIncome - dayExpense,
+              label: date.getDate()
+            })
+          }
+
+          // Calculate cumulative balance
+          let runningBalance = balance?.current || 0
+          for (let i = last30Days.length - 1; i >= 0; i--) {
+            last30Days[i].balance = runningBalance
+            runningBalance -= last30Days[i].net
+          }
+
+          const maxBalance = Math.max(...last30Days.map(d => d.balance), 1000)
+          const minBalance = Math.min(...last30Days.map(d => d.balance), 0)
+            const maxIncome = Math.max(...last30Days.map(d => d.income))
+            const maxExpense = Math.max(...last30Days.map(d => d.expense))
+            const maxValue = Math.max(maxBalance, maxIncome, maxExpense)
+            const minValue = Math.min(minBalance, 0)
+            const range = maxValue - minValue || 1
+
+            const chartWidth = 800
+            const chartHeight = 200
+            const padding = { top: 20, right: 20, bottom: 30, left: 60 }
+            const innerWidth = chartWidth - padding.left - padding.right
+            const innerHeight = chartHeight - padding.top - padding.bottom
+
+            const getY = (value) => {
+              return padding.top + innerHeight - ((value - minValue) / range) * innerHeight
+            }
+
+            const getX = (index) => {
+              return padding.left + (index / (last30Days.length - 1)) * innerWidth
+            }
+
+            // Create paths
+            const balancePath = last30Days.map((d, i) => {
+              const x = getX(i)
+              const y = getY(d.balance)
+              return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+            }).join(' ')
+
+            return (
+              <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }}>
+                <svg width={chartWidth} height={chartHeight} style={{ display: 'block' }}>
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                    const y = padding.top + innerHeight * (1 - ratio)
+                    const value = minValue + range * ratio
+                    return (
+                      <g key={i}>
+                        <line
+                          x1={padding.left}
+                          y1={y}
+                          x2={chartWidth - padding.right}
+                          y2={y}
+                          stroke="rgba(0,0,0,0.05)"
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={padding.left - 10}
+                          y={y + 4}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="rgba(0,0,0,0.4)"
+                        >
+                          {(value / 1000).toFixed(0)}k
+                        </text>
+                      </g>
+                    )
+                  })}
+
+                  {/* Income bars */}
+                  {last30Days.map((d, i) => {
+                    if (d.income === 0) return null
+                    const x = getX(i)
+                    const y = getY(d.income)
+                    const barHeight = getY(0) - y
+                    return (
+                      <rect
+                        key={`income-${i}`}
+                        x={x - 3}
+                        y={y}
+                        width="6"
+                        height={barHeight}
+                        fill="#21a038"
+                        opacity="0.3"
+                      />
+                    )
+                  })}
+
+                  {/* Expense bars */}
+                  {last30Days.map((d, i) => {
+                    if (d.expense === 0) return null
+                    const x = getX(i)
+                    const y = getY(0)
+                    const barHeight = getY(0) - getY(d.expense)
+                    return (
+                      <rect
+                        key={`expense-${i}`}
+                        x={x - 3}
+                        y={y}
+                        width="6"
+                        height={barHeight}
+                        fill="#f44336"
+                        opacity="0.3"
+                      />
+                    )
+                  })}
+
+                  {/* Balance line */}
+                  <Motion.path
+                    d={balancePath}
+                    fill="none"
+                    stroke="#ffdd2d"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+
+                  {/* Balance points - only show every 5th point */}
+                  {last30Days.filter((_, i) => i % 5 === 0).map((d, idx) => {
+                    const i = idx * 5
+                    const x = getX(i)
+                    const y = getY(d.balance)
+                    return (
+                      <circle
+                        key={`point-${i}`}
+                        cx={x}
+                        cy={y}
+                        r="4"
+                        fill="#ffdd2d"
+                        stroke="#fff"
+                        strokeWidth="2"
+                      />
+                    )
+                  })}
+
+                  {/* X-axis labels */}
+                  {last30Days.filter((_, i) => i % 5 === 0).map((d, i) => {
+                    const index = i * 5
+                    const x = getX(index)
+                    return (
+                      <text
+                        key={`label-${i}`}
+                        x={x}
+                        y={chartHeight - 10}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fill="rgba(0,0,0,0.4)"
+                      >
+                        {d.label}
+                      </text>
+                    )
+                  })}
+                </svg>
+
+                {/* Legend */}
+                <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 12, fontSize: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 16, height: 3, background: '#ffdd2d', borderRadius: 2 }} />
+                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Баланс</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 16, height: 8, background: '#21a038', opacity: 0.3, borderRadius: 2 }} />
+                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Доходы</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 16, height: 8, background: '#f44336', opacity: 0.3, borderRadius: 2 }} />
+                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Расходы</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+        </Motion.div>
+
       {/* Forecast + AI Tips */}
       <div style={s.row}>
         <Motion.div variants={item} style={s.card} whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
@@ -164,11 +382,11 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
               </div>
               <div style={s.lessonSub}>
                 {forecast.days_left > 0
-                  ? `При текущих тратах ${forecast.daily_avg?.toLocaleString("ru-RU")} ₽/день`
+                  ? `При текущих тратах ${forecast.daily_avg?.toLocaleString("ru-RU")} с/день`
                   : "Твои расходы под контролем"}
               </div>
               <div style={s.lessonMeta}>
-                <span>📊 Средний расход: {forecast.daily_avg?.toLocaleString("ru-RU")} ₽</span>
+                <span>📊 Средний расход: {forecast.daily_avg?.toLocaleString("ru-RU")} с</span>
               </div>
             </>
           ) : (
@@ -177,26 +395,36 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
         </Motion.div>
 
         <Motion.div variants={item} style={s.card} whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-          <div style={s.cardLabel}>СОВЕТЫ ОТ AI</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <div style={{ fontSize: 24 }}>🤖</div>
+            <div style={s.cardLabel}>AI-СОВЕТНИК</div>
+          </div>
           <div style={s.missionsList}>
             {ai_tips?.slice(0, 3).map((tip, i) => (
               <Motion.div
                 key={i}
-                style={s.missionItem}
+                style={{
+                  ...s.missionItem,
+                  background: "linear-gradient(135deg, rgba(255,221,45,0.08), rgba(255,221,45,0.02))",
+                  border: "1px solid rgba(255,221,45,0.2)",
+                  borderRadius: 12,
+                  padding: "12px 14px",
+                }}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 + i * 0.07, duration: 0.3 }}
               >
-                <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
-                <span style={{ flex: 1, fontSize: 13, color: "#1a1a1a", lineHeight: 1.4 }}>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
+                <span style={{ flex: 1, fontSize: 13, color: "#1a1a1a", lineHeight: 1.5, fontWeight: 500 }}>
                   {tip.text}
                 </span>
               </Motion.div>
             ))}
           </div>
           {!ai_tips?.length && (
-            <div style={{ textAlign: "center", padding: "20px 0", color: "rgba(0,0,0,0.4)", fontSize: 13 }}>
-              Добавь транзакции, чтобы получить персональные советы
+            <div style={{ textAlign: "center", padding: "30px 20px", color: "rgba(0,0,0,0.35)", fontSize: 13 }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🤖</div>
+              <div>Добавь транзакции, чтобы получить персональные советы от AI</div>
             </div>
           )}
         </Motion.div>
@@ -222,8 +450,8 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
                 <div style={{ fontWeight: 600 }}>{t.category}</div>
                 <div style={{ fontSize: 12, color: "rgba(0,0,0,0.4)" }}>{t.comment || t.date}</div>
               </div>
-              <span style={{ color: t.type === "income" ? "#ffa000" : "#ff8f00", fontWeight: 700 }}>
-                {t.type === "income" ? "+" : "-"}{t.amount?.toLocaleString("ru-RU")} ₽
+              <span style={{ color: t.type === "income" ? "#21a038" : "#f44336", fontWeight: 700 }}>
+                {t.type === "income" ? "+" : "-"}{t.amount?.toLocaleString("ru-RU")} с
               </span>
             </div>
           ))}
@@ -289,7 +517,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
                 <div style={{ fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 2 }}>Всего</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>
-                  {spending_chart.reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString("ru-RU")} ₽
+                  {spending_chart.reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString("ru-RU")} с
                 </div>
               </div>
             </div>
@@ -345,7 +573,7 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
                 </div>
               </div>
               <span style={{ fontSize: 12, color: "rgba(0,0,0,0.4)", width: 80, textAlign: "right" }}>
-                {cat.amount?.toLocaleString("ru-RU")} ₽
+                {cat.amount?.toLocaleString("ru-RU")} с
               </span>
             </Motion.div>
           ))}
@@ -397,6 +625,11 @@ const s = {
   portfolioLabel: { fontSize: 11, color: "rgba(0,0,0,0.4)", letterSpacing: 2, marginBottom: 8, fontWeight: 600 },
   portfolioValue: { fontSize: 32, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 },
   portfolioPnl: { fontSize: 15, fontWeight: 600 },
+  chartCard: {
+    background: "#ffffff", borderRadius: 16, padding: "24px 28px", marginBottom: 20,
+    border: "1px solid rgba(0,0,0,0.08)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+  },
   row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 },
   card: {
     background: "#ffffff", borderRadius: 16, padding: "20px 24px",

@@ -122,8 +122,8 @@ class GlobalRateLimiter:
 # Rate limit configurations by endpoint type
 RATE_LIMITS = {
     # Authentication endpoints - very strict
-    "auth:login": {"max_requests": 5, "window": 300},  # 5 per 5 min
-    "auth:register": {"max_requests": 3, "window": 300},  # 3 per 5 min
+    "auth:login": {"max_requests": 20, "window": 300},  # 20 per 5 min
+    "auth:register": {"max_requests": 20, "window": 300},  # 20 per 5 min
     "auth:refresh": {"max_requests": 10, "window": 60},  # 10 per min
     # AI endpoints - strict (expensive operations)
     "ai:predict": {"max_requests": 10, "window": 60},  # 10 per min

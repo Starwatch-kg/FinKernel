@@ -197,6 +197,54 @@ async def market_event_action(
     }
 
 
+ACHIEVEMENT_TEMPLATES = [
+    # Экономия (savings)
+    {"id": 1, "name": "Первая экономия", "description": "Сэкономь 1000с", "icon": "💰", "category": "savings", "xp_reward": 50},
+    {"id": 2, "name": "Бережливый", "description": "Сэкономь 5000с", "icon": "🏦", "category": "savings", "xp_reward": 100},
+    {"id": 3, "name": "Мастер экономии", "description": "Сэкономь 10000с", "icon": "💎", "category": "savings", "xp_reward": 200},
+    {"id": 4, "name": "Финансовый гений", "description": "Сэкономь 50000с", "icon": "👑", "category": "savings", "xp_reward": 500},
+    {"id": 5, "name": "Миллионер", "description": "Накопи 1000000с", "icon": "🎯", "category": "savings", "xp_reward": 1000},
+
+    # Бюджет (budget)
+    {"id": 6, "name": "Первый бюджет", "description": "Создай свой первый бюджет", "icon": "📊", "category": "budget", "xp_reward": 50},
+    {"id": 7, "name": "Планировщик", "description": "Соблюдай бюджет 7 дней подряд", "icon": "📅", "category": "budget", "xp_reward": 100},
+    {"id": 8, "name": "Бюджетный мастер", "description": "Соблюдай бюджет месяц", "icon": "🎓", "category": "budget", "xp_reward": 300},
+    {"id": 9, "name": "Финансовый контроль", "description": "Не превысь бюджет 3 месяца", "icon": "🛡️", "category": "budget", "xp_reward": 500},
+    {"id": 10, "name": "Идеальный баланс", "description": "Соблюдай бюджет полгода", "icon": "⚖️", "category": "budget", "xp_reward": 800},
+
+    # Дисциплина (discipline)
+    {"id": 11, "name": "Первый шаг", "description": "Добавь первую транзакцию", "icon": "✨", "category": "discipline", "xp_reward": 25},
+    {"id": 12, "name": "Активный пользователь", "description": "Добавь 10 транзакций", "icon": "📝", "category": "discipline", "xp_reward": 75},
+    {"id": 13, "name": "Записывающий всё", "description": "Добавь 50 транзакций", "icon": "📚", "category": "discipline", "xp_reward": 150},
+    {"id": 14, "name": "Финансовый аналитик", "description": "Добавь 100 транзакций", "icon": "📈", "category": "discipline", "xp_reward": 300},
+    {"id": 15, "name": "Мастер учёта", "description": "Добавь 500 транзакций", "icon": "🏆", "category": "discipline", "xp_reward": 750},
+
+    # Серия (streak)
+    {"id": 16, "name": "Начало пути", "description": "Используй приложение 3 дня подряд", "icon": "🔥", "category": "streak", "xp_reward": 50},
+    {"id": 17, "name": "Неделя силы", "description": "Используй приложение 7 дней подряд", "icon": "💪", "category": "streak", "xp_reward": 100},
+    {"id": 18, "name": "Двухнедельный марафон", "description": "Используй приложение 14 дней подряд", "icon": "🎖️", "category": "streak", "xp_reward": 200},
+    {"id": 19, "name": "Месяц дисциплины", "description": "Используй приложение 30 дней подряд", "icon": "🌟", "category": "streak", "xp_reward": 400},
+    {"id": 20, "name": "Легенда", "description": "Используй приложение 100 дней подряд", "icon": "👑", "category": "streak", "xp_reward": 1000},
+
+    # Обучение
+    {"id": 21, "name": "Ученик", "description": "Пройди первый урок", "icon": "🎓", "category": "discipline", "xp_reward": 50},
+    {"id": 22, "name": "Знаток", "description": "Пройди 5 уроков", "icon": "📖", "category": "discipline", "xp_reward": 150},
+    {"id": 23, "name": "Эксперт", "description": "Пройди все уроки", "icon": "🧠", "category": "discipline", "xp_reward": 500},
+
+    # Категории расходов
+    {"id": 24, "name": "Категоризатор", "description": "Используй 5 разных категорий", "icon": "🏷️", "category": "discipline", "xp_reward": 100},
+    {"id": 25, "name": "Организатор", "description": "Используй все категории", "icon": "🗂️", "category": "discipline", "xp_reward": 200},
+
+    # Цели
+    {"id": 26, "name": "Целеустремлённый", "description": "Создай первую финансовую цель", "icon": "🎯", "category": "savings", "xp_reward": 75},
+    {"id": 27, "name": "Достигатор", "description": "Достигни первой цели", "icon": "🏅", "category": "savings", "xp_reward": 200},
+    {"id": 28, "name": "Мечтатель", "description": "Достигни 5 целей", "icon": "🌈", "category": "savings", "xp_reward": 500},
+
+    # Особые
+    {"id": 29, "name": "Ранняя пташка", "description": "Войди в приложение до 7 утра", "icon": "🌅", "category": "streak", "xp_reward": 100},
+    {"id": 30, "name": "Полуночник", "description": "Добавь транзакцию после полуночи", "icon": "🌙", "category": "streak", "xp_reward": 100},
+]
+
 @router.get("/achievements")
 async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
     """Get user achievements"""
@@ -207,19 +255,25 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
         .where(Achievement.user_id == user_id)
         .order_by(Achievement.unlocked_at.desc())
     )
-    achievements = result.scalars().all()
+    unlocked = result.scalars().all()
+    unlocked_ids = {a.title for a in unlocked}
 
-    return [
-        {
-            "id": a.id,
-            "title": a.title,
-            "description": a.description,
-            "icon": a.icon,
-            "xp_reward": a.xp_reward,
-            "unlocked_at": a.unlocked_at.isoformat(),
-        }
-        for a in achievements
-    ]
+    # Return all achievements with unlocked status
+    achievements_list = []
+    for template in ACHIEVEMENT_TEMPLATES:
+        unlocked_ach = next((a for a in unlocked if a.title == template["name"]), None)
+        achievements_list.append({
+            "id": template["id"],
+            "name": template["name"],
+            "description": template["description"],
+            "icon": template["icon"],
+            "category": template["category"],
+            "xp_reward": template["xp_reward"],
+            "unlocked": template["name"] in unlocked_ids,
+            "unlocked_at": unlocked_ach.unlocked_at.isoformat() if unlocked_ach else None,
+        })
+
+    return achievements_list
 
 
 @router.get("/daily-missions")

@@ -87,14 +87,14 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {mask(balance.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " ₽")}
+          {mask(balance.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " с")}
         </Motion.div>
         <div style={{ ...s.portfolioPnl, color: changeSign ? "#21a038" : "#f44336" }}>
-          {hide ? "•••" : `${changeSign ? "+" : ""}${balanceChange.toLocaleString("ru-RU")} ₽ за месяц`}
+          {hide ? "•••" : `${changeSign ? "+" : ""}${balanceChange.toLocaleString("ru-RU")} с за месяц`}
         </div>
         {expenses > 0 && (
           <div style={s.portfolioFree}>
-            Расходы: {mask(expenses.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " ₽")}
+            Расходы: {mask(expenses.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " с")}
           </div>
         )}
       </Motion.div>

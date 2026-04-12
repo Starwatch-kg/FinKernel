@@ -107,12 +107,12 @@ export default function TransactionsScreen({ onRefresh }) {
         <div>
           <div style={s.headerLabel}>ТЕКУЩИЙ БАЛАНС</div>
           <div style={s.headerValue}>
-            <AnimatedNumber value={balance.current} suffix=" ₽" masked={hide} />
+            <AnimatedNumber value={balance.current} suffix=" с" masked={hide} />
           </div>
           <div style={s.headerPnl}>
-            <span style={{ color: "#ffa000" }}>↑ {mask((balance.income_month || 0).toLocaleString("ru-RU"))} ₽</span>
+            <span style={{ color: "#21a038" }}>↑ {mask((balance.income_month || 0).toLocaleString("ru-RU"))} с</span>
             {" "}
-            <span style={{ color: "#ff8f00" }}>↓ {mask((balance.expenses_month || 0).toLocaleString("ru-RU"))} ₽</span>
+            <span style={{ color: "#f44336" }}>↓ {mask((balance.expenses_month || 0).toLocaleString("ru-RU"))} с</span>
           </div>
         </div>
         <Motion.button
@@ -129,8 +129,8 @@ export default function TransactionsScreen({ onRefresh }) {
       {message && (
         <div style={{
           ...s.tradeMsg,
-          background: message.type === "success" ? "rgba(255,160,0,0.15)" : "rgba(255,143,0,0.15)",
-          color: message.type === "success" ? "#ffa000" : "#ff8f00",
+          background: message.type === "success" ? "rgba(33,160,56,0.15)" : "rgba(244,67,54,0.15)",
+          color: message.type === "success" ? "#21a038" : "#f44336",
         }}>
           {message.text}
           <button onClick={() => setMessage(null)} style={s.closeMsgBtn}>✕</button>
@@ -168,9 +168,9 @@ export default function TransactionsScreen({ onRefresh }) {
             <div style={{ textAlign: "right" }}>
               <div style={{
                 fontSize: 15, fontWeight: 700,
-                color: t.type === "income" ? "#ffa000" : "#ff8f00",
+                color: t.type === "income" ? "#21a038" : "#f44336",
               }}>
-                {t.type === "income" ? "+" : "-"}{mask(t.amount?.toLocaleString("ru-RU"))} ₽
+                {t.type === "income" ? "+" : "-"}{mask(t.amount?.toLocaleString("ru-RU"))} с
               </div>
               <div style={{ fontSize: 11, color: "rgba(0,0,0,0.3)" }}>
                 {new Date(t.date).toLocaleDateString("ru-RU")}
@@ -349,8 +349,8 @@ const s = {
     borderRadius: 8, background: "transparent", color: "rgba(0,0,0,0.45)",
     fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
   },
-  tradeToggleBuy: { background: "rgba(255,160,0,0.15)", color: "#ffa000", borderColor: "rgba(255,160,0,0.3)" },
-  tradeToggleSell: { background: "rgba(255,143,0,0.15)", color: "#ff8f00", borderColor: "rgba(255,143,0,0.3)" },
+  tradeToggleBuy: { background: "rgba(255,221,45,0.15)", color: "#ffdd2d", borderColor: "rgba(255,221,45,0.3)" },
+  tradeToggleSell: { background: "rgba(255,221,45,0.15)", color: "#ffdd2d", borderColor: "rgba(255,221,45,0.3)" },
   formGroup: { marginBottom: 16 },
   formLabel: { display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 },
   formInput: {
