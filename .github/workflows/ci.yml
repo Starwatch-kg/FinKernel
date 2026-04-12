@@ -120,6 +120,12 @@ jobs:
           ENVIRONMENT: test
           BASE_URL: http://localhost:8000
 
+      - name: Show API logs on failure
+        if: failure()
+        run: |
+          echo "=== API Gateway Logs ==="
+          cat microservices/api-gateway/api.log || echo "No API logs found"
+
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
