@@ -119,7 +119,9 @@ class TestRegistration:
     @pytest.mark.asyncio
     async def test_register_rate_limit(self):
         """Test registration rate limiting"""
-        async with AsyncClient(base_url=BASE_URL, headers={"X-Test-Rate-Limit": "true"}) as client:
+        async with AsyncClient(
+            base_url=BASE_URL, headers={"X-Test-Rate-Limit": "true"}
+        ) as client:
             email_base = f"ratelimit_{uuid.uuid4().hex[:8]}"
 
             # Try to register 4 times quickly (limit is 3 per 5 min)

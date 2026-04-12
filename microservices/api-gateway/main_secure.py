@@ -498,9 +498,7 @@ async def delete_transaction(
     # Check for errors from transaction service
     if resp.status_code != 200:
         error_data = resp.json() if resp.content else {"detail": "Delete failed"}
-        raise HTTPException(
-            resp.status_code, error_data.get("detail", "Delete failed")
-        )
+        raise HTTPException(resp.status_code, error_data.get("detail", "Delete failed"))
 
     await delete_cache(f"dashboard:{user.user_id}")
 
