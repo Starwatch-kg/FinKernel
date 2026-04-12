@@ -72,33 +72,50 @@ class TestRegistration:
     async def test_register_weak_password(self):
         """Test registration with weak password fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"test_{unique_id}@example.com"
 
             # No uppercase
             response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}_1",
+                    "password": "test123!@#",
+                },
             )
             assert response.status_code == 422
 
             # No digit
             response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "TestTest!@#"},
+                json={
+                    "email": f"test_{unique_id}_2@example.com",
+                    "name": f"Test User {unique_id}_2",
+                    "password": "TestTest!@#",
+                },
             )
             assert response.status_code == 422
 
             # No special character
             response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123456"},
+                json={
+                    "email": f"test_{unique_id}_3@example.com",
+                    "name": f"Test User {unique_id}_3",
+                    "password": "Test123456",
+                },
             )
             assert response.status_code == 422
 
             # Too short
             response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Te1!"},
+                json={
+                    "email": f"test_{unique_id}_4@example.com",
+                    "name": f"Test User {unique_id}_4",
+                    "password": "Te1!",
+                },
             )
             assert response.status_code == 422
 
@@ -106,11 +123,12 @@ class TestRegistration:
     async def test_register_invalid_email(self):
         """Test registration with invalid email fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
+            unique_id = uuid.uuid4().hex[:8]
             response = await client.post(
                 "/api/auth/register",
                 json={
                     "email": "not-an-email",
-                    "name": "Test User",
+                    "name": f"Test User {unique_id}",
                     "password": "Test123!@#",
                 },
             )
@@ -149,13 +167,18 @@ class TestLogin:
     async def test_login_success(self):
         """Test successful login"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"login_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"login_{unique_id}@example.com"
             password = "Test123!@#"
 
             # Register user
             await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": password},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": password,
+                },
             )
 
             # Login
@@ -174,12 +197,17 @@ class TestLogin:
     async def test_login_wrong_password(self):
         """Test login with wrong password fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"wrongpass_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"wrongpass_{unique_id}@example.com"
 
             # Register user
             await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
             )
 
             # Login with wrong password
@@ -210,13 +238,18 @@ class TestLogin:
     async def test_login_case_insensitive_email(self):
         """Test login is case-insensitive for email"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"CaseSensitive_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"CaseSensitive_{unique_id}@example.com"
             password = "Test123!@#"
 
             # Register with mixed case
             await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": password},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": password,
+                },
             )
 
             # Login with lowercase
@@ -234,12 +267,17 @@ class TestTokenRefresh:
     async def test_refresh_token_success(self):
         """Test successful token refresh"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"refresh_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"refresh_{unique_id}@example.com"
 
             # Register and get tokens
             register_response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
             )
             assert (
                 register_response.status_code == 200
@@ -273,12 +311,17 @@ class TestTokenRefresh:
     async def test_refresh_with_access_token_fails(self):
         """Test refresh with access token instead of refresh token fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"wrongtoken_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"wrongtoken_{unique_id}@example.com"
 
             # Register and get tokens
             register_response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
             )
             assert (
                 register_response.status_code == 200
@@ -311,12 +354,17 @@ class TestAuthorization:
     async def test_valid_token_grants_access(self):
         """Test valid token grants access to protected endpoints"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"access_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"access_{unique_id}@example.com"
 
             # Register and get token
             register_response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
             )
             assert (
                 register_response.status_code == 200
@@ -382,11 +430,16 @@ class TestTokenExpiration:
     async def test_access_token_short_lived(self):
         """Test access token has short expiration (15 minutes)"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            email = f"expiry_{uuid.uuid4().hex[:8]}@example.com"
+            unique_id = uuid.uuid4().hex[:8]
+            email = f"expiry_{unique_id}@example.com"
 
             register_response = await client.post(
                 "/api/auth/register",
-                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
             )
 
             data = register_response.json()
