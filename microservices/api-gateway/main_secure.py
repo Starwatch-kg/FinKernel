@@ -236,6 +236,7 @@ class TransactionCreateRequest(BaseModel):
     type: str = Field(pattern="^(income|expense)$")
     category: str
     description: Optional[str] = Field(None, max_length=500)
+    idempotency_key: Optional[str] = Field(None, max_length=255)
 
     @validator("amount")
     def validate_amount_field(cls, v):
@@ -410,12 +411,19 @@ async def create_transaction(
         "type": txn.type,
         "category": txn.category,
         "description": txn.description,
+        "idempotency_key": txn.idempotency_key,
     }
 
     # Use resilient HTTP client with retry
     resp = await default_client.post(
         f"{TRANSACTIONS_URL}/transactions", json=transaction_data, request_id=request_id
     )
+
+    # Check for errors from transaction service
+    if resp.status_code != 200:
+        error_data = resp.json() if resp.content else {"detail": "Transaction failed"}
+        raise HTTPException(resp.status_code, error_data.get("detail", "Transaction failed"))
+
     result = resp.json()
 
     # Map category

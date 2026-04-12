@@ -20,6 +20,9 @@ from helpers import register_and_get_token
 
 BASE_URL = "http://localhost:8000"
 
+# Headers to enable rate limiting in tests
+RATE_LIMIT_HEADERS = {"X-Test-Rate-Limit": "true"}
+
 
 class TestRateLimiting:
     """Test rate limiting functionality"""
@@ -27,7 +30,7 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_login_rate_limit(self):
         """Test login endpoint is rate limited (5 per 5 min)"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             email = f"ratelimit_{uuid.uuid4().hex[:8]}@example.com"
 
             # Try to login 6 times quickly
@@ -47,7 +50,7 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_register_rate_limit(self):
         """Test registration endpoint is rate limited (3 per 5 min)"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             base_email = f"register_{uuid.uuid4().hex[:8]}"
 
             # Try to register 4 times quickly
@@ -71,7 +74,7 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_transaction_rate_limit(self):
         """Test transaction endpoint is rate limited (50 per min)"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             # Register and login
             auth_data = await register_and_get_token(client)
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
@@ -100,7 +103,7 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_rate_limit_headers(self):
         """Test rate limit headers are present"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             auth_data = await register_and_get_token(client)
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
@@ -119,7 +122,7 @@ class TestRateLimitFallback:
         # This test requires mocking Redis failure
         # In real scenario, stop Redis and verify fallback works
 
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             email = f"fallback_{uuid.uuid4().hex[:8]}@example.com"
 
             # Even with Redis down, rate limiting should still work
@@ -138,7 +141,7 @@ class TestRateLimitFallback:
     @pytest.mark.asyncio
     async def test_rate_limit_per_user(self):
         """Test rate limits are per-user, not global"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             # Create two users
             auth_data1 = await register_and_get_token(client)
             token1 = auth_data1["token"]
@@ -183,7 +186,7 @@ class TestRateLimitRecovery:
     @pytest.mark.asyncio
     async def test_rate_limit_window_reset(self):
         """Test rate limit resets after time window"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             email = f"reset_{uuid.uuid4().hex[:8]}@example.com"
 
             # Hit rate limit
@@ -210,7 +213,7 @@ class TestRateLimitByEndpoint:
     @pytest.mark.asyncio
     async def test_ai_endpoints_stricter_limit(self):
         """Test AI endpoints have stricter rate limits (10 per min)"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             auth_data = await register_and_get_token(client)
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
@@ -229,7 +232,7 @@ class TestRateLimitByEndpoint:
     @pytest.mark.asyncio
     async def test_read_endpoints_lenient_limit(self):
         """Test read endpoints have lenient limits (100 per min)"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             auth_data = await register_and_get_token(client)
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
@@ -245,7 +248,7 @@ class TestRateLimitSlidingWindow:
     @pytest.mark.asyncio
     async def test_sliding_window_behavior(self):
         """Test rate limit uses sliding window, not fixed window"""
-        async with AsyncClient(base_url=BASE_URL) as client:
+        async with AsyncClient(base_url=BASE_URL, headers=RATE_LIMIT_HEADERS) as client:
             email = f"sliding_{uuid.uuid4().hex[:8]}@example.com"
 
             # Make 3 requests quickly

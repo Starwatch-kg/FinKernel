@@ -153,11 +153,14 @@ async def apply_rate_limit(
     """
     Apply rate limit to request.
     Raises HTTPException if limit exceeded.
-    Skips rate limiting in test environment.
+    Skips rate limiting in test environment unless explicitly testing rate limits.
     """
-    # Skip rate limiting in test environment
+    # Skip rate limiting in test environment, unless the test explicitly wants to test it
+    # Tests can set X-Test-Rate-Limit header to enable rate limiting
     if os.getenv("ENVIRONMENT") == "test":
-        return
+        test_rate_limit = request.headers.get("X-Test-Rate-Limit")
+        if not test_rate_limit:
+            return
 
     config = get_rate_limit_config(endpoint_type)
     request_id = getattr(request.state, "request_id", "unknown")
