@@ -2,12 +2,14 @@
 SECURE PORTFOLIO ROUTES - Race condition protection
 CRITICAL: All routes require authentication via gateway
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
 from shared.models import User, Portfolio, Stock, TradeHistory
@@ -36,7 +38,9 @@ async def init_stocks(db: AsyncSession):
     all_stocks = market_data.get_all_stocks()
 
     for stock_data in all_stocks:
-        result = await db.execute(select(Stock).where(Stock.ticker == stock_data["ticker"]))
+        result = await db.execute(
+            select(Stock).where(Stock.ticker == stock_data["ticker"])
+        )
         if not result.scalar_one_or_none():
             stock = Stock(
                 ticker=stock_data["ticker"],
@@ -45,7 +49,7 @@ async def init_stocks(db: AsyncSession):
                 change_percent=stock_data["change_percent"],
                 volume=stock_data["volume"],
                 market_cap=stock_data["market_cap"],
-                sector=stock_data["sector"]
+                sector=stock_data["sector"],
             )
             db.add(stock)
             logger.info(f"Initialized stock: {stock_data['ticker']}")
@@ -64,9 +68,7 @@ async def get_portfolio(user_id: int, db: AsyncSession = Depends(get_db)):
     if cached:
         return cached
 
-    result = await db.execute(
-        select(Portfolio).where(Portfolio.user_id == user_id)
-    )
+    result = await db.execute(select(Portfolio).where(Portfolio.user_id == user_id))
     positions = result.scalars().all()
 
     portfolio_data = []
@@ -83,23 +85,27 @@ async def get_portfolio(user_id: int, db: AsyncSession = Depends(get_db)):
             profit_loss = current_value - cost_basis
             profit_loss_pct = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
 
-            portfolio_data.append({
-                "ticker": pos.ticker,
-                "name": stock.name,
-                "shares": pos.shares,
-                "avg_price": round(pos.avg_price, 2),
-                "current_price": round(stock.price, 2),
-                "current_value": round(current_value, 2),
-                "profit_loss": round(profit_loss, 2),
-                "profit_loss_pct": round(profit_loss_pct, 2),
-                "sector": stock.sector
-            })
+            portfolio_data.append(
+                {
+                    "ticker": pos.ticker,
+                    "name": stock.name,
+                    "shares": pos.shares,
+                    "avg_price": round(pos.avg_price, 2),
+                    "current_price": round(stock.price, 2),
+                    "current_value": round(current_value, 2),
+                    "profit_loss": round(profit_loss, 2),
+                    "profit_loss_pct": round(profit_loss_pct, 2),
+                    "sector": stock.sector,
+                }
+            )
 
             total_value += current_value
             total_cost += cost_basis
 
     total_profit_loss = total_value - total_cost
-    total_profit_loss_pct = (total_profit_loss / total_cost * 100) if total_cost > 0 else 0
+    total_profit_loss_pct = (
+        (total_profit_loss / total_cost * 100) if total_cost > 0 else 0
+    )
 
     response = {
         "positions": portfolio_data,
@@ -107,7 +113,7 @@ async def get_portfolio(user_id: int, db: AsyncSession = Depends(get_db)):
         "total_cost": round(total_cost, 2),
         "total_profit_loss": round(total_profit_loss, 2),
         "total_profit_loss_pct": round(total_profit_loss_pct, 2),
-        "cash": 0
+        "cash": 0,
     }
 
     await set_cache(cache_key, response, ttl=60)
@@ -119,7 +125,7 @@ async def execute_trade(
     request: Request,
     user_id: int,
     trade: TradeRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Execute trade with ATOMIC balance and position updates.
@@ -140,7 +146,7 @@ async def execute_trade(
         existing_result = await db.execute(
             select(TradeHistory).where(
                 TradeHistory.idempotency_key == trade.idempotency_key,
-                TradeHistory.user_id == user_id
+                TradeHistory.user_id == user_id,
             )
         )
         existing_trade = existing_result.scalar_one_or_none()
@@ -156,7 +162,7 @@ async def execute_trade(
                 "shares": existing_trade.shares,
                 "price": round(existing_trade.price, 2),
                 "total": round(existing_trade.total_cost, 2),
-                "idempotent": True
+                "idempotent": True,
             }
 
     # Start atomic transaction
@@ -192,7 +198,9 @@ async def execute_trade(
                     f"[{request_id}] Insufficient funds for trade: "
                     f"user {user_id} has {user.balance}, needs {total_cost}"
                 )
-                raise HTTPException(400, f"Insufficient funds. Need ${total_cost}, have ${user.balance}")
+                raise HTTPException(
+                    400, f"Insufficient funds. Need ${total_cost}, have ${user.balance}"
+                )
 
             # Deduct balance
             user.balance -= total_cost
@@ -208,7 +216,9 @@ async def execute_trade(
             if position:
                 # Update average price
                 total_shares = position.shares + validated_shares
-                total_value = (position.avg_price * position.shares) + (stock.price * validated_shares)
+                total_value = (position.avg_price * position.shares) + (
+                    stock.price * validated_shares
+                )
                 position.avg_price = total_value / total_shares
                 position.shares = total_shares
                 position.updated_at = datetime.utcnow()
@@ -217,7 +227,7 @@ async def execute_trade(
                     user_id=user_id,
                     ticker=trade.ticker,
                     shares=validated_shares,
-                    avg_price=stock.price
+                    avg_price=stock.price,
                 )
                 db.add(position)
 
@@ -234,7 +244,7 @@ async def execute_trade(
                 action="buy",
                 price=stock.price,
                 total_cost=total_cost,
-                idempotency_key=trade.idempotency_key
+                idempotency_key=trade.idempotency_key,
             )
             db.add(trade_record)
 
@@ -250,7 +260,7 @@ async def execute_trade(
             if not position or position.shares < validated_shares:
                 raise HTTPException(
                     400,
-                    f"Insufficient shares. Have {position.shares if position else 0}, need {validated_shares}"
+                    f"Insufficient shares. Have {position.shares if position else 0}, need {validated_shares}",
                 )
 
             # Add balance
@@ -276,7 +286,7 @@ async def execute_trade(
                 action="sell",
                 price=stock.price,
                 total_cost=total_cost,
-                idempotency_key=trade.idempotency_key
+                idempotency_key=trade.idempotency_key,
             )
             db.add(trade_record)
 
@@ -292,17 +302,20 @@ async def execute_trade(
         price=stock.price,
         total_cost=total_cost,
         request_id=request_id,
-        idempotency_key=trade.idempotency_key
+        idempotency_key=trade.idempotency_key,
     )
 
     # Publish event
-    await publish_event("portfolio.updated", {
-        "user_id": user_id,
-        "ticker": trade.ticker,
-        "action": trade.action,
-        "shares": validated_shares,
-        "price": stock.price
-    })
+    await publish_event(
+        "portfolio.updated",
+        {
+            "user_id": user_id,
+            "ticker": trade.ticker,
+            "action": trade.action,
+            "shares": validated_shares,
+            "price": stock.price,
+        },
+    )
 
     # Invalidate cache
     await delete_cache(f"portfolio:{user_id}")
@@ -314,7 +327,7 @@ async def execute_trade(
         "shares": validated_shares,
         "price": round(stock.price, 2),
         "total": round(total_cost, 2),
-        "new_balance": round(user.balance, 2)
+        "new_balance": round(user.balance, 2),
     }
 
 
@@ -340,19 +353,23 @@ async def get_stocks(db: AsyncSession = Depends(get_db)):
             stock.change_percent = change_pct
 
             all_stocks_data = market_data.get_all_stocks()
-            stock_data = next((s for s in all_stocks_data if s["ticker"] == stock.ticker), None)
+            stock_data = next(
+                (s for s in all_stocks_data if s["ticker"] == stock.ticker), None
+            )
             if stock_data:
                 stock.volume = stock_data["volume"]
 
-            stock_list.append({
-                "ticker": stock.ticker,
-                "name": stock.name,
-                "price": round(stock.price, 2),
-                "change_percent": round(stock.change_percent, 2),
-                "volume": stock.volume,
-                "market_cap": stock.market_cap,
-                "sector": stock.sector
-            })
+            stock_list.append(
+                {
+                    "ticker": stock.ticker,
+                    "name": stock.name,
+                    "price": round(stock.price, 2),
+                    "change_percent": round(stock.change_percent, 2),
+                    "volume": stock.volume,
+                    "market_cap": stock.market_cap,
+                    "sector": stock.sector,
+                }
+            )
         except ValueError as e:
             logger.warning(f"Skipping unknown ticker {stock.ticker}: {e}")
             continue
@@ -387,7 +404,7 @@ async def get_stock_detail(ticker: str, db: AsyncSession = Depends(get_db)):
         "pe_ratio": metrics["pe_ratio"],
         "dividend_yield": metrics["dividend_yield"],
         "52w_high": metrics["52w_high"],
-        "52w_low": metrics["52w_low"]
+        "52w_low": metrics["52w_low"],
     }
 
 

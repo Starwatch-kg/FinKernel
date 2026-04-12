@@ -1,4 +1,5 @@
 """Production-grade authentication and authorization system"""
+
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
@@ -7,7 +8,8 @@ from fastapi import HTTPException, Header, Request
 from functools import wraps
 import os
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.config import get_config
 from shared.logger import setup_logger
@@ -22,6 +24,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 class UserContext:
     """Authenticated user context"""
+
     def __init__(self, user_id: int, email: str, is_admin: bool = False):
         self.user_id = user_id
         self.email = email
@@ -34,14 +37,14 @@ class UserContext:
 def hash_password(password: str) -> str:
     """Hash password with bcrypt (cost factor 12)"""
     salt = bcrypt.gensalt(rounds=12)
-    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed.decode('utf-8')
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
     """Verify password against hash - constant time comparison"""
     try:
-        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
     except Exception as e:
         logger.error(f"Password verification error: {e}")
         return False
@@ -57,7 +60,7 @@ def create_access_token(user_id: int, email: str, is_admin: bool = False) -> str
         "is_admin": is_admin,
         "exp": expire,
         "iat": datetime.utcnow(),
-        "type": "access"
+        "type": "access",
     }
 
     token = jwt.encode(payload, config.jwt_secret_key, algorithm=config.jwt_algorithm)
@@ -73,7 +76,7 @@ def create_refresh_token(user_id: int, email: str) -> str:
         "email": email,
         "exp": expire,
         "iat": datetime.utcnow(),
-        "type": "refresh"
+        "type": "refresh",
     }
 
     token = jwt.encode(payload, config.jwt_secret_key, algorithm=config.jwt_algorithm)
@@ -87,7 +90,7 @@ def decode_token(token: str) -> Optional[Dict]:
             token,
             config.jwt_secret_key,
             algorithms=[config.jwt_algorithm],
-            options={"verify_exp": True}
+            options={"verify_exp": True},
         )
         return payload
     except jwt.ExpiredSignatureError:
@@ -102,8 +105,7 @@ def decode_token(token: str) -> Optional[Dict]:
 
 
 async def get_current_user(
-    request: Request,
-    authorization: str = Header(None, alias="Authorization")
+    request: Request, authorization: str = Header(None, alias="Authorization")
 ) -> UserContext:
     """
     CRITICAL: Extract authenticated user from JWT token.
@@ -117,7 +119,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=401,
             detail="Missing authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not authorization.startswith("Bearer "):
@@ -125,7 +127,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     token = authorization[7:]  # Remove "Bearer " prefix
@@ -136,29 +138,27 @@ async def get_current_user(
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Verify token type
     if payload.get("type") != "access":
         logger.warning(f"[{request_id}] Wrong token type: {payload.get('type')}")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token type"
-        )
+        raise HTTPException(status_code=401, detail="Invalid token type")
 
     user_id = int(payload.get("sub"))
     email = payload.get("email")
     is_admin = payload.get("is_admin", False)
 
-    logger.info(f"[{request_id}] Authenticated user_id={user_id}, email={email}, admin={is_admin}")
+    logger.info(
+        f"[{request_id}] Authenticated user_id={user_id}, email={email}, admin={is_admin}"
+    )
 
     return UserContext(user_id=user_id, email=email, is_admin=is_admin)
 
 
 async def get_current_admin(
-    request: Request,
-    authorization: str = Header(None, alias="Authorization")
+    request: Request, authorization: str = Header(None, alias="Authorization")
 ) -> UserContext:
     """
     Require admin privileges.
@@ -168,11 +168,10 @@ async def get_current_admin(
 
     if not user.is_admin:
         request_id = getattr(request.state, "request_id", "unknown")
-        logger.warning(f"[{request_id}] Non-admin user {user.user_id} attempted admin action")
-        raise HTTPException(
-            status_code=403,
-            detail="Admin privileges required"
+        logger.warning(
+            f"[{request_id}] Non-admin user {user.user_id} attempted admin action"
         )
+        raise HTTPException(status_code=403, detail="Admin privileges required")
 
     return user
 
@@ -188,8 +187,7 @@ def verify_resource_ownership(user: UserContext, resource_user_id: int):
             f"resource owned by user {resource_user_id}"
         )
         raise HTTPException(
-            status_code=403,
-            detail="You do not have permission to access this resource"
+            status_code=403, detail="You do not have permission to access this resource"
         )
 
 

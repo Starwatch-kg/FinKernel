@@ -1,4 +1,5 @@
 """Centralized Secrets Management with Vault/AWS Secrets Manager abstraction"""
+
 import os
 import time
 from typing import Optional, Dict, Any
@@ -164,7 +165,9 @@ def create_secrets_manager() -> SecretsManager:
         region = os.getenv("AWS_REGION", "us-east-1")
         backend = AWSSecretsBackend(region)
     else:
-        logger.warning("Using environment variable backend (not recommended for production)")
+        logger.warning(
+            "Using environment variable backend (not recommended for production)"
+        )
         backend = EnvBackend()
 
     cache_ttl = int(os.getenv("SECRETS_CACHE_TTL", "300"))

@@ -2,6 +2,7 @@
 Integration tests for rate limiting.
 Tests Redis-based rate limiting and fallback behavior.
 """
+
 import pytest
 import asyncio
 from httpx import AsyncClient
@@ -15,7 +16,6 @@ tests_path = Path(__file__).parent.parent
 sys.path.insert(0, str(tests_path))
 
 from helpers import register_and_get_token
-
 
 BASE_URL = "http://localhost:8000"
 
@@ -31,10 +31,9 @@ class TestRateLimiting:
 
             # Try to login 6 times quickly
             for i in range(6):
-                response = await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": "Test123!@#"
-                })
+                response = await client.post(
+                    "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+                )
 
                 if i < 5:
                     # First 5 should go through (even if credentials wrong)
@@ -52,11 +51,14 @@ class TestRateLimiting:
 
             # Try to register 4 times quickly
             for i in range(4):
-                response = await client.post("/api/auth/register", json={
-                    "email": f"{base_email}_{i}@example.com",
-                    "name": f"User {base_email}_{i}",
-                    "password": "Test123!@#"
-                })
+                response = await client.post(
+                    "/api/auth/register",
+                    json={
+                        "email": f"{base_email}_{i}@example.com",
+                        "name": f"User {base_email}_{i}",
+                        "password": "Test123!@#",
+                    },
+                )
 
                 if i < 3:
                     # First 3 should succeed
@@ -76,13 +78,16 @@ class TestRateLimiting:
             # Try to create 52 transactions quickly
             rate_limited = False
             for i in range(52):
-                response = await client.post("/api/transactions", json={
-                    "amount": 1.0,
-                    "type": "income",
-                    "category": "salary",
-                    "description": f"Test {i}",
-                    "idempotency_key": str(uuid.uuid4())
-                })
+                response = await client.post(
+                    "/api/transactions",
+                    json={
+                        "amount": 1.0,
+                        "type": "income",
+                        "category": "salary",
+                        "description": f"Test {i}",
+                        "idempotency_key": str(uuid.uuid4()),
+                    },
+                )
 
                 if response.status_code == 429:
                     rate_limited = True
@@ -119,10 +124,9 @@ class TestRateLimitFallback:
             # Even with Redis down, rate limiting should still work
             # (using in-memory fallback)
             for i in range(6):
-                response = await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": "Test123!@#"
-                })
+                response = await client.post(
+                    "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+                )
 
                 # Should still be rate limited eventually
                 if response.status_code == 429:
@@ -136,31 +140,37 @@ class TestRateLimitFallback:
         async with AsyncClient(base_url=BASE_URL) as client:
             # Create two users
             auth_data1 = await register_and_get_token(client)
-            token1 = auth_data1['token']
+            token1 = auth_data1["token"]
 
             auth_data2 = await register_and_get_token(client)
-            token2 = auth_data2['token']
+            token2 = auth_data2["token"]
 
             # User 1 makes many requests
             client.headers["Authorization"] = f"Bearer {token1}"
             for i in range(50):
-                await client.post("/api/transactions", json={
-                    "amount": 1.0,
-                    "type": "income",
-                    "category": "salary",
-                    "description": f"Test {i}",
-                    "idempotency_key": str(uuid.uuid4())
-                })
+                await client.post(
+                    "/api/transactions",
+                    json={
+                        "amount": 1.0,
+                        "type": "income",
+                        "category": "salary",
+                        "description": f"Test {i}",
+                        "idempotency_key": str(uuid.uuid4()),
+                    },
+                )
 
             # User 2 should still be able to make requests
             client.headers["Authorization"] = f"Bearer {token2}"
-            response = await client.post("/api/transactions", json={
-                "amount": 1.0,
-                "type": "income",
-                "category": "salary",
-                "description": "User 2 test",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 1.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "User 2 test",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             # User 2 should not be rate limited
             assert response.status_code == 200
@@ -177,16 +187,14 @@ class TestRateLimitRecovery:
 
             # Hit rate limit
             for i in range(6):
-                await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": "Test123!@#"
-                })
+                await client.post(
+                    "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+                )
 
             # Should be rate limited now
-            response = await client.post("/api/auth/login", json={
-                "email": email,
-                "password": "Test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+            )
             assert response.status_code == 429
 
             # Wait for window to reset (5 minutes for login)
@@ -241,28 +249,27 @@ class TestRateLimitSlidingWindow:
 
             # Make 3 requests quickly
             for i in range(3):
-                response = await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": "Test123!@#"
-                })
-                assert response.status_code == 401  # Wrong password, but not rate limited
+                response = await client.post(
+                    "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+                )
+                assert (
+                    response.status_code == 401
+                )  # Wrong password, but not rate limited
 
             # Wait a bit
             await asyncio.sleep(1)
 
             # Should still be able to make 2 more (sliding window)
             for i in range(2):
-                response = await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": "Test123!@#"
-                })
+                response = await client.post(
+                    "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+                )
                 assert response.status_code == 401  # Still not rate limited
 
             # 6th should be rate limited
-            response = await client.post("/api/auth/login", json={
-                "email": email,
-                "password": "Test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login", json={"email": email, "password": "Test123!@#"}
+            )
             assert response.status_code == 429
 
 

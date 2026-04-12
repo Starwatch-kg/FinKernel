@@ -1,4 +1,5 @@
 """Alerting System with webhook and log integration"""
+
 import asyncio
 import httpx
 from datetime import datetime, timedelta
@@ -35,7 +36,7 @@ class Alert:
         message: str,
         severity: AlertSeverity,
         source: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self.id = f"alert_{int(datetime.utcnow().timestamp() * 1000)}"
         self.title = title
@@ -53,7 +54,7 @@ class Alert:
             "severity": self.severity.value,
             "source": self.source,
             "metadata": self.metadata,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
@@ -67,7 +68,11 @@ class AlertingSystem:
         self.alert_queue = asyncio.Queue(maxsize=1000)
         self.dedup_window = 300  # 5 minutes
 
-    def configure(self, webhook_url: Optional[str] = None, channels: Optional[List[AlertChannel]] = None):
+    def configure(
+        self,
+        webhook_url: Optional[str] = None,
+        channels: Optional[List[AlertChannel]] = None,
+    ):
         """Configure alerting channels"""
         if webhook_url:
             self.webhook_url = webhook_url
@@ -77,7 +82,9 @@ class AlertingSystem:
         if channels:
             self.channels = channels
 
-        logger.info(f"Alerting configured with channels: {[c.value for c in self.channels]}")
+        logger.info(
+            f"Alerting configured with channels: {[c.value for c in self.channels]}"
+        )
 
     async def send_alert(
         self,
@@ -85,7 +92,7 @@ class AlertingSystem:
         message: str,
         severity: AlertSeverity,
         source: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Send alert with deduplication"""
         alert = Alert(title, message, severity, source, metadata)
@@ -137,10 +144,12 @@ class AlertingSystem:
             AlertSeverity.INFO: logger.info,
             AlertSeverity.WARNING: logger.warning,
             AlertSeverity.ERROR: logger.error,
-            AlertSeverity.CRITICAL: logger.critical
+            AlertSeverity.CRITICAL: logger.critical,
         }.get(alert.severity, logger.info)
 
-        log_func(f"ALERT [{alert.severity.value.upper()}] {alert.title}: {alert.message} | {alert.metadata}")
+        log_func(
+            f"ALERT [{alert.severity.value.upper()}] {alert.title}: {alert.message} | {alert.metadata}"
+        )
 
     async def _send_to_webhook(self, alert: Alert):
         """Send alert to webhook"""
@@ -170,7 +179,9 @@ class AlertRules:
         self.alerting = alerting
         self.redis = redis
 
-    async def check_failed_logins(self, user_id: Optional[int] = None, email: Optional[str] = None):
+    async def check_failed_logins(
+        self, user_id: Optional[int] = None, email: Optional[str] = None
+    ):
         """Alert on multiple failed login attempts"""
         key = f"failed_logins:{email or user_id}"
         count = await self.redis.get(key)
@@ -181,20 +192,24 @@ class AlertRules:
                 message=f"User {email or user_id} has {count} failed login attempts",
                 severity=AlertSeverity.WARNING,
                 source="auth",
-                metadata={"user_id": user_id, "email": email, "attempts": int(count)}
+                metadata={"user_id": user_id, "email": email, "attempts": int(count)},
             )
 
-    async def check_anomaly_detection(self, user_id: int, anomaly_type: str, details: dict):
+    async def check_anomaly_detection(
+        self, user_id: int, anomaly_type: str, details: dict
+    ):
         """Alert on anomaly detection"""
         await self.alerting.send_alert(
             title=f"Anomaly Detected: {anomaly_type}",
             message=f"User {user_id} triggered anomaly detection",
             severity=AlertSeverity.WARNING,
             source="anti_abuse",
-            metadata={"user_id": user_id, "type": anomaly_type, "details": details}
+            metadata={"user_id": user_id, "type": anomaly_type, "details": details},
         )
 
-    async def check_error_rate(self, service: str, error_count: int, total_requests: int):
+    async def check_error_rate(
+        self, service: str, error_count: int, total_requests: int
+    ):
         """Alert on high error rate"""
         if total_requests == 0:
             return
@@ -202,14 +217,20 @@ class AlertRules:
         error_rate = error_count / total_requests
 
         if error_rate > 0.05:  # 5% error rate
-            severity = AlertSeverity.CRITICAL if error_rate > 0.1 else AlertSeverity.ERROR
+            severity = (
+                AlertSeverity.CRITICAL if error_rate > 0.1 else AlertSeverity.ERROR
+            )
 
             await self.alerting.send_alert(
                 title=f"High Error Rate: {service}",
                 message=f"Error rate: {error_rate:.2%} ({error_count}/{total_requests})",
                 severity=severity,
                 source=service,
-                metadata={"error_count": error_count, "total_requests": total_requests, "error_rate": error_rate}
+                metadata={
+                    "error_count": error_count,
+                    "total_requests": total_requests,
+                    "error_rate": error_rate,
+                },
             )
 
     async def check_ai_failure_rate(self, failure_count: int, total_predictions: int):
@@ -225,7 +246,10 @@ class AlertRules:
                 message=f"AI service failure rate: {failure_rate:.2%}",
                 severity=AlertSeverity.ERROR,
                 source="ai_service",
-                metadata={"failure_count": failure_count, "total_predictions": total_predictions}
+                metadata={
+                    "failure_count": failure_count,
+                    "total_predictions": total_predictions,
+                },
             )
 
     async def check_service_health(self, service: str, is_healthy: bool):
@@ -236,7 +260,7 @@ class AlertRules:
                 message=f"{service} health check failed",
                 severity=AlertSeverity.CRITICAL,
                 source=service,
-                metadata={"service": service}
+                metadata={"service": service},
             )
 
     async def check_database_connection(self, is_connected: bool):
@@ -247,7 +271,7 @@ class AlertRules:
                 message="Unable to connect to database",
                 severity=AlertSeverity.CRITICAL,
                 source="database",
-                metadata={}
+                metadata={},
             )
 
     async def check_redis_connection(self, is_connected: bool):
@@ -258,7 +282,7 @@ class AlertRules:
                 message="Unable to connect to Redis",
                 severity=AlertSeverity.ERROR,
                 source="redis",
-                metadata={}
+                metadata={},
             )
 
 

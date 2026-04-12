@@ -2,6 +2,7 @@
 Audit logging for critical financial operations.
 Logs are immutable and stored separately for compliance.
 """
+
 import json
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -24,7 +25,7 @@ class AuditLogger:
         amount: float,
         transaction_type: str,
         request_id: str,
-        idempotency_key: Optional[str] = None
+        idempotency_key: Optional[str] = None,
     ):
         """Log transaction creation"""
         await AuditLogger._log_event(
@@ -34,9 +35,9 @@ class AuditLogger:
                 "transaction_id": transaction_id,
                 "amount": amount,
                 "type": transaction_type,
-                "idempotency_key": idempotency_key
+                "idempotency_key": idempotency_key,
             },
-            request_id=request_id
+            request_id=request_id,
         )
 
     @staticmethod
@@ -47,7 +48,7 @@ class AuditLogger:
         transaction_type: str,
         request_id: str,
         balance_before: float,
-        balance_after: float
+        balance_after: float,
     ):
         """Log transaction deletion (critical for audit trail)"""
         await AuditLogger._log_event(
@@ -58,10 +59,10 @@ class AuditLogger:
                 "amount": amount,
                 "type": transaction_type,
                 "balance_before": balance_before,
-                "balance_after": balance_after
+                "balance_after": balance_after,
             },
             request_id=request_id,
-            severity="high"
+            severity="high",
         )
 
     @staticmethod
@@ -73,7 +74,7 @@ class AuditLogger:
         price: float,
         total_cost: float,
         request_id: str,
-        idempotency_key: Optional[str] = None
+        idempotency_key: Optional[str] = None,
     ):
         """Log trade execution"""
         await AuditLogger._log_event(
@@ -85,9 +86,9 @@ class AuditLogger:
                 "shares": shares,
                 "price": price,
                 "total_cost": total_cost,
-                "idempotency_key": idempotency_key
+                "idempotency_key": idempotency_key,
             },
-            request_id=request_id
+            request_id=request_id,
         )
 
     @staticmethod
@@ -97,7 +98,7 @@ class AuditLogger:
         balance_after: float,
         reason: str,
         request_id: str,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """Log balance changes (critical for financial audit)"""
         await AuditLogger._log_event(
@@ -108,10 +109,10 @@ class AuditLogger:
                 "balance_after": balance_after,
                 "delta": balance_after - balance_before,
                 "reason": reason,
-                **(details or {})
+                **(details or {}),
             },
             request_id=request_id,
-            severity="high"
+            severity="high",
         )
 
     @staticmethod
@@ -119,19 +120,15 @@ class AuditLogger:
         email: Optional[str],
         reason: str,
         request_id: str,
-        ip_address: Optional[str] = None
+        ip_address: Optional[str] = None,
     ):
         """Log authentication failures (security monitoring)"""
         await AuditLogger._log_event(
             event_type="auth.failed",
             user_id=None,
-            details={
-                "email": email,
-                "reason": reason,
-                "ip_address": ip_address
-            },
+            details={"email": email, "reason": reason, "ip_address": ip_address},
             request_id=request_id,
-            severity="medium"
+            severity="medium",
         )
 
     @staticmethod
@@ -140,7 +137,7 @@ class AuditLogger:
         resource_type: str,
         resource_id: Any,
         request_id: str,
-        attempted_action: str
+        attempted_action: str,
     ):
         """Log unauthorized access attempts (IDOR attempts)"""
         await AuditLogger._log_event(
@@ -149,10 +146,10 @@ class AuditLogger:
             details={
                 "resource_type": resource_type,
                 "resource_id": resource_id,
-                "attempted_action": attempted_action
+                "attempted_action": attempted_action,
             },
             request_id=request_id,
-            severity="critical"
+            severity="critical",
         )
 
     @staticmethod
@@ -161,7 +158,7 @@ class AuditLogger:
         action: str,
         target_user_id: Optional[int],
         request_id: str,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """Log admin actions for accountability"""
         await AuditLogger._log_event(
@@ -170,10 +167,10 @@ class AuditLogger:
             details={
                 "action": action,
                 "target_user_id": target_user_id,
-                **(details or {})
+                **(details or {}),
             },
             request_id=request_id,
-            severity="high"
+            severity="high",
         )
 
     @staticmethod
@@ -182,7 +179,7 @@ class AuditLogger:
         user_id: Optional[int],
         details: Dict[str, Any],
         request_id: str,
-        severity: str = "info"
+        severity: str = "info",
     ):
         """
         Internal method to log audit events.
@@ -196,7 +193,7 @@ class AuditLogger:
             "user_id": user_id,
             "request_id": request_id,
             "severity": severity,
-            "details": details
+            "details": details,
         }
 
         # Log to application logger
@@ -213,22 +210,19 @@ class AuditLogger:
         try:
             audit_key = f"audit:{event_type}:{timestamp}:{request_id}"
             await redis_client.setex(
-                audit_key,
-                2592000,  # 30 days in seconds
-                json.dumps(audit_entry)
+                audit_key, 2592000, json.dumps(audit_entry)  # 30 days in seconds
             )
 
             # Add to sorted set for querying by time
             await redis_client.zadd(
                 f"audit:timeline:{event_type}",
-                {audit_key: datetime.utcnow().timestamp()}
+                {audit_key: datetime.utcnow().timestamp()},
             )
 
             # Add to user-specific audit trail
             if user_id:
                 await redis_client.zadd(
-                    f"audit:user:{user_id}",
-                    {audit_key: datetime.utcnow().timestamp()}
+                    f"audit:user:{user_id}", {audit_key: datetime.utcnow().timestamp()}
                 )
 
         except Exception as e:

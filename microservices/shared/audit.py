@@ -1,4 +1,5 @@
 """Enterprise Audit Logging System"""
+
 import asyncio
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -15,6 +16,7 @@ Base = declarative_base()
 
 class AuditLog(Base):
     """Audit log table for compliance"""
+
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -30,8 +32,8 @@ class AuditLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
     __table_args__ = (
-        Index('idx_user_action_time', 'user_id', 'action', 'timestamp'),
-        Index('idx_resource_time', 'resource', 'timestamp'),
+        Index("idx_user_action_time", "user_id", "action", "timestamp"),
+        Index("idx_resource_time", "resource", "timestamp"),
     )
 
 
@@ -52,7 +54,7 @@ class AuditLogger:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
         request_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """Queue audit log entry (non-blocking)"""
         entry = {
@@ -65,7 +67,7 @@ class AuditLogger:
             "user_agent": user_agent,
             "request_id": request_id,
             "details": details,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         try:
@@ -81,7 +83,7 @@ class AuditLogger:
         email: Optional[str] = None,
         ip_address: Optional[str] = None,
         request_id: Optional[str] = None,
-        reason: Optional[str] = None
+        reason: Optional[str] = None,
     ):
         """Log authentication events"""
         await self.log(
@@ -91,10 +93,7 @@ class AuditLogger:
             user_id=user_id,
             ip_address=ip_address,
             request_id=request_id,
-            details={
-                "email": email,
-                "reason": reason
-            }
+            details={"email": email, "reason": reason},
         )
 
     async def log_data_access(
@@ -105,7 +104,7 @@ class AuditLogger:
         action: str,
         status: str,
         ip_address: Optional[str] = None,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ):
         """Log data access events"""
         await self.log(
@@ -115,7 +114,7 @@ class AuditLogger:
             status=status,
             user_id=user_id,
             ip_address=ip_address,
-            request_id=request_id
+            request_id=request_id,
         )
 
     async def log_trade(
@@ -127,7 +126,7 @@ class AuditLogger:
         price: float,
         status: str,
         ip_address: Optional[str] = None,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ):
         """Log trading activity"""
         await self.log(
@@ -142,8 +141,8 @@ class AuditLogger:
                 "ticker": ticker,
                 "shares": shares,
                 "price": price,
-                "total_value": shares * price
-            }
+                "total_value": shares * price,
+            },
         )
 
     async def log_admin_action(
@@ -154,7 +153,7 @@ class AuditLogger:
         status: str = "success",
         ip_address: Optional[str] = None,
         request_id: Optional[str] = None,
-        details: Optional[Dict] = None
+        details: Optional[Dict] = None,
     ):
         """Log admin actions"""
         await self.log(
@@ -165,7 +164,7 @@ class AuditLogger:
             resource_id=str(target_user_id) if target_user_id else None,
             ip_address=ip_address,
             request_id=request_id,
-            details=details
+            details=details,
         )
 
     async def start_worker(self, db_session_factory):

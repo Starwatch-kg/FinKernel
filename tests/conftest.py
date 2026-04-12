@@ -10,16 +10,26 @@ microservices_path = Path(__file__).parent.parent / "microservices"
 sys.path.insert(0, str(microservices_path))
 
 # Set environment variables for tests
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb")
+os.environ.setdefault(
+    "DATABASE_URL", "postgresql+asyncpg://finuser:finpass123@localhost:5432/financedb"
+)
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long")
+os.environ.setdefault(
+    "JWT_SECRET_KEY", "test-secret-key-for-ci-pipeline-must-be-at-least-64-chars-long"
+)
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("BASE_URL", "http://localhost:8000")
+
 
 # Configure pytest-asyncio
 @pytest.fixture(scope="session")
 def event_loop_policy():
-    return asyncio.WindowsProactorEventLoopPolicy() if sys.platform == "win32" else asyncio.DefaultEventLoopPolicy()
+    return (
+        asyncio.WindowsProactorEventLoopPolicy()
+        if sys.platform == "win32"
+        else asyncio.DefaultEventLoopPolicy()
+    )
+
 
 @pytest.fixture(scope="session")
 def event_loop(event_loop_policy):
@@ -28,10 +38,12 @@ def event_loop(event_loop_policy):
     yield loop
     loop.close()
 
+
 # Base URL for API tests
 @pytest.fixture
 def base_url():
     return os.getenv("BASE_URL", "http://localhost:8000")
+
 
 # HTTP client fixture
 @pytest.fixture
@@ -39,6 +51,7 @@ async def client(base_url):
     """Async HTTP client for API tests"""
     async with httpx.AsyncClient(base_url=base_url, timeout=10.0) as client:
         yield client
+
 
 # Authenticated client fixture
 @pytest.fixture

@@ -1,4 +1,5 @@
 """Fraud Detection Layer with risk scoring"""
+
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 from redis.asyncio import Redis
@@ -25,7 +26,7 @@ class RiskScore:
             "level": self.get_level(),
             "factors": self.factors,
             "details": self.details,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
     def get_level(self) -> str:
@@ -46,11 +47,7 @@ class FraudDetector:
     def __init__(self, redis: Redis):
         self.redis = redis
 
-    async def calculate_risk_score(
-        self,
-        user_id: int,
-        db: AsyncSession
-    ) -> RiskScore:
+    async def calculate_risk_score(self, user_id: int, db: AsyncSession) -> RiskScore:
         """Calculate comprehensive risk score for user"""
         factors = []
         details = {}
@@ -102,11 +99,10 @@ class FraudDetector:
         # Get last 24 hours spending
         yesterday = datetime.utcnow() - timedelta(days=1)
         recent_result = await db.execute(
-            select(func.sum(Transaction.amount))
-            .where(
+            select(func.sum(Transaction.amount)).where(
                 Transaction.user_id == user_id,
                 Transaction.type == "expense",
-                Transaction.timestamp >= yesterday
+                Transaction.timestamp >= yesterday,
             )
         )
         recent_spending = recent_result.scalar() or 0
@@ -114,11 +110,10 @@ class FraudDetector:
         # Get average daily spending (last 30 days)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         avg_result = await db.execute(
-            select(func.avg(Transaction.amount))
-            .where(
+            select(func.avg(Transaction.amount)).where(
                 Transaction.user_id == user_id,
                 Transaction.type == "expense",
-                Transaction.timestamp >= thirty_days_ago
+                Transaction.timestamp >= thirty_days_ago,
             )
         )
         avg_spending = avg_result.scalar() or 0
@@ -143,10 +138,7 @@ class FraudDetector:
         from shared.models import Portfolio
 
         # Get user's portfolio activity
-        result = await db.execute(
-            select(Portfolio)
-            .where(Portfolio.user_id == user_id)
-        )
+        result = await db.execute(select(Portfolio).where(Portfolio.user_id == user_id))
         positions = result.scalars().all()
 
         if not positions:
@@ -233,7 +225,7 @@ class FraudDetector:
             return RiskScore(
                 score=score_dict["score"],
                 factors=score_dict["factors"],
-                details=score_dict["details"]
+                details=score_dict["details"],
             )
 
         return None
@@ -242,7 +234,9 @@ class FraudDetector:
         """Flag high-risk user"""
         key = f"high_risk_user:{user_id}"
         await self.redis.setex(key, 86400, json.dumps(risk_score.to_dict()))
-        logger.warning(f"User {user_id} flagged as high-risk: score={risk_score.score:.2f}, factors={risk_score.factors}")
+        logger.warning(
+            f"User {user_id} flagged as high-risk: score={risk_score.score:.2f}, factors={risk_score.factors}"
+        )
 
     async def is_high_risk(self, user_id: int) -> bool:
         """Check if user is flagged as high-risk"""

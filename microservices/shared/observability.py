@@ -1,5 +1,12 @@
 """Observability: Prometheus metrics integration"""
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 from fastapi import Response
 import time
 from functools import wraps
@@ -9,107 +16,73 @@ logger = setup_logger("metrics")
 
 # Request metrics
 http_requests_total = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
+    "http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"]
 )
 
 http_request_duration_seconds = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration',
-    ['method', 'endpoint']
+    "http_request_duration_seconds", "HTTP request duration", ["method", "endpoint"]
 )
 
 # Auth metrics
 auth_attempts_total = Counter(
-    'auth_attempts_total',
-    'Total authentication attempts',
-    ['type', 'status']
+    "auth_attempts_total", "Total authentication attempts", ["type", "status"]
 )
 
 # Transaction metrics
 transactions_total = Counter(
-    'transactions_total',
-    'Total transactions',
-    ['type', 'status']
+    "transactions_total", "Total transactions", ["type", "status"]
 )
 
-transaction_amount = Histogram(
-    'transaction_amount',
-    'Transaction amounts',
-    ['type']
-)
+transaction_amount = Histogram("transaction_amount", "Transaction amounts", ["type"])
 
 # AI metrics
 ai_predictions_total = Counter(
-    'ai_predictions_total',
-    'Total AI predictions',
-    ['status']
+    "ai_predictions_total", "Total AI predictions", ["status"]
 )
 
 ai_prediction_duration_seconds = Histogram(
-    'ai_prediction_duration_seconds',
-    'AI prediction duration'
+    "ai_prediction_duration_seconds", "AI prediction duration"
 )
 
-ai_confidence = Histogram(
-    'ai_confidence',
-    'AI prediction confidence scores'
-)
+ai_confidence = Histogram("ai_confidence", "AI prediction confidence scores")
 
 # Circuit breaker metrics
 circuit_breaker_state = Gauge(
-    'circuit_breaker_state',
-    'Circuit breaker state (0=closed, 1=half_open, 2=open)',
-    ['name']
+    "circuit_breaker_state",
+    "Circuit breaker state (0=closed, 1=half_open, 2=open)",
+    ["name"],
 )
 
 # Rate limiting metrics
 rate_limit_exceeded_total = Counter(
-    'rate_limit_exceeded_total',
-    'Total rate limit violations',
-    ['resource']
+    "rate_limit_exceeded_total", "Total rate limit violations", ["resource"]
 )
 
 # Fraud detection metrics
-fraud_score = Histogram(
-    'fraud_risk_score',
-    'User fraud risk scores'
-)
+fraud_score = Histogram("fraud_risk_score", "User fraud risk scores")
 
-high_risk_users = Gauge(
-    'high_risk_users_total',
-    'Total high-risk users flagged'
-)
+high_risk_users = Gauge("high_risk_users_total", "Total high-risk users flagged")
 
 # Database metrics
-db_connections_active = Gauge(
-    'db_connections_active',
-    'Active database connections'
-)
+db_connections_active = Gauge("db_connections_active", "Active database connections")
 
 db_query_duration_seconds = Histogram(
-    'db_query_duration_seconds',
-    'Database query duration',
-    ['query_type']
+    "db_query_duration_seconds", "Database query duration", ["query_type"]
 )
 
 # Redis metrics
 redis_operations_total = Counter(
-    'redis_operations_total',
-    'Total Redis operations',
-    ['operation', 'status']
+    "redis_operations_total", "Total Redis operations", ["operation", "status"]
 )
 
 redis_operation_duration_seconds = Histogram(
-    'redis_operation_duration_seconds',
-    'Redis operation duration',
-    ['operation']
+    "redis_operation_duration_seconds", "Redis operation duration", ["operation"]
 )
 
 
 def track_request_metrics(func):
     """Decorator to track HTTP request metrics"""
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         start_time = time.time()

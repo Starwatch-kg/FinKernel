@@ -1,4 +1,5 @@
 """Request Validation and Size Limiting"""
+
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from shared.logger import setup_logger
@@ -21,8 +22,12 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
             if content_length:
                 content_length = int(content_length)
                 if content_length > self.max_size:
-                    logger.warning(f"Request too large: {content_length} bytes from {request.client.host}")
-                    return HTTPException(413, f"Request body too large. Max size: {self.max_size} bytes")
+                    logger.warning(
+                        f"Request too large: {content_length} bytes from {request.client.host}"
+                    )
+                    return HTTPException(
+                        413, f"Request body too large. Max size: {self.max_size} bytes"
+                    )
 
         response = await call_next(request)
         return response
@@ -34,7 +39,7 @@ class ContentTypeValidationMiddleware(BaseHTTPMiddleware):
     ALLOWED_CONTENT_TYPES = {
         "application/json",
         "application/x-www-form-urlencoded",
-        "multipart/form-data"
+        "multipart/form-data",
     }
 
     async def dispatch(self, request: Request, call_next):
@@ -42,7 +47,9 @@ class ContentTypeValidationMiddleware(BaseHTTPMiddleware):
             content_type = request.headers.get("content-type", "").split(";")[0].strip()
 
             if content_type and content_type not in self.ALLOWED_CONTENT_TYPES:
-                logger.warning(f"Invalid content-type: {content_type} from {request.client.host}")
+                logger.warning(
+                    f"Invalid content-type: {content_type} from {request.client.host}"
+                )
                 raise HTTPException(415, f"Unsupported content type: {content_type}")
 
         response = await call_next(request)

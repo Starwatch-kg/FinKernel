@@ -1,4 +1,5 @@
 """Anti-Abuse and Anomaly Detection System"""
+
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from redis.asyncio import Redis
@@ -14,7 +15,9 @@ class AnomalyDetector:
     def __init__(self, redis: Redis):
         self.redis = redis
 
-    async def check_rapid_trades(self, user_id: int, threshold: int = 10, window: int = 60) -> bool:
+    async def check_rapid_trades(
+        self, user_id: int, threshold: int = 10, window: int = 60
+    ) -> bool:
         """Detect rapid trading bursts"""
         key = f"trade_burst:{user_id}"
         count = await self.redis.incr(key)
@@ -23,13 +26,19 @@ class AnomalyDetector:
             await self.redis.expire(key, window)
 
         if count > threshold:
-            logger.warning(f"Rapid trade burst detected for user {user_id}: {count} trades in {window}s")
-            await self.flag_user(user_id, "rapid_trades", f"{count} trades in {window}s")
+            logger.warning(
+                f"Rapid trade burst detected for user {user_id}: {count} trades in {window}s"
+            )
+            await self.flag_user(
+                user_id, "rapid_trades", f"{count} trades in {window}s"
+            )
             return True
 
         return False
 
-    async def check_repeated_failures(self, user_id: int, action: str, threshold: int = 5, window: int = 300) -> bool:
+    async def check_repeated_failures(
+        self, user_id: int, action: str, threshold: int = 5, window: int = 300
+    ) -> bool:
         """Detect repeated failed attempts"""
         key = f"failures:{user_id}:{action}"
         count = await self.redis.incr(key)
@@ -38,18 +47,18 @@ class AnomalyDetector:
             await self.redis.expire(key, window)
 
         if count > threshold:
-            logger.warning(f"Repeated failures detected for user {user_id} on {action}: {count} in {window}s")
-            await self.flag_user(user_id, f"repeated_failures_{action}", f"{count} failures in {window}s")
+            logger.warning(
+                f"Repeated failures detected for user {user_id} on {action}: {count} in {window}s"
+            )
+            await self.flag_user(
+                user_id, f"repeated_failures_{action}", f"{count} failures in {window}s"
+            )
             return True
 
         return False
 
     async def check_abnormal_transaction_pattern(
-        self,
-        user_id: int,
-        amount: float,
-        avg_amount: float,
-        std_dev: float
+        self, user_id: int, amount: float, avg_amount: float, std_dev: float
     ) -> bool:
         """Detect transactions significantly outside normal range"""
         if std_dev == 0:
@@ -58,8 +67,14 @@ class AnomalyDetector:
         z_score = abs((amount - avg_amount) / std_dev)
 
         if z_score > 3:  # 3 standard deviations
-            logger.warning(f"Abnormal transaction for user {user_id}: amount={amount}, z-score={z_score:.2f}")
-            await self.flag_user(user_id, "abnormal_transaction", f"amount={amount}, z-score={z_score:.2f}")
+            logger.warning(
+                f"Abnormal transaction for user {user_id}: amount={amount}, z-score={z_score:.2f}"
+            )
+            await self.flag_user(
+                user_id,
+                "abnormal_transaction",
+                f"amount={amount}, z-score={z_score:.2f}",
+            )
             return True
 
         return False
@@ -70,7 +85,7 @@ class AnomalyDetector:
         flag_data = {
             "reason": reason,
             "details": details,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         await self.redis.setex(key, 3600, json.dumps(flag_data))
@@ -85,13 +100,15 @@ class AnomalyDetector:
             return json.loads(data)
         return None
 
-    async def block_user_temporarily(self, user_id: int, duration: int = 300, reason: str = "abuse_detected"):
+    async def block_user_temporarily(
+        self, user_id: int, duration: int = 300, reason: str = "abuse_detected"
+    ):
         """Temporarily block user"""
         key = f"blocked_user:{user_id}"
         block_data = {
             "reason": reason,
             "blocked_at": datetime.utcnow().isoformat(),
-            "duration": duration
+            "duration": duration,
         }
 
         await self.redis.setex(key, duration, json.dumps(block_data))
@@ -115,10 +132,7 @@ class AnomalyDetector:
     async def record_action(self, user_id: int, action: str):
         """Record user action for pattern analysis"""
         key = f"user_actions:{user_id}"
-        action_data = {
-            "action": action,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        action_data = {"action": action, "timestamp": datetime.utcnow().isoformat()}
 
         await self.redis.lpush(key, json.dumps(action_data))
         await self.redis.ltrim(key, 0, 99)  # Keep last 100 actions
@@ -131,7 +145,9 @@ class AnomalyDetector:
 
         return [json.loads(action) for action in actions]
 
-    async def check_velocity(self, user_id: int, action: str, max_per_minute: int = 30) -> bool:
+    async def check_velocity(
+        self, user_id: int, action: str, max_per_minute: int = 30
+    ) -> bool:
         """Check action velocity"""
         key = f"velocity:{user_id}:{action}"
         now = datetime.utcnow()
@@ -145,7 +161,9 @@ class AnomalyDetector:
         count = await self.redis.zcard(key)
 
         if count > max_per_minute:
-            logger.warning(f"Velocity limit exceeded for user {user_id} on {action}: {count}/min")
+            logger.warning(
+                f"Velocity limit exceeded for user {user_id} on {action}: {count}/min"
+            )
             return False
 
         return True

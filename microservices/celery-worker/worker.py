@@ -1,4 +1,5 @@
 """Celery Worker"""
+
 from celery import Celery
 import httpx
 import redis
@@ -11,10 +12,10 @@ AI_URL = os.getenv("AI_URL", "http://ai:8002")
 celery_app = Celery("worker", broker=REDIS_URL, backend=REDIS_URL)
 
 celery_app.conf.update(
-    task_serializer='json',
-    accept_content=['json'],
-    result_serializer='json',
-    timezone='UTC',
+    task_serializer="json",
+    accept_content=["json"],
+    result_serializer="json",
+    timezone="UTC",
     enable_utc=True,
 )
 
@@ -27,7 +28,7 @@ def process_transaction(self, event_data: dict):
         response.raise_for_status()
         return {"status": "success", "user_id": user_id}
     except httpx.HTTPError as e:
-        raise self.retry(exc=e, countdown=2 ** self.request.retries)
+        raise self.retry(exc=e, countdown=2**self.request.retries)
 
 
 def listen_events():

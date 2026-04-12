@@ -1,4 +1,5 @@
 """Security hardening utilities"""
+
 import re
 import html
 from typing import Any, Dict
@@ -10,11 +11,14 @@ import uuid
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add security headers to all responses"""
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
 
         # HSTS - Force HTTPS
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains; preload"
+        )
 
         # Prevent clickjacking
         response.headers["X-Frame-Options"] = "DENY"
@@ -40,13 +44,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         # Permissions Policy
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        response.headers["Permissions-Policy"] = (
+            "geolocation=(), microphone=(), camera=()"
+        )
 
         return response
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """Add unique request ID to all requests for tracing"""
+
     async def dispatch(self, request: Request, call_next):
         # Generate or extract request ID
         request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
@@ -73,10 +80,10 @@ def sanitize_string(value: str, max_length: int = 1000) -> str:
     value = html.escape(value)
 
     # Remove null bytes
-    value = value.replace('\x00', '')
+    value = value.replace("\x00", "")
 
     # Remove control characters except newline and tab
-    value = ''.join(char for char in value if ord(char) >= 32 or char in '\n\t')
+    value = "".join(char for char in value if ord(char) >= 32 or char in "\n\t")
 
     return value.strip()
 
@@ -97,34 +104,36 @@ def sanitize_for_llm(value: str, max_length: int = 500) -> str:
     value = value[:max_length]
 
     # Remove null bytes and control characters
-    value = value.replace('\x00', '')
-    value = ''.join(char for char in value if ord(char) >= 32 or char in '\n\t')
+    value = value.replace("\x00", "")
+    value = "".join(char for char in value if ord(char) >= 32 or char in "\n\t")
 
     # Remove dangerous patterns that could inject instructions
     dangerous_patterns = [
-        r'ignore\s+previous\s+instructions',
-        r'ignore\s+all\s+previous',
-        r'disregard\s+previous',
-        r'forget\s+previous',
-        r'new\s+instructions',
-        r'system\s*:',
-        r'assistant\s*:',
-        r'user\s*:',
-        r'<\|.*?\|>',  # Special tokens
-        r'\[INST\]',
-        r'\[/INST\]',
+        r"ignore\s+previous\s+instructions",
+        r"ignore\s+all\s+previous",
+        r"disregard\s+previous",
+        r"forget\s+previous",
+        r"new\s+instructions",
+        r"system\s*:",
+        r"assistant\s*:",
+        r"user\s*:",
+        r"<\|.*?\|>",  # Special tokens
+        r"\[INST\]",
+        r"\[/INST\]",
     ]
 
     for pattern in dangerous_patterns:
-        value = re.sub(pattern, '', value, flags=re.IGNORECASE)
+        value = re.sub(pattern, "", value, flags=re.IGNORECASE)
 
     # Escape JSON special characters to prevent JSON injection
-    value = value.replace('"', '\\"').replace('\n', ' ').replace('\r', '')
+    value = value.replace('"', '\\"').replace("\n", " ").replace("\r", "")
 
     return value.strip()
 
 
-def validate_amount(amount: float, min_val: float = 0.01, max_val: float = 1_000_000_000) -> float:
+def validate_amount(
+    amount: float, min_val: float = 0.01, max_val: float = 1_000_000_000
+) -> float:
     """
     Validate financial amounts to prevent:
     - Negative amounts
@@ -138,7 +147,7 @@ def validate_amount(amount: float, min_val: float = 0.01, max_val: float = 1_000
     if amount != amount:  # NaN check
         raise ValueError("Amount cannot be NaN")
 
-    if amount == float('inf') or amount == float('-inf'):
+    if amount == float("inf") or amount == float("-inf"):
         raise ValueError("Amount cannot be infinite")
 
     if amount < min_val:
@@ -179,6 +188,7 @@ def validate_csrf_token(token: str, expected: str) -> bool:
 
 class RateLimitExceeded(Exception):
     """Raised when rate limit is exceeded"""
+
     def __init__(self, retry_after: int):
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds")

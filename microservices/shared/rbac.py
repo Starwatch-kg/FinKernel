@@ -1,4 +1,5 @@
 """Role-Based Access Control (RBAC) System"""
+
 from functools import wraps
 from fastapi import HTTPException, Header, Request
 from typing import List, Optional
@@ -12,6 +13,7 @@ logger = setup_logger("rbac")
 
 class Role:
     """Role definitions"""
+
     USER = "user"
     ADMIN = "admin"
     SYSTEM = "system"
@@ -19,6 +21,7 @@ class Role:
 
 class Permission:
     """Permission definitions"""
+
     READ_OWN_DATA = "read:own"
     WRITE_OWN_DATA = "write:own"
     READ_ALL_DATA = "read:all"
@@ -28,22 +31,19 @@ class Permission:
 
 
 ROLE_PERMISSIONS = {
-    Role.USER: [
-        Permission.READ_OWN_DATA,
-        Permission.WRITE_OWN_DATA
-    ],
+    Role.USER: [Permission.READ_OWN_DATA, Permission.WRITE_OWN_DATA],
     Role.ADMIN: [
         Permission.READ_OWN_DATA,
         Permission.WRITE_OWN_DATA,
         Permission.READ_ALL_DATA,
         Permission.WRITE_ALL_DATA,
-        Permission.MANAGE_USERS
+        Permission.MANAGE_USERS,
     ],
     Role.SYSTEM: [
         Permission.SYSTEM_ADMIN,
         Permission.READ_ALL_DATA,
-        Permission.WRITE_ALL_DATA
-    ]
+        Permission.WRITE_ALL_DATA,
+    ],
 }
 
 
@@ -54,8 +54,7 @@ def has_permission(role: str, permission: str) -> bool:
 
 
 async def extract_and_validate_token(
-    authorization: Optional[str],
-    redis: Redis
+    authorization: Optional[str], redis: Redis
 ) -> dict:
     """Extract and validate JWT token from Authorization header"""
     if not authorization:
@@ -83,6 +82,7 @@ async def extract_and_validate_token(
 
 def require_role(required_role: str):
     """Decorator to require specific role"""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -91,7 +91,9 @@ def require_role(required_role: str):
             authorization: Optional[str] = kwargs.get("authorization")
 
             if not request and not authorization:
-                raise HTTPException(500, "RBAC misconfiguration: missing request or authorization")
+                raise HTTPException(
+                    500, "RBAC misconfiguration: missing request or authorization"
+                )
 
             # Get Redis from request state if available
             redis = getattr(request.state, "redis", None) if request else None
@@ -103,24 +105,34 @@ def require_role(required_role: str):
             user_role = payload.get("role", Role.USER)
 
             # Check role hierarchy
-            if required_role == Role.ADMIN and user_role not in [Role.ADMIN, Role.SYSTEM]:
-                logger.warning(f"Access denied: user {payload.get('user_id')} with role {user_role} attempted admin action")
+            if required_role == Role.ADMIN and user_role not in [
+                Role.ADMIN,
+                Role.SYSTEM,
+            ]:
+                logger.warning(
+                    f"Access denied: user {payload.get('user_id')} with role {user_role} attempted admin action"
+                )
                 raise HTTPException(403, "Insufficient permissions")
 
             if required_role == Role.SYSTEM and user_role != Role.SYSTEM:
-                logger.warning(f"Access denied: user {payload.get('user_id')} with role {user_role} attempted system action")
+                logger.warning(
+                    f"Access denied: user {payload.get('user_id')} with role {user_role} attempted system action"
+                )
                 raise HTTPException(403, "Insufficient permissions")
 
             # Add user info to kwargs
             kwargs["current_user"] = payload
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 def require_permission(required_permission: str):
     """Decorator to require specific permission"""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -139,13 +151,19 @@ def require_permission(required_permission: str):
             user_role = payload.get("role", Role.USER)
 
             if not has_permission(user_role, required_permission):
-                logger.warning(f"Permission denied: user {payload.get('user_id')} lacks {required_permission}")
-                raise HTTPException(403, f"Missing required permission: {required_permission}")
+                logger.warning(
+                    f"Permission denied: user {payload.get('user_id')} lacks {required_permission}"
+                )
+                raise HTTPException(
+                    403, f"Missing required permission: {required_permission}"
+                )
 
             kwargs["current_user"] = payload
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 

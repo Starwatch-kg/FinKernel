@@ -1,13 +1,15 @@
 """
 SECURE AI SERVICE - Prompt injection protection
 """
+
 from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta
 import sys
 import time
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
 from shared.models import User, Transaction, Prediction, RiskLevel
@@ -36,9 +38,7 @@ async def health():
 
 @app.post("/predict/{user_id}", response_model=PredictionResponse)
 async def create_prediction(
-    request: Request,
-    user_id: int,
-    db: AsyncSession = Depends(get_db)
+    request: Request, user_id: int, db: AsyncSession = Depends(get_db)
 ):
     """
     Create AI prediction with SANITIZED inputs.
@@ -67,18 +67,20 @@ async def create_prediction(
             # Sanitize description to prevent prompt injection
             safe_description = sanitize_for_llm(t.description or "", max_length=100)
 
-            txn_data.append({
-                "amount": round(t.amount, 2),
-                "type": t.type.value,
-                "timestamp": t.timestamp.isoformat(),
-                "description": safe_description  # SANITIZED
-            })
+            txn_data.append(
+                {
+                    "amount": round(t.amount, 2),
+                    "type": t.type.value,
+                    "timestamp": t.timestamp.isoformat(),
+                    "description": safe_description,  # SANITIZED
+                }
+            )
 
         features = engine.calculate_features(txn_data)
 
         # Call prediction engine with sanitized data
-        days_left, confidence, risk_level, recommendation, ai_used = await engine.predict(
-            user.balance, features, txn_data
+        days_left, confidence, risk_level, recommendation, ai_used = (
+            await engine.predict(user.balance, features, txn_data)
         )
 
         predicted_date = None
@@ -86,9 +88,17 @@ async def create_prediction(
             predicted_date = datetime.utcnow() + timedelta(days=days_left)
 
         # Deactivate old predictions
-        old_preds = (await db.execute(
-            select(Prediction).where(Prediction.user_id == user_id, Prediction.is_active == True)
-        )).scalars().all()
+        old_preds = (
+            (
+                await db.execute(
+                    select(Prediction).where(
+                        Prediction.user_id == user_id, Prediction.is_active == True
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
 
         for p in old_preds:
             p.is_active = False
@@ -102,7 +112,7 @@ async def create_prediction(
             confidence=confidence,
             features=features,
             recommendation=recommendation,
-            is_active=True
+            is_active=True,
         )
 
         db.add(prediction)
@@ -118,7 +128,7 @@ async def create_prediction(
             "confidence": confidence,
             "recommendation": recommendation,
             "ai_used": ai_used,
-            "created_at": prediction.created_at.isoformat()
+            "created_at": prediction.created_at.isoformat(),
         }
 
         await set_cache(f"prediction:{user_id}", response_data, ttl=3600)
@@ -134,7 +144,9 @@ async def create_prediction(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[{request_id}] Prediction error for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"[{request_id}] Prediction error for user {user_id}: {e}", exc_info=True
+        )
         raise HTTPException(500, "Prediction failed")
 
 
@@ -161,4 +173,5 @@ async def get_prediction(user_id: int, db: AsyncSession = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

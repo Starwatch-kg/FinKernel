@@ -1,9 +1,11 @@
 """Seed test data"""
+
 import asyncio
 import sys
 from datetime import datetime, timedelta
 import random
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import async_session
 from shared.models import User, Transaction
@@ -16,7 +18,7 @@ async def seed():
             username="testuser",
             email="test@example.com",
             password_hash="hashed",
-            balance=5000.0
+            balance=5000.0,
         )
         session.add(user)
         await session.commit()
@@ -25,24 +27,28 @@ async def seed():
         now = datetime.utcnow()
         transactions = []
 
-        transactions.append(Transaction(
-            user_id=user.id,
-            amount=10000.0,
-            type="income",
-            category="salary",
-            description="Monthly salary",
-            timestamp=now - timedelta(days=30)
-        ))
+        transactions.append(
+            Transaction(
+                user_id=user.id,
+                amount=10000.0,
+                type="income",
+                category="salary",
+                description="Monthly salary",
+                timestamp=now - timedelta(days=30),
+            )
+        )
 
         for i in range(25):
-            transactions.append(Transaction(
-                user_id=user.id,
-                amount=round(random.uniform(50, 500), 2),
-                type="expense",
-                category=random.choice(["food", "transport", "entertainment"]),
-                description=f"Expense {i+1}",
-                timestamp=now - timedelta(days=random.randint(0, 29))
-            ))
+            transactions.append(
+                Transaction(
+                    user_id=user.id,
+                    amount=round(random.uniform(50, 500), 2),
+                    type="expense",
+                    category=random.choice(["food", "transport", "entertainment"]),
+                    description=f"Expense {i+1}",
+                    timestamp=now - timedelta(days=random.randint(0, 29)),
+                )
+            )
 
         session.add_all(transactions)
         await session.commit()

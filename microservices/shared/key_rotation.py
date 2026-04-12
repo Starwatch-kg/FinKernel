@@ -1,4 +1,5 @@
 """Key Rotation System with versioned keys"""
+
 import jwt
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
@@ -13,7 +14,13 @@ logger = setup_logger("key_rotation")
 class KeyVersion:
     """Versioned key with metadata"""
 
-    def __init__(self, key_id: str, key_value: str, created_at: datetime, expires_at: Optional[datetime] = None):
+    def __init__(
+        self,
+        key_id: str,
+        key_value: str,
+        created_at: datetime,
+        expires_at: Optional[datetime] = None,
+    ):
         self.key_id = key_id
         self.key_value = key_value
         self.created_at = created_at
@@ -25,7 +32,7 @@ class KeyVersion:
             "key_id": self.key_id,
             "created_at": self.created_at.isoformat(),
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "is_active": self.is_active
+            "is_active": self.is_active,
         }
 
 
@@ -46,9 +53,7 @@ class KeyRotationManager:
         if jwt_secret:
             key_id = "jwt_v1"
             self.jwt_keys[key_id] = KeyVersion(
-                key_id=key_id,
-                key_value=jwt_secret,
-                created_at=datetime.utcnow()
+                key_id=key_id, key_value=jwt_secret, created_at=datetime.utcnow()
             )
             self.active_jwt_key_id = key_id
             logger.info(f"Loaded JWT key: {key_id}")
@@ -58,9 +63,7 @@ class KeyRotationManager:
         if encryption_key:
             key_id = "enc_v1"
             self.encryption_keys[key_id] = KeyVersion(
-                key_id=key_id,
-                key_value=encryption_key,
-                created_at=datetime.utcnow()
+                key_id=key_id, key_value=encryption_key, created_at=datetime.utcnow()
             )
             self.active_encryption_key_id = key_id
             logger.info(f"Loaded encryption key: {key_id}")
@@ -79,7 +82,11 @@ class KeyRotationManager:
                         key_id=key_id,
                         key_value=key_data["key_value"],
                         created_at=datetime.fromisoformat(key_data["created_at"]),
-                        expires_at=datetime.fromisoformat(key_data["expires_at"]) if key_data.get("expires_at") else None
+                        expires_at=(
+                            datetime.fromisoformat(key_data["expires_at"])
+                            if key_data.get("expires_at")
+                            else None
+                        ),
                     )
 
         enc_keys_data = await self.redis.get("key_rotation:encryption_keys")
@@ -91,7 +98,11 @@ class KeyRotationManager:
                         key_id=key_id,
                         key_value=key_data["key_value"],
                         created_at=datetime.fromisoformat(key_data["created_at"]),
-                        expires_at=datetime.fromisoformat(key_data["expires_at"]) if key_data.get("expires_at") else None
+                        expires_at=(
+                            datetime.fromisoformat(key_data["expires_at"])
+                            if key_data.get("expires_at")
+                            else None
+                        ),
                     )
 
     async def _save_keys(self):
@@ -100,7 +111,7 @@ class KeyRotationManager:
             key_id: {
                 "key_value": key.key_value,
                 "created_at": key.created_at.isoformat(),
-                "expires_at": key.expires_at.isoformat() if key.expires_at else None
+                "expires_at": key.expires_at.isoformat() if key.expires_at else None,
             }
             for key_id, key in self.jwt_keys.items()
         }
@@ -110,7 +121,7 @@ class KeyRotationManager:
             key_id: {
                 "key_value": key.key_value,
                 "created_at": key.created_at.isoformat(),
-                "expires_at": key.expires_at.isoformat() if key.expires_at else None
+                "expires_at": key.expires_at.isoformat() if key.expires_at else None,
             }
             for key_id, key in self.encryption_keys.items()
         }
@@ -121,16 +132,18 @@ class KeyRotationManager:
         # Mark current key as expiring
         if self.active_jwt_key_id:
             current_key = self.jwt_keys[self.active_jwt_key_id]
-            current_key.expires_at = datetime.utcnow() + timedelta(days=grace_period_days)
-            logger.info(f"Marked JWT key {self.active_jwt_key_id} for expiration in {grace_period_days} days")
+            current_key.expires_at = datetime.utcnow() + timedelta(
+                days=grace_period_days
+            )
+            logger.info(
+                f"Marked JWT key {self.active_jwt_key_id} for expiration in {grace_period_days} days"
+            )
 
         # Create new key version
         version_num = len(self.jwt_keys) + 1
         new_key_id = f"jwt_v{version_num}"
         self.jwt_keys[new_key_id] = KeyVersion(
-            key_id=new_key_id,
-            key_value=new_key,
-            created_at=datetime.utcnow()
+            key_id=new_key_id, key_value=new_key, created_at=datetime.utcnow()
         )
         self.active_jwt_key_id = new_key_id
 
@@ -139,19 +152,23 @@ class KeyRotationManager:
 
         return new_key_id
 
-    async def rotate_encryption_key(self, new_key: str, grace_period_days: int = 30) -> str:
+    async def rotate_encryption_key(
+        self, new_key: str, grace_period_days: int = 30
+    ) -> str:
         """Rotate encryption key"""
         if self.active_encryption_key_id:
             current_key = self.encryption_keys[self.active_encryption_key_id]
-            current_key.expires_at = datetime.utcnow() + timedelta(days=grace_period_days)
-            logger.info(f"Marked encryption key {self.active_encryption_key_id} for expiration in {grace_period_days} days")
+            current_key.expires_at = datetime.utcnow() + timedelta(
+                days=grace_period_days
+            )
+            logger.info(
+                f"Marked encryption key {self.active_encryption_key_id} for expiration in {grace_period_days} days"
+            )
 
         version_num = len(self.encryption_keys) + 1
         new_key_id = f"enc_v{version_num}"
         self.encryption_keys[new_key_id] = KeyVersion(
-            key_id=new_key_id,
-            key_value=new_key,
-            created_at=datetime.utcnow()
+            key_id=new_key_id, key_value=new_key, created_at=datetime.utcnow()
         )
         self.active_encryption_key_id = new_key_id
 
@@ -192,7 +209,9 @@ class KeyRotationManager:
             return self.encryption_keys[key_id].key_value
         return None
 
-    def decode_jwt_with_rotation(self, token: str, algorithms: List[str] = ["HS256"]) -> Optional[dict]:
+    def decode_jwt_with_rotation(
+        self, token: str, algorithms: List[str] = ["HS256"]
+    ) -> Optional[dict]:
         """Decode JWT trying all valid keys"""
         valid_keys = self.get_all_valid_jwt_keys()
 
@@ -212,7 +231,8 @@ class KeyRotationManager:
 
         # Cleanup JWT keys
         expired_jwt = [
-            key_id for key_id, key in self.jwt_keys.items()
+            key_id
+            for key_id, key in self.jwt_keys.items()
             if key.expires_at and now > key.expires_at
         ]
         for key_id in expired_jwt:
@@ -221,7 +241,8 @@ class KeyRotationManager:
 
         # Cleanup encryption keys
         expired_enc = [
-            key_id for key_id, key in self.encryption_keys.items()
+            key_id
+            for key_id, key in self.encryption_keys.items()
             if key.expires_at and now > key.expires_at
         ]
         for key_id in expired_enc:
@@ -237,11 +258,11 @@ class KeyRotationManager:
             "jwt_keys": {
                 "active": self.active_jwt_key_id,
                 "total": len(self.jwt_keys),
-                "versions": [key.to_dict() for key in self.jwt_keys.values()]
+                "versions": [key.to_dict() for key in self.jwt_keys.values()],
             },
             "encryption_keys": {
                 "active": self.active_encryption_key_id,
                 "total": len(self.encryption_keys),
-                "versions": [key.to_dict() for key in self.encryption_keys.values()]
-            }
+                "versions": [key.to_dict() for key in self.encryption_keys.values()],
+            },
         }

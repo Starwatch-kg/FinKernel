@@ -1,4 +1,5 @@
 """Circuit Breaker Pattern for resilient service calls"""
+
 import asyncio
 from datetime import datetime, timedelta
 from typing import Optional, Callable, Any
@@ -22,7 +23,7 @@ class CircuitBreaker:
         name: str,
         failure_threshold: int = 5,
         recovery_timeout: int = 60,
-        success_threshold: int = 2
+        success_threshold: int = 2,
     ):
         self.name = name
         self.failure_threshold = failure_threshold
@@ -108,8 +109,10 @@ class CircuitBreaker:
             "state": self.state.value,
             "failure_count": self.failure_count,
             "success_count": self.success_count,
-            "last_failure_time": self.last_failure_time.isoformat() if self.last_failure_time else None,
-            "last_state_change": self.last_state_change.isoformat()
+            "last_failure_time": (
+                self.last_failure_time.isoformat() if self.last_failure_time else None
+            ),
+            "last_state_change": self.last_state_change.isoformat(),
         }
 
     def reset(self):
@@ -120,6 +123,7 @@ class CircuitBreaker:
 
 class CircuitBreakerOpenError(Exception):
     """Raised when circuit breaker is open"""
+
     pass
 
 
@@ -137,10 +141,7 @@ class CircuitBreakerManager:
 
     def get_all_states(self) -> dict:
         """Get state of all circuit breakers"""
-        return {
-            name: breaker.get_state()
-            for name, breaker in self.breakers.items()
-        }
+        return {name: breaker.get_state() for name, breaker in self.breakers.items()}
 
     def reset_all(self):
         """Reset all circuit breakers"""

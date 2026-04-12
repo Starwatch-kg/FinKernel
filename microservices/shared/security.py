@@ -1,4 +1,5 @@
 """Security utilities - input sanitization, CSRF, etc."""
+
 import re
 import html
 from typing import Any, Dict
@@ -17,7 +18,7 @@ def sanitize_string(value: str, max_length: int = 1000) -> str:
     value = html.escape(value)
 
     # Remove null bytes
-    value = value.replace('\x00', '')
+    value = value.replace("\x00", "")
 
     return value.strip()
 
@@ -33,7 +34,7 @@ def sanitize_dict(data: Dict[str, Any], string_fields: list[str]) -> Dict[str, A
 
 def validate_email(email: str) -> bool:
     """Validate email format"""
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
 
 
@@ -53,16 +54,17 @@ def is_safe_redirect_url(url: str, allowed_hosts: list[str]) -> bool:
         return False
 
     # Prevent open redirects
-    if url.startswith('http://') or url.startswith('https://'):
+    if url.startswith("http://") or url.startswith("https://"):
         from urllib.parse import urlparse
+
         parsed = urlparse(url)
         return parsed.netloc in allowed_hosts
 
     # Relative URLs are safe
-    return url.startswith('/')
+    return url.startswith("/")
 
 
 def strip_dangerous_chars(value: str) -> str:
     """Remove potentially dangerous characters"""
     # Remove control characters except newline and tab
-    return ''.join(char for char in value if ord(char) >= 32 or char in '\n\t')
+    return "".join(char for char in value if ord(char) >= 32 or char in "\n\t")

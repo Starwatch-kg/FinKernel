@@ -1,4 +1,5 @@
 """AI Output Validation and Hardening"""
+
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
 from enum import Enum
@@ -9,6 +10,7 @@ logger = setup_logger("ai_validation")
 
 class RiskLevel(str, Enum):
     """Valid risk levels"""
+
     safe = "safe"
     warning = "warning"
     danger = "danger"
@@ -17,19 +19,20 @@ class RiskLevel(str, Enum):
 
 class ValidatedPrediction(BaseModel):
     """Strict schema for AI predictions"""
+
     days_left: Optional[float] = Field(None, ge=0, le=365)
     risk_level: RiskLevel
     confidence: float = Field(..., ge=0.0, le=1.0)
     recommendation: str = Field(..., min_length=10, max_length=500)
     ai_used: bool = Field(default=False)
 
-    @validator('days_left')
+    @validator("days_left")
     def validate_days_left(cls, v):
         if v is not None and (v < 0 or v > 365):
             raise ValueError("days_left must be between 0 and 365")
         return v
 
-    @validator('recommendation')
+    @validator("recommendation")
     def validate_recommendation(cls, v):
         # Check for prompt injection patterns
         dangerous_patterns = [
@@ -40,7 +43,7 @@ class ValidatedPrediction(BaseModel):
             "<script>",
             "javascript:",
             "eval(",
-            "exec("
+            "exec(",
         ]
 
         v_lower = v.lower()
@@ -54,6 +57,7 @@ class ValidatedPrediction(BaseModel):
 
 class ValidatedQuestion(BaseModel):
     """Strict schema for AI-generated questions"""
+
     question: str = Field(..., min_length=10, max_length=500)
     options: list[str] = Field(..., min_items=2, max_items=4)
     correct_answer: int = Field(..., ge=0, le=3)
@@ -61,7 +65,7 @@ class ValidatedQuestion(BaseModel):
     difficulty: str = Field(..., pattern="^(easy|medium|hard)$")
     topic: str = Field(..., min_length=2, max_length=100)
 
-    @validator('options')
+    @validator("options")
     def validate_options(cls, v):
         if len(v) != len(set(v)):
             raise ValueError("Options must be unique")
@@ -72,9 +76,9 @@ class ValidatedQuestion(BaseModel):
 
         return v
 
-    @validator('correct_answer')
+    @validator("correct_answer")
     def validate_correct_answer(cls, v, values):
-        if 'options' in values and v >= len(values['options']):
+        if "options" in values and v >= len(values["options"]):
             raise ValueError("correct_answer index out of range")
         return v
 
@@ -87,8 +91,7 @@ class AIValidator:
 
     @staticmethod
     def validate_prediction(
-        raw_output: Dict[str, Any],
-        min_confidence: Optional[float] = None
+        raw_output: Dict[str, Any], min_confidence: Optional[float] = None
     ) -> ValidatedPrediction:
         """Validate and sanitize AI prediction output"""
         try:
@@ -97,13 +100,17 @@ class AIValidator:
             # Check confidence threshold
             threshold = min_confidence or AIValidator.MIN_CONFIDENCE_THRESHOLD
             if prediction.confidence < threshold:
-                logger.warning(f"AI prediction below confidence threshold: {prediction.confidence} < {threshold}")
+                logger.warning(
+                    f"AI prediction below confidence threshold: {prediction.confidence} < {threshold}"
+                )
                 raise ValueError(f"Confidence too low: {prediction.confidence}")
 
             # Extra validation for critical risk
             if prediction.risk_level == RiskLevel.critical:
                 if prediction.confidence < AIValidator.MIN_CONFIDENCE_FOR_CRITICAL:
-                    logger.warning(f"Critical risk prediction with low confidence: {prediction.confidence}")
+                    logger.warning(
+                        f"Critical risk prediction with low confidence: {prediction.confidence}"
+                    )
                     raise ValueError("Critical predictions require higher confidence")
 
             return prediction
@@ -135,24 +142,34 @@ class AIValidator:
         return text.strip()
 
     @staticmethod
-    def create_safe_fallback_prediction(balance: float, avg_daily_expense: float) -> ValidatedPrediction:
+    def create_safe_fallback_prediction(
+        balance: float, avg_daily_expense: float
+    ) -> ValidatedPrediction:
         """Create safe fallback prediction when AI fails"""
         if avg_daily_expense <= 0:
             days_left = None
             risk_level = RiskLevel.safe
-            recommendation = "Недостаточно данных для прогноза. Продолжайте отслеживать расходы."
+            recommendation = (
+                "Недостаточно данных для прогноза. Продолжайте отслеживать расходы."
+            )
         else:
             days_left = balance / avg_daily_expense if balance > 0 else 0
 
             if days_left > 30:
                 risk_level = RiskLevel.safe
-                recommendation = "Ваш бюджет в безопасности. Продолжайте контролировать расходы."
+                recommendation = (
+                    "Ваш бюджет в безопасности. Продолжайте контролировать расходы."
+                )
             elif days_left > 14:
                 risk_level = RiskLevel.warning
-                recommendation = "Следите за расходами. Рекомендуем сократить необязательные траты."
+                recommendation = (
+                    "Следите за расходами. Рекомендуем сократить необязательные траты."
+                )
             elif days_left > 7:
                 risk_level = RiskLevel.danger
-                recommendation = "Внимание! Средства заканчиваются. Срочно сократите расходы."
+                recommendation = (
+                    "Внимание! Средства заканчиваются. Срочно сократите расходы."
+                )
             else:
                 risk_level = RiskLevel.critical
                 recommendation = "Критическая ситуация! Немедленно пересмотрите бюджет."
@@ -162,5 +179,5 @@ class AIValidator:
             risk_level=risk_level,
             confidence=0.7,
             recommendation=recommendation,
-            ai_used=False
+            ai_used=False,
         )

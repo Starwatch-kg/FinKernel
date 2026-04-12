@@ -2,6 +2,7 @@
 Fallback in-memory rate limiter for when Redis is unavailable.
 Prevents complete bypass of rate limiting on Redis failure.
 """
+
 import time
 from typing import Dict, Tuple, Optional
 from collections import defaultdict
@@ -23,10 +24,7 @@ class InMemoryRateLimiter:
         self._last_cleanup = time.time()
 
     def check_rate_limit(
-        self,
-        key: str,
-        max_requests: int,
-        window_seconds: int
+        self, key: str, max_requests: int, window_seconds: int
     ) -> Tuple[bool, dict]:
         """
         Check if request is within rate limit.
@@ -60,7 +58,7 @@ class InMemoryRateLimiter:
             return False, {
                 "remaining": 0,
                 "reset_at": int(now + retry_after),
-                "retry_after": max(1, retry_after)
+                "retry_after": max(1, retry_after),
             }
 
         # Add current request
@@ -71,7 +69,7 @@ class InMemoryRateLimiter:
         return True, {
             "remaining": remaining,
             "reset_at": int(now + window_seconds),
-            "retry_after": 0
+            "retry_after": 0,
         }
 
     def _cleanup_old_entries(self, now: float):

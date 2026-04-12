@@ -2,6 +2,7 @@
 Resilient HTTP client with retry logic and circuit breaker.
 Used for inter-service communication.
 """
+
 import httpx
 import asyncio
 from typing import Optional, Dict, Any
@@ -17,10 +18,7 @@ class ResilientHttpClient:
     """
 
     def __init__(
-        self,
-        timeout: float = 5.0,
-        max_retries: int = 3,
-        backoff_factor: float = 0.5
+        self, timeout: float = 5.0, max_retries: int = 3, backoff_factor: float = 0.5
     ):
         self.timeout = timeout
         self.max_retries = max_retries
@@ -31,18 +29,14 @@ class ResilientHttpClient:
         url: str,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        request_id: str = "unknown"
+        request_id: str = "unknown",
     ) -> httpx.Response:
         """
         POST request with retry logic.
         Retries on network errors and 5xx server errors.
         """
         return await self._request_with_retry(
-            method="POST",
-            url=url,
-            json=json,
-            headers=headers,
-            request_id=request_id
+            method="POST", url=url, json=json, headers=headers, request_id=request_id
         )
 
     async def get(
@@ -50,25 +44,21 @@ class ResilientHttpClient:
         url: str,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        request_id: str = "unknown"
+        request_id: str = "unknown",
     ) -> httpx.Response:
         """
         GET request with retry logic.
         Retries on network errors and 5xx server errors.
         """
         return await self._request_with_retry(
-            method="GET",
-            url=url,
-            params=params,
-            headers=headers,
-            request_id=request_id
+            method="GET", url=url, params=params, headers=headers, request_id=request_id
         )
 
     async def delete(
         self,
         url: str,
         headers: Optional[Dict[str, str]] = None,
-        request_id: str = "unknown"
+        request_id: str = "unknown",
     ) -> httpx.Response:
         """
         DELETE request with retry logic.
@@ -79,7 +69,7 @@ class ResilientHttpClient:
             url=url,
             headers=headers,
             request_id=request_id,
-            retry_on_success=False
+            retry_on_success=False,
         )
 
     async def _request_with_retry(
@@ -90,7 +80,7 @@ class ResilientHttpClient:
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         request_id: str = "unknown",
-        retry_on_success: bool = True
+        retry_on_success: bool = True,
     ) -> httpx.Response:
         """
         Execute HTTP request with exponential backoff retry.
@@ -127,10 +117,14 @@ class ResilientHttpClient:
                     last_exception = httpx.HTTPStatusError(
                         f"Server error: {response.status_code}",
                         request=response.request,
-                        response=response
+                        response=response,
                     )
 
-            except (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError) as e:
+            except (
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectError,
+            ) as e:
                 logger.warning(
                     f"[{request_id}] Network error on attempt {attempt + 1}: "
                     f"{method} {url} - {type(e).__name__}: {e}"
@@ -149,7 +143,7 @@ class ResilientHttpClient:
 
             # Exponential backoff before retry
             if attempt < self.max_retries - 1:
-                backoff_time = self.backoff_factor * (2 ** attempt)
+                backoff_time = self.backoff_factor * (2**attempt)
                 logger.info(
                     f"[{request_id}] Retrying in {backoff_time:.2f}s "
                     f"(attempt {attempt + 1}/{self.max_retries})"

@@ -1,4 +1,5 @@
 """Network Security Middleware"""
+
 from fastapi import Request, HTTPException
 from fastapi.responses import RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -82,7 +83,9 @@ class RateLimitByIPMiddleware(BaseHTTPMiddleware):
                 await self.redis.expire(key, self.window)
 
             if count > self.max_requests:
-                logger.warning(f"IP rate limit exceeded: {client_ip} ({count}/{self.max_requests})")
+                logger.warning(
+                    f"IP rate limit exceeded: {client_ip} ({count}/{self.max_requests})"
+                )
                 raise HTTPException(429, "Too many requests from your IP")
 
         except Exception as e:

@@ -1,4 +1,5 @@
 """Application-level encryption for sensitive data"""
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
@@ -17,16 +18,18 @@ class DataEncryption:
         encryption_key = os.getenv("ENCRYPTION_KEY", "")
 
         if not encryption_key:
-            logger.warning("ENCRYPTION_KEY not set - generating temporary key (NOT FOR PRODUCTION)")
+            logger.warning(
+                "ENCRYPTION_KEY not set - generating temporary key (NOT FOR PRODUCTION)"
+            )
             encryption_key = Fernet.generate_key().decode()
 
         # Derive key from password
         kdf = PBKDF2(
             algorithm=hashes.SHA256(),
             length=32,
-            salt=b'fintech_salt_v1',  # In production, use unique salt per deployment
+            salt=b"fintech_salt_v1",  # In production, use unique salt per deployment
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
 
         key = base64.urlsafe_b64encode(kdf.derive(encryption_key.encode()))

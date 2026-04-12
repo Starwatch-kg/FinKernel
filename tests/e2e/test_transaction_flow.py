@@ -2,6 +2,7 @@
 End-to-end tests for transaction flow.
 Tests complete transaction lifecycle through API gateway.
 """
+
 import pytest
 import asyncio
 from httpx import AsyncClient
@@ -16,7 +17,6 @@ sys.path.insert(0, str(tests_path))
 
 from helpers import register_and_get_token
 
-
 BASE_URL = "http://localhost:8000"
 
 
@@ -27,12 +27,15 @@ class TestTransactionE2E:
     async def test_create_and_retrieve_transaction(self, auth_client):
         """Test creating transaction and retrieving it"""
         # Create income transaction
-        create_response = await auth_client.post("/api/transactions", json={
-            "amount": 1000.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Monthly salary"
-        })
+        create_response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 1000.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Monthly salary",
+            },
+        )
 
         assert create_response.status_code == 200
         created = create_response.json()
@@ -56,12 +59,15 @@ class TestTransactionE2E:
         initial_balance = dashboard.json()["balance"]["current"]
 
         # Create income transaction
-        await auth_client.post("/api/transactions", json={
-            "amount": 500.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Bonus"
-        })
+        await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 500.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Bonus",
+            },
+        )
 
         # Check balance increased
         dashboard = await auth_client.get("/api/dashboard")
@@ -69,12 +75,15 @@ class TestTransactionE2E:
         assert new_balance == initial_balance + 500.0
 
         # Create expense transaction
-        await auth_client.post("/api/transactions", json={
-            "amount": 200.0,
-            "type": "expense",
-            "category": "food",
-            "description": "Groceries"
-        })
+        await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 200.0,
+                "type": "expense",
+                "category": "food",
+                "description": "Groceries",
+            },
+        )
 
         # Check balance decreased
         dashboard = await auth_client.get("/api/dashboard")
@@ -89,12 +98,15 @@ class TestTransactionE2E:
         initial_balance = dashboard.json()["balance"]["current"]
 
         # Create expense
-        create_response = await auth_client.post("/api/transactions", json={
-            "amount": 100.0,
-            "type": "expense",
-            "category": "food",
-            "description": "Test expense"
-        })
+        create_response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 100.0,
+                "type": "expense",
+                "category": "food",
+                "description": "Test expense",
+            },
+        )
         transaction_id = create_response.json()["id"]
 
         # Balance should decrease
@@ -103,7 +115,9 @@ class TestTransactionE2E:
         assert after_expense == initial_balance - 100.0
 
         # Delete transaction
-        delete_response = await auth_client.delete(f"/api/transactions/{transaction_id}")
+        delete_response = await auth_client.delete(
+            f"/api/transactions/{transaction_id}"
+        )
         assert delete_response.status_code == 200
 
         # Balance should return to initial
@@ -119,12 +133,15 @@ class TestTransactionE2E:
         balance = dashboard.json()["balance"]["current"]
 
         # Try to spend more than balance
-        response = await auth_client.post("/api/transactions", json={
-            "amount": balance + 1000.0,
-            "type": "expense",
-            "category": "food",
-            "description": "Too expensive"
-        })
+        response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": balance + 1000.0,
+                "type": "expense",
+                "category": "food",
+                "description": "Too expensive",
+            },
+        )
 
         assert response.status_code == 400
         assert "insufficient" in response.json()["message"].lower()
@@ -139,21 +156,27 @@ class TestTransactionE2E:
         initial_balance = dashboard.json()["balance"]["current"]
 
         # Send same request twice with same idempotency key
-        response1 = await auth_client.post("/api/transactions", json={
-            "amount": 100.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Test income",
-            "idempotency_key": idempotency_key
-        })
+        response1 = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 100.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Test income",
+                "idempotency_key": idempotency_key,
+            },
+        )
 
-        response2 = await auth_client.post("/api/transactions", json={
-            "amount": 100.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Test income",
-            "idempotency_key": idempotency_key
-        })
+        response2 = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 100.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Test income",
+                "idempotency_key": idempotency_key,
+            },
+        )
 
         assert response1.status_code == 200
         assert response2.status_code == 200
@@ -176,13 +199,16 @@ class TestTransactionE2E:
         # Create 10 concurrent income transactions
         tasks = []
         for i in range(10):
-            task = auth_client.post("/api/transactions", json={
-                "amount": 10.0,
-                "type": "income",
-                "category": "salary",
-                "description": f"Concurrent income {i}",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            task = auth_client.post(
+                "/api/transactions",
+                json={
+                    "amount": 10.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": f"Concurrent income {i}",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
@@ -199,56 +225,74 @@ class TestTransactionE2E:
     async def test_transaction_validation(self, auth_client):
         """Test transaction input validation"""
         # Negative amount
-        response = await auth_client.post("/api/transactions", json={
-            "amount": -100.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Invalid"
-        })
+        response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": -100.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Invalid",
+            },
+        )
         assert response.status_code == 422
 
         # Zero amount
-        response = await auth_client.post("/api/transactions", json={
-            "amount": 0.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Invalid"
-        })
+        response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 0.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Invalid",
+            },
+        )
         assert response.status_code == 422
 
         # Invalid type
-        response = await auth_client.post("/api/transactions", json={
-            "amount": 100.0,
-            "type": "invalid",
-            "category": "salary",
-            "description": "Invalid"
-        })
+        response = await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 100.0,
+                "type": "invalid",
+                "category": "salary",
+                "description": "Invalid",
+            },
+        )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_dashboard_aggregates_correctly(self, auth_client):
         """Test dashboard shows correct aggregated data"""
         # Create multiple transactions
-        await auth_client.post("/api/transactions", json={
-            "amount": 1000.0,
-            "type": "income",
-            "category": "salary",
-            "description": "Salary"
-        })
+        await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 1000.0,
+                "type": "income",
+                "category": "salary",
+                "description": "Salary",
+            },
+        )
 
-        await auth_client.post("/api/transactions", json={
-            "amount": 200.0,
-            "type": "expense",
-            "category": "food",
-            "description": "Groceries"
-        })
+        await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 200.0,
+                "type": "expense",
+                "category": "food",
+                "description": "Groceries",
+            },
+        )
 
-        await auth_client.post("/api/transactions", json={
-            "amount": 150.0,
-            "type": "expense",
-            "category": "transport",
-            "description": "Gas"
-        })
+        await auth_client.post(
+            "/api/transactions",
+            json={
+                "amount": 150.0,
+                "type": "expense",
+                "category": "transport",
+                "description": "Gas",
+            },
+        )
 
         # Get dashboard
         dashboard = await auth_client.get("/api/dashboard")
@@ -276,13 +320,16 @@ class TestTransactionPagination:
         """Test transaction list respects limit parameter"""
         # Create 20 transactions
         for i in range(20):
-            await auth_client.post("/api/transactions", json={
-                "amount": 10.0,
-                "type": "income",
-                "category": "salary",
-                "description": f"Transaction {i}",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            await auth_client.post(
+                "/api/transactions",
+                json={
+                    "amount": 10.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": f"Transaction {i}",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
         # Request with limit
         response = await auth_client.get("/api/transactions?limit=5")
@@ -308,12 +355,15 @@ class TestTransactionSecurity:
     async def test_unauthenticated_request_rejected(self):
         """Test unauthenticated requests are rejected"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            response = await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Test"
-            })
+            response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Test",
+                },
+            )
 
             assert response.status_code == 401
 
@@ -324,20 +374,23 @@ class TestTransactionSecurity:
         async with AsyncClient(base_url=BASE_URL) as client:
             # User 1
             auth_data1 = await register_and_get_token(client)
-            token1 = auth_data1['token']
+            token1 = auth_data1["token"]
 
             # User 2
             auth_data2 = await register_and_get_token(client)
-            token2 = auth_data2['token']
+            token2 = auth_data2["token"]
 
             # User 1 creates transaction
             client.headers["Authorization"] = f"Bearer {token1}"
-            await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "User 1 transaction"
-            })
+            await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "User 1 transaction",
+                },
+            )
 
             # User 2 should only see their own transactions
             client.headers["Authorization"] = f"Bearer {token2}"

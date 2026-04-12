@@ -2,6 +2,7 @@
 Unit tests for transaction service.
 Tests transaction creation, deletion, balance validation, and idempotency.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
@@ -9,7 +10,8 @@ from fastapi import HTTPException
 
 # Mock imports before importing the module
 import sys
-sys.path.insert(0, '/app')
+
+sys.path.insert(0, "/app")
 
 
 @pytest.fixture
@@ -64,7 +66,7 @@ class TestTransactionCreation:
         # Setup mocks
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # No existing transaction with idempotency key
-            mock_user  # User exists
+            mock_user,  # User exists
         ]
 
         txn_data = TransactionCreate(
@@ -73,7 +75,7 @@ class TestTransactionCreation:
             type=TransactionType.expense,
             category="food",
             description="Test",
-            idempotency_key="test-key-123"
+            idempotency_key="test-key-123",
         )
 
         # Verify user balance is checked
@@ -100,7 +102,7 @@ class TestTransactionCreation:
         mock_user.balance = 50.0
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # No existing transaction
-            mock_user  # User with low balance
+            mock_user,  # User with low balance
         ]
 
         txn_data = TransactionCreate(
@@ -108,7 +110,7 @@ class TestTransactionCreation:
             amount=100.0,
             type=TransactionType.expense,
             category="food",
-            description="Test"
+            description="Test",
         )
 
         # Should raise HTTPException for insufficient funds
@@ -129,11 +131,11 @@ class TestTransactionCreation:
 
         # Test NaN
         with pytest.raises(ValueError, match="Amount cannot be NaN"):
-            validate_amount(float('nan'))
+            validate_amount(float("nan"))
 
         # Test infinity
         with pytest.raises(ValueError, match="Amount cannot be infinite"):
-            validate_amount(float('inf'))
+            validate_amount(float("inf"))
 
         # Test too large
         with pytest.raises(ValueError, match="Amount cannot exceed"):
@@ -145,7 +147,7 @@ class TestTransactionCreation:
         # Setup: no user found
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # No existing transaction
-            None   # No user found
+            None,  # No user found
         ]
 
         # Should raise HTTPException 404
@@ -155,7 +157,9 @@ class TestTransactionDeletion:
     """Test transaction deletion with balance validation"""
 
     @pytest.mark.asyncio
-    async def test_delete_expense_transaction(self, mock_db, mock_user, mock_transaction):
+    async def test_delete_expense_transaction(
+        self, mock_db, mock_user, mock_transaction
+    ):
         """Test deleting expense transaction returns money"""
         # Setup
         mock_transaction.type = "expense"
@@ -164,7 +168,7 @@ class TestTransactionDeletion:
 
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             mock_transaction,  # Transaction found
-            mock_user  # User found
+            mock_user,  # User found
         ]
 
         # After deletion, balance should increase
@@ -172,7 +176,9 @@ class TestTransactionDeletion:
         assert expected_balance == 600.0
 
     @pytest.mark.asyncio
-    async def test_delete_income_transaction_sufficient_balance(self, mock_db, mock_user, mock_transaction):
+    async def test_delete_income_transaction_sufficient_balance(
+        self, mock_db, mock_user, mock_transaction
+    ):
         """Test deleting income transaction with sufficient balance"""
         # Setup
         mock_transaction.type = "income"
@@ -181,14 +187,16 @@ class TestTransactionDeletion:
 
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             mock_transaction,
-            mock_user
+            mock_user,
         ]
 
         # Should succeed - user has enough balance
         assert mock_user.balance >= mock_transaction.amount
 
     @pytest.mark.asyncio
-    async def test_delete_income_transaction_insufficient_balance(self, mock_db, mock_user, mock_transaction):
+    async def test_delete_income_transaction_insufficient_balance(
+        self, mock_db, mock_user, mock_transaction
+    ):
         """Test deleting income transaction fails with insufficient balance"""
         # Setup
         mock_transaction.type = "income"
@@ -197,7 +205,7 @@ class TestTransactionDeletion:
 
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             mock_transaction,
-            mock_user
+            mock_user,
         ]
 
         # Should fail - insufficient balance to reverse income
@@ -264,7 +272,9 @@ class TestIdempotency:
     """Test idempotency key handling"""
 
     @pytest.mark.asyncio
-    async def test_duplicate_idempotency_key_returns_same_transaction(self, mock_db, mock_transaction):
+    async def test_duplicate_idempotency_key_returns_same_transaction(
+        self, mock_db, mock_transaction
+    ):
         """Test duplicate idempotency key returns existing transaction"""
         mock_db.execute.return_value.scalar_one_or_none.return_value = mock_transaction
 
@@ -278,19 +288,21 @@ class TestIdempotency:
         """Test transaction without idempotency key creates new transaction"""
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # No existing transaction (no key to check)
-            mock_user
+            mock_user,
         ]
 
         # Should create new transaction each time
 
     @pytest.mark.asyncio
-    async def test_different_idempotency_keys_create_different_transactions(self, mock_db, mock_user):
+    async def test_different_idempotency_keys_create_different_transactions(
+        self, mock_db, mock_user
+    ):
         """Test different idempotency keys create separate transactions"""
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # First key - no existing
             mock_user,
             None,  # Second key - no existing
-            mock_user
+            mock_user,
         ]
 
         # Two different keys should create two transactions
@@ -311,7 +323,14 @@ class TestTransactionValidation:
         """Test category validation"""
         from shared.models import TransactionCategory
 
-        valid_categories = ["food", "transport", "entertainment", "education", "salary", "other"]
+        valid_categories = [
+            "food",
+            "transport",
+            "entertainment",
+            "education",
+            "salary",
+            "other",
+        ]
         for cat in valid_categories:
             assert hasattr(TransactionCategory, cat)
 

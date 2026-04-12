@@ -1,13 +1,21 @@
 """Market Events and Gamification Routes"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from datetime import datetime, timedelta
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
-from shared.models import MarketEvent, UserMarketResponse, Achievement, DailyMission, User
+from shared.models import (
+    MarketEvent,
+    UserMarketResponse,
+    Achievement,
+    DailyMission,
+    User,
+)
 from shared.redis import get_cache, set_cache, publish_event
 from shared.logger import setup_logger
 from pydantic import BaseModel
@@ -28,23 +36,33 @@ EVENT_TEMPLATES = [
         "title": "Процентная ставка ФРС выросла",
         "description": "Федеральная резервная система США повысила ставку на 0.25%. Как это повлияет на рынок?",
         "impact": "negative",
-        "options": ["Продать акции", "Купить облигации", "Держать позиции", "Купить золото"],
-        "correct_option": 1
+        "options": [
+            "Продать акции",
+            "Купить облигации",
+            "Держать позиции",
+            "Купить золото",
+        ],
+        "correct_option": 1,
     },
     {
         "title": "Tech-гигант представил новый продукт",
         "description": "Apple анонсировала революционное устройство. Акции выросли на 5%.",
         "impact": "positive",
         "options": ["Купить акции", "Продать акции", "Ждать коррекции", "Игнорировать"],
-        "correct_option": 0
+        "correct_option": 0,
     },
     {
         "title": "Геополитическая напряженность",
         "description": "Конфликт на Ближнем Востоке усилился. Цены на нефть растут.",
         "impact": "mixed",
-        "options": ["Купить нефтяные акции", "Продать все", "Диверсифицировать", "Купить защитные активы"],
-        "correct_option": 3
-    }
+        "options": [
+            "Купить нефтяные акции",
+            "Продать все",
+            "Диверсифицировать",
+            "Купить защитные активы",
+        ],
+        "correct_option": 3,
+    },
 ]
 
 
@@ -52,8 +70,7 @@ async def init_market_events(db: AsyncSession):
     """Create active market events if none exist - uses deterministic selection"""
     result = await db.execute(
         select(MarketEvent).where(
-            MarketEvent.is_active == True,
-            MarketEvent.expires_at > datetime.utcnow()
+            MarketEvent.is_active == True, MarketEvent.expires_at > datetime.utcnow()
         )
     )
     active_events = result.scalars().all()
@@ -71,7 +88,7 @@ async def init_market_events(db: AsyncSession):
             options=template["options"],
             correct_option=template["correct_option"],
             expires_at=datetime.utcnow() + timedelta(hours=24),
-            is_active=True
+            is_active=True,
         )
         db.add(event)
         logger.info(f"Created market event: {template['title']}")
@@ -87,15 +104,17 @@ async def get_market_event(userId: str, db: AsyncSession = Depends(get_db)):
 
     # Get event user hasn't responded to
     result = await db.execute(
-        select(MarketEvent).where(
+        select(MarketEvent)
+        .where(
             MarketEvent.is_active == True,
             MarketEvent.expires_at > datetime.utcnow(),
             ~MarketEvent.id.in_(
                 select(UserMarketResponse.event_id).where(
                     UserMarketResponse.user_id == user_id
                 )
-            )
-        ).limit(1)
+            ),
+        )
+        .limit(1)
     )
     event = result.scalar_one_or_none()
 
@@ -108,12 +127,14 @@ async def get_market_event(userId: str, db: AsyncSession = Depends(get_db)):
         "description": event.description,
         "impact": event.impact,
         "options": event.options,
-        "expires_at": event.expires_at.isoformat()
+        "expires_at": event.expires_at.isoformat(),
     }
 
 
 @router.post("/market-event/action")
-async def market_event_action(req: MarketActionRequest, db: AsyncSession = Depends(get_db)):
+async def market_event_action(
+    req: MarketActionRequest, db: AsyncSession = Depends(get_db)
+):
     """Record user's response to market event"""
     user_id = int(req.userId) if req.userId.isdigit() else 1
 
@@ -130,7 +151,7 @@ async def market_event_action(req: MarketActionRequest, db: AsyncSession = Depen
     response_result = await db.execute(
         select(UserMarketResponse).where(
             UserMarketResponse.user_id == user_id,
-            UserMarketResponse.event_id == req.eventId
+            UserMarketResponse.event_id == req.eventId,
         )
     )
     existing = response_result.scalar_one_or_none()
@@ -139,7 +160,11 @@ async def market_event_action(req: MarketActionRequest, db: AsyncSession = Depen
         raise HTTPException(400, "Already responded to this event")
 
     # Determine if correct
-    is_correct = event.options.index(req.action) == event.correct_option if req.action in event.options else False
+    is_correct = (
+        event.options.index(req.action) == event.correct_option
+        if req.action in event.options
+        else False
+    )
     xp_earned = 15 if is_correct else 5
 
     # Record response
@@ -148,23 +173,26 @@ async def market_event_action(req: MarketActionRequest, db: AsyncSession = Depen
         event_id=req.eventId,
         action=req.action,
         is_correct=is_correct,
-        xp_earned=xp_earned
+        xp_earned=xp_earned,
     )
     db.add(response)
     await db.commit()
 
-    await publish_event("market.event_responded", {
-        "user_id": user_id,
-        "event_id": req.eventId,
-        "is_correct": is_correct,
-        "xp_earned": xp_earned
-    })
+    await publish_event(
+        "market.event_responded",
+        {
+            "user_id": user_id,
+            "event_id": req.eventId,
+            "is_correct": is_correct,
+            "xp_earned": xp_earned,
+        },
+    )
 
     return {
         "status": "recorded",
         "is_correct": is_correct,
         "xp_earned": xp_earned,
-        "correct_action": event.options[event.correct_option]
+        "correct_action": event.options[event.correct_option],
     }
 
 
@@ -174,7 +202,9 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
     user_id = int(userId) if userId.isdigit() else 1
 
     result = await db.execute(
-        select(Achievement).where(Achievement.user_id == user_id).order_by(Achievement.unlocked_at.desc())
+        select(Achievement)
+        .where(Achievement.user_id == user_id)
+        .order_by(Achievement.unlocked_at.desc())
     )
     achievements = result.scalars().all()
 
@@ -185,7 +215,7 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
             "description": a.description,
             "icon": a.icon,
             "xp_reward": a.xp_reward,
-            "unlocked_at": a.unlocked_at.isoformat()
+            "unlocked_at": a.unlocked_at.isoformat(),
         }
         for a in achievements
     ]
@@ -201,8 +231,7 @@ async def get_daily_missions(userId: str, db: AsyncSession = Depends(get_db)):
     # Get today's missions
     result = await db.execute(
         select(DailyMission).where(
-            DailyMission.user_id == user_id,
-            func.date(DailyMission.date) == today
+            DailyMission.user_id == user_id, func.date(DailyMission.date) == today
         )
     )
     missions = result.scalars().all()
@@ -210,9 +239,17 @@ async def get_daily_missions(userId: str, db: AsyncSession = Depends(get_db)):
     # Create missions if none exist
     if not missions:
         mission_templates = [
-            {"title": "Добавь 3 транзакции", "description": "Запиши свои расходы", "target": 3},
+            {
+                "title": "Добавь 3 транзакции",
+                "description": "Запиши свои расходы",
+                "target": 3,
+            },
             {"title": "Пройди 1 урок", "description": "Изучи новую тему", "target": 1},
-            {"title": "Проверь портфель", "description": "Посмотри на свои инвестиции", "target": 1}
+            {
+                "title": "Проверь портфель",
+                "description": "Посмотри на свои инвестиции",
+                "target": 1,
+            },
         ]
 
         for template in mission_templates:
@@ -224,7 +261,7 @@ async def get_daily_missions(userId: str, db: AsyncSession = Depends(get_db)):
                 target=template["target"],
                 xp_reward=10,
                 completed=False,
-                date=datetime.utcnow()
+                date=datetime.utcnow(),
             )
             db.add(mission)
             missions.append(mission)
@@ -239,7 +276,7 @@ async def get_daily_missions(userId: str, db: AsyncSession = Depends(get_db)):
             "progress": m.progress,
             "target": m.target,
             "xp_reward": m.xp_reward,
-            "completed": m.completed
+            "completed": m.completed,
         }
         for m in missions
     ]
@@ -258,8 +295,7 @@ async def get_progress(userId: str, db: AsyncSession = Depends(get_db)):
 
     missions_result = await db.execute(
         select(func.sum(DailyMission.xp_reward)).where(
-            DailyMission.user_id == user_id,
-            DailyMission.completed == True
+            DailyMission.user_id == user_id, DailyMission.completed == True
         )
     )
     missions_xp = missions_result.scalar() or 0
@@ -276,7 +312,7 @@ async def get_progress(userId: str, db: AsyncSession = Depends(get_db)):
         "xp": current_level_xp,
         "total_xp": total_xp,
         "next_level_xp": next_level_xp,
-        "progress_percent": (current_level_xp / next_level_xp * 100)
+        "progress_percent": (current_level_xp / next_level_xp * 100),
     }
 
 
@@ -285,12 +321,9 @@ async def get_levels():
     """Get level definitions"""
     levels = []
     for i in range(1, 51):
-        levels.append({
-            "level": i,
-            "xp_required": i * 100,
-            "title": f"Level {i}",
-            "rewards": []
-        })
+        levels.append(
+            {"level": i, "xp_required": i * 100, "title": f"Level {i}", "rewards": []}
+        )
     return levels
 
 
@@ -302,9 +335,10 @@ async def get_diary(userId: str, limit: int = 20, db: AsyncSession = Depends(get
     from shared.models import DiaryEntry
 
     result = await db.execute(
-        select(DiaryEntry).where(
-            DiaryEntry.user_id == user_id
-        ).order_by(DiaryEntry.created_at.desc()).limit(limit)
+        select(DiaryEntry)
+        .where(DiaryEntry.user_id == user_id)
+        .order_by(DiaryEntry.created_at.desc())
+        .limit(limit)
     )
     entries = result.scalars().all()
 
@@ -314,7 +348,7 @@ async def get_diary(userId: str, limit: int = 20, db: AsyncSession = Depends(get
             "content": e.content,
             "mood": e.mood,
             "tags": e.tags,
-            "created_at": e.created_at.isoformat()
+            "created_at": e.created_at.isoformat(),
         }
         for e in entries
     ]
@@ -360,8 +394,4 @@ async def buy_freeze(data: dict, db: AsyncSession = Depends(get_db)):
         user.balance -= freeze_cost
         await db.flush()
 
-    return {
-        "status": "purchased",
-        "cost": freeze_cost,
-        "new_balance": user.balance
-    }
+    return {"status": "purchased", "cost": freeze_cost, "new_balance": user.balance}

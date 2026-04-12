@@ -1,4 +1,5 @@
 """Deterministic market data provider - NO random generation in production"""
+
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import math
@@ -13,22 +14,74 @@ class MarketDataProvider:
 
     # Base stock data - static reference prices
     STOCK_REFERENCE_DATA = {
-        "AAPL": {"name": "Apple Inc.", "base_price": 178.50, "sector": "Technology", "volatility": 0.02},
-        "GOOGL": {"name": "Alphabet Inc.", "base_price": 142.30, "sector": "Technology", "volatility": 0.025},
-        "MSFT": {"name": "Microsoft Corp.", "base_price": 415.20, "sector": "Technology", "volatility": 0.018},
-        "TSLA": {"name": "Tesla Inc.", "base_price": 248.90, "sector": "Automotive", "volatility": 0.04},
-        "AMZN": {"name": "Amazon.com Inc.", "base_price": 178.25, "sector": "E-commerce", "volatility": 0.022},
-        "NVDA": {"name": "NVIDIA Corp.", "base_price": 875.40, "sector": "Technology", "volatility": 0.035},
-        "META": {"name": "Meta Platforms", "base_price": 485.60, "sector": "Technology", "volatility": 0.028},
-        "JPM": {"name": "JPMorgan Chase", "base_price": 195.80, "sector": "Finance", "volatility": 0.015},
-        "V": {"name": "Visa Inc.", "base_price": 278.30, "sector": "Finance", "volatility": 0.016},
-        "WMT": {"name": "Walmart Inc.", "base_price": 165.40, "sector": "Retail", "volatility": 0.012}
+        "AAPL": {
+            "name": "Apple Inc.",
+            "base_price": 178.50,
+            "sector": "Technology",
+            "volatility": 0.02,
+        },
+        "GOOGL": {
+            "name": "Alphabet Inc.",
+            "base_price": 142.30,
+            "sector": "Technology",
+            "volatility": 0.025,
+        },
+        "MSFT": {
+            "name": "Microsoft Corp.",
+            "base_price": 415.20,
+            "sector": "Technology",
+            "volatility": 0.018,
+        },
+        "TSLA": {
+            "name": "Tesla Inc.",
+            "base_price": 248.90,
+            "sector": "Automotive",
+            "volatility": 0.04,
+        },
+        "AMZN": {
+            "name": "Amazon.com Inc.",
+            "base_price": 178.25,
+            "sector": "E-commerce",
+            "volatility": 0.022,
+        },
+        "NVDA": {
+            "name": "NVIDIA Corp.",
+            "base_price": 875.40,
+            "sector": "Technology",
+            "volatility": 0.035,
+        },
+        "META": {
+            "name": "Meta Platforms",
+            "base_price": 485.60,
+            "sector": "Technology",
+            "volatility": 0.028,
+        },
+        "JPM": {
+            "name": "JPMorgan Chase",
+            "base_price": 195.80,
+            "sector": "Finance",
+            "volatility": 0.015,
+        },
+        "V": {
+            "name": "Visa Inc.",
+            "base_price": 278.30,
+            "sector": "Finance",
+            "volatility": 0.016,
+        },
+        "WMT": {
+            "name": "Walmart Inc.",
+            "base_price": 165.40,
+            "sector": "Retail",
+            "volatility": 0.012,
+        },
     }
 
     def __init__(self):
         self.reference_date = datetime(2026, 1, 1)
 
-    def get_current_price(self, ticker: str, current_time: Optional[datetime] = None) -> float:
+    def get_current_price(
+        self, ticker: str, current_time: Optional[datetime] = None
+    ) -> float:
         """
         Get deterministic current price based on time.
         Uses sine wave to simulate market movement - deterministic, not random.
@@ -57,18 +110,24 @@ class MarketDataProvider:
 
         return round(current_price, 2)
 
-    def get_change_percent(self, ticker: str, current_time: Optional[datetime] = None) -> float:
+    def get_change_percent(
+        self, ticker: str, current_time: Optional[datetime] = None
+    ) -> float:
         """Get deterministic daily change percentage"""
         if current_time is None:
             current_time = datetime.utcnow()
 
         current_price = self.get_current_price(ticker, current_time)
-        yesterday_price = self.get_current_price(ticker, current_time - timedelta(days=1))
+        yesterday_price = self.get_current_price(
+            ticker, current_time - timedelta(days=1)
+        )
 
         change_pct = ((current_price - yesterday_price) / yesterday_price) * 100
         return round(change_pct, 2)
 
-    def get_historical_prices(self, ticker: str, days: int = 30, end_date: Optional[datetime] = None) -> List[Dict]:
+    def get_historical_prices(
+        self, ticker: str, days: int = 30, end_date: Optional[datetime] = None
+    ) -> List[Dict]:
         """
         Get deterministic historical price data.
         NO random generation - uses same deterministic algorithm.
@@ -90,11 +149,7 @@ class MarketDataProvider:
             else:  # Weekend
                 volume = base_volume // 2
 
-            history.append({
-                "date": date.isoformat(),
-                "price": price,
-                "volume": volume
-            })
+            history.append({"date": date.isoformat(), "price": price, "volume": volume})
 
         return history
 
@@ -114,7 +169,8 @@ class MarketDataProvider:
             "dividend_yield": round((ticker_hash % 5) * 0.5, 2),
             "52w_high": round(current_price * 1.2, 2),
             "52w_low": round(current_price * 0.8, 2),
-            "market_cap": data["base_price"] * (100_000_000 + (ticker_hash * 10_000_000))
+            "market_cap": data["base_price"]
+            * (100_000_000 + (ticker_hash * 10_000_000)),
         }
 
     def get_all_stocks(self) -> List[Dict]:
@@ -130,15 +186,17 @@ class MarketDataProvider:
             ticker_hash = sum(ord(c) for c in ticker)
             volume = 5_000_000 + (ticker_hash * 100_000)
 
-            stocks.append({
-                "ticker": ticker,
-                "name": data["name"],
-                "price": price,
-                "change_percent": change_pct,
-                "volume": volume,
-                "market_cap": self.get_stock_metrics(ticker)["market_cap"],
-                "sector": data["sector"]
-            })
+            stocks.append(
+                {
+                    "ticker": ticker,
+                    "name": data["name"],
+                    "price": price,
+                    "change_percent": change_pct,
+                    "volume": volume,
+                    "market_cap": self.get_stock_metrics(ticker)["market_cap"],
+                    "sector": data["sector"],
+                }
+            )
 
         return stocks
 
@@ -179,7 +237,7 @@ class MarketDataProvider:
             "action": action,
             "confidence": confidence,
             "target_price": target_price,
-            "reason": reason
+            "reason": reason,
         }
 
 

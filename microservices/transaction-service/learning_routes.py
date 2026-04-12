@@ -1,10 +1,12 @@
 """Learning System Routes"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
 from shared.models import Module, Lesson, UserProgress, User
@@ -28,29 +30,29 @@ MODULES_DATA = [
         "title": "Основы финансов",
         "description": "Базовые концепции управления деньгами",
         "icon": "💰",
-        "order": 1
+        "order": 1,
     },
     {
         "id": 2,
         "title": "Инвестиции",
         "description": "Как заставить деньги работать",
         "icon": "📈",
-        "order": 2
+        "order": 2,
     },
     {
         "id": 3,
         "title": "Бюджетирование",
         "description": "Планирование расходов и доходов",
         "icon": "📊",
-        "order": 3
+        "order": 3,
     },
     {
         "id": 4,
         "title": "Криптовалюты",
         "description": "Цифровые активы и блокчейн",
         "icon": "₿",
-        "order": 4
-    }
+        "order": 4,
+    },
 ]
 
 LESSONS_DATA = [
@@ -65,11 +67,16 @@ LESSONS_DATA = [
         "questions": [
             {
                 "question": "Что такое бюджет?",
-                "options": ["План доходов и расходов", "Список покупок", "Банковский счет", "Кредитная карта"],
+                "options": [
+                    "План доходов и расходов",
+                    "Список покупок",
+                    "Банковский счет",
+                    "Кредитная карта",
+                ],
                 "correct": 0,
-                "explanation": "Бюджет — это структурированный план управления деньгами"
+                "explanation": "Бюджет — это структурированный план управления деньгами",
             }
-        ]
+        ],
     },
     {
         "id": 2,
@@ -84,9 +91,9 @@ LESSONS_DATA = [
                 "question": "Сколько процентов дохода нужно откладывать?",
                 "options": ["10%", "20%", "30%", "50%"],
                 "correct": 1,
-                "explanation": "По правилу 50/30/20 на сбережения идет 20%"
+                "explanation": "По правилу 50/30/20 на сбережения идет 20%",
             }
-        ]
+        ],
     },
     {
         "id": 3,
@@ -101,10 +108,10 @@ LESSONS_DATA = [
                 "question": "Что безопаснее?",
                 "options": ["Акции", "Облигации", "Криптовалюта", "Форекс"],
                 "correct": 1,
-                "explanation": "Облигации считаются более консервативным инструментом"
+                "explanation": "Облигации считаются более консервативным инструментом",
             }
-        ]
-    }
+        ],
+    },
 ]
 
 
@@ -141,8 +148,7 @@ async def get_modules(userId: str, db: AsyncSession = Depends(get_db)):
         # Count lessons
         lessons_result = await db.execute(
             select(func.count(Lesson.id)).where(
-                Lesson.module_id == module.id,
-                Lesson.is_active == True
+                Lesson.module_id == module.id, Lesson.is_active == True
             )
         )
         total_lessons = lessons_result.scalar()
@@ -154,33 +160,40 @@ async def get_modules(userId: str, db: AsyncSession = Depends(get_db)):
                 UserProgress.completed == True,
                 UserProgress.lesson_id.in_(
                     select(Lesson.id).where(Lesson.module_id == module.id)
-                )
+                ),
             )
         )
         completed_lessons = completed_result.scalar()
 
-        modules_list.append({
-            "id": module.id,
-            "title": module.title,
-            "description": module.description,
-            "icon": module.icon,
-            "total_lessons": total_lessons,
-            "completed_lessons": completed_lessons,
-            "progress": (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
-        })
+        modules_list.append(
+            {
+                "id": module.id,
+                "title": module.title,
+                "description": module.description,
+                "icon": module.icon,
+                "total_lessons": total_lessons,
+                "completed_lessons": completed_lessons,
+                "progress": (
+                    (completed_lessons / total_lessons * 100)
+                    if total_lessons > 0
+                    else 0
+                ),
+            }
+        )
 
     return modules_list
 
 
 @router.get("/v2/lessons")
-async def get_module_lessons(userId: str, moduleId: int, db: AsyncSession = Depends(get_db)):
+async def get_module_lessons(
+    userId: str, moduleId: int, db: AsyncSession = Depends(get_db)
+):
     user_id = int(userId) if userId.isdigit() else 1
 
     result = await db.execute(
-        select(Lesson).where(
-            Lesson.module_id == moduleId,
-            Lesson.is_active == True
-        ).order_by(Lesson.order)
+        select(Lesson)
+        .where(Lesson.module_id == moduleId, Lesson.is_active == True)
+        .order_by(Lesson.order)
     )
     lessons = result.scalars().all()
 
@@ -189,26 +202,29 @@ async def get_module_lessons(userId: str, moduleId: int, db: AsyncSession = Depe
         # Check if completed
         progress_result = await db.execute(
             select(UserProgress).where(
-                UserProgress.user_id == user_id,
-                UserProgress.lesson_id == lesson.id
+                UserProgress.user_id == user_id, UserProgress.lesson_id == lesson.id
             )
         )
         progress = progress_result.scalar_one_or_none()
 
-        lessons_list.append({
-            "id": lesson.id,
-            "title": lesson.title,
-            "duration_minutes": lesson.duration_minutes,
-            "xp_reward": lesson.xp_reward,
-            "completed": progress.completed if progress else False,
-            "score": progress.score if progress else None
-        })
+        lessons_list.append(
+            {
+                "id": lesson.id,
+                "title": lesson.title,
+                "duration_minutes": lesson.duration_minutes,
+                "xp_reward": lesson.xp_reward,
+                "completed": progress.completed if progress else False,
+                "score": progress.score if progress else None,
+            }
+        )
 
     return lessons_list
 
 
 @router.get("/v2/lesson/{lesson_id}")
-async def get_lesson_detail(lesson_id: int, userId: str, db: AsyncSession = Depends(get_db)):
+async def get_lesson_detail(
+    lesson_id: int, userId: str, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Lesson).where(Lesson.id == lesson_id))
     lesson = result.scalar_one_or_none()
 
@@ -221,12 +237,14 @@ async def get_lesson_detail(lesson_id: int, userId: str, db: AsyncSession = Depe
         "content": lesson.content,
         "duration_minutes": lesson.duration_minutes,
         "xp_reward": lesson.xp_reward,
-        "questions": lesson.questions or []
+        "questions": lesson.questions or [],
     }
 
 
 @router.post("/v2/complete-lesson")
-async def complete_lesson(req: CompleteLessonRequest, db: AsyncSession = Depends(get_db)):
+async def complete_lesson(
+    req: CompleteLessonRequest, db: AsyncSession = Depends(get_db)
+):
     user_id = int(req.userId) if req.userId.isdigit() else 1
 
     # Check if lesson exists
@@ -238,13 +256,16 @@ async def complete_lesson(req: CompleteLessonRequest, db: AsyncSession = Depends
     # Get or create progress
     progress_result = await db.execute(
         select(UserProgress).where(
-            UserProgress.user_id == user_id,
-            UserProgress.lesson_id == req.lessonId
+            UserProgress.user_id == user_id, UserProgress.lesson_id == req.lessonId
         )
     )
     progress = progress_result.scalar_one_or_none()
 
-    score = int((req.correctAnswers / req.totalQuestions * 100)) if req.totalQuestions > 0 else 100
+    score = (
+        int((req.correctAnswers / req.totalQuestions * 100))
+        if req.totalQuestions > 0
+        else 100
+    )
 
     if progress:
         progress.completed = True
@@ -256,7 +277,7 @@ async def complete_lesson(req: CompleteLessonRequest, db: AsyncSession = Depends
             lesson_id=req.lessonId,
             completed=True,
             score=score,
-            completed_at=datetime.utcnow()
+            completed_at=datetime.utcnow(),
         )
         db.add(progress)
 
@@ -269,18 +290,21 @@ async def complete_lesson(req: CompleteLessonRequest, db: AsyncSession = Depends
 
     await db.commit()
 
-    await publish_event("lesson.completed", {
-        "user_id": user_id,
-        "lesson_id": req.lessonId,
-        "score": score,
-        "xp_earned": lesson.xp_reward
-    })
+    await publish_event(
+        "lesson.completed",
+        {
+            "user_id": user_id,
+            "lesson_id": req.lessonId,
+            "score": score,
+            "xp_earned": lesson.xp_reward,
+        },
+    )
 
     return {
         "status": "completed",
         "lesson_id": req.lessonId,
         "score": score,
-        "xp_earned": lesson.xp_reward
+        "xp_earned": lesson.xp_reward,
     }
 
 
@@ -289,7 +313,7 @@ async def generate_lesson(
     userId: str,
     weakTopic: str = None,
     strongTopic: str = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Generate AI-powered adaptive lesson"""
     # This will use OpenRouter in AI service
@@ -297,17 +321,12 @@ async def generate_lesson(
 
     client = OpenRouterClient()
 
-    user_context = {
-        "weak_topic": weakTopic,
-        "strong_topic": strongTopic
-    }
+    user_context = {"weak_topic": weakTopic, "strong_topic": strongTopic}
 
     topic = weakTopic or "financial basics"
 
     lesson_content = await client.generate_lesson_content(
-        topic=topic,
-        difficulty="medium",
-        user_context=user_context
+        topic=topic, difficulty="medium", user_context=user_context
     )
 
     if not lesson_content:
@@ -318,16 +337,16 @@ async def generate_lesson(
             "key_points": [
                 "Основные концепции",
                 "Практические примеры",
-                "Применение в жизни"
+                "Применение в жизни",
             ],
             "questions": [
                 {
                     "question": "Вопрос по теме",
                     "options": ["A", "B", "C", "D"],
                     "correct": 0,
-                    "explanation": "Объяснение"
+                    "explanation": "Объяснение",
                 }
-            ]
+            ],
         }
 
     return lesson_content

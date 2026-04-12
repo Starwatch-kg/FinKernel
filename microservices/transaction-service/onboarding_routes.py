@@ -1,10 +1,12 @@
 """Onboarding System Routes"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
 from shared.models import User
@@ -26,8 +28,8 @@ ONBOARDING_QUESTIONS = [
         "options": [
             {"id": "a", "text": "Никогда не инвестировал", "score": 0},
             {"id": "b", "text": "Начинающий инвестор", "score": 1},
-            {"id": "c", "text": "Опытный инвестор", "score": 2}
-        ]
+            {"id": "c", "text": "Опытный инвестор", "score": 2},
+        ],
     },
     {
         "id": 2,
@@ -36,8 +38,8 @@ ONBOARDING_QUESTIONS = [
         "options": [
             {"id": "a", "text": "Избегаю риска", "score": 0},
             {"id": "b", "text": "Умеренный риск", "score": 1},
-            {"id": "c", "text": "Готов рисковать", "score": 2}
-        ]
+            {"id": "c", "text": "Готов рисковать", "score": 2},
+        ],
     },
     {
         "id": 3,
@@ -46,9 +48,9 @@ ONBOARDING_QUESTIONS = [
         "options": [
             {"id": "a", "text": "Сохранить деньги", "score": 0},
             {"id": "b", "text": "Накопить на покупку", "score": 1},
-            {"id": "c", "text": "Создать пассивный доход", "score": 2}
-        ]
-    }
+            {"id": "c", "text": "Создать пассивный доход", "score": 2},
+        ],
+    },
 ]
 
 
@@ -90,11 +92,7 @@ async def submit_onboarding(data: OnboardingSubmit, db: AsyncSession = Depends(g
     else:
         level = "advanced"
 
-    return {
-        "status": "completed",
-        "score": total_score,
-        "level": level
-    }
+    return {"status": "completed", "score": total_score, "level": level}
 
 
 @router.get("/onboarding/result")
@@ -109,6 +107,6 @@ async def get_onboarding_result(userId: str, db: AsyncSession = Depends(get_db))
         "recommendations": [
             "Начните с базовых уроков",
             "Изучите основы инвестирования",
-            "Практикуйтесь с виртуальным портфелем"
-        ]
+            "Практикуйтесь с виртуальным портфелем",
+        ],
     }

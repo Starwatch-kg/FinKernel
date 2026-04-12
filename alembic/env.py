@@ -1,4 +1,5 @@
 """Database migrations setup with Alembic"""
+
 # Run: alembic init alembic
 # Then: alembic revision --autogenerate -m "Initial migration"
 # Then: alembic upgrade head
@@ -9,7 +10,7 @@ from alembic import context
 import os
 import sys
 
-sys.path.append('/app')
+sys.path.append("/app")
 
 from shared.models import Base
 from shared.config import get_config
@@ -18,8 +19,8 @@ config = context.config
 cfg = get_config()
 
 # Override sqlalchemy.url from environment - use sync driver for migrations
-database_url = cfg.database_url.replace('postgresql+asyncpg://', 'postgresql://')
-config.set_main_option('sqlalchemy.url', database_url)
+database_url = cfg.database_url.replace("postgresql+asyncpg://", "postgresql://")
+config.set_main_option("sqlalchemy.url", database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -50,10 +51,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

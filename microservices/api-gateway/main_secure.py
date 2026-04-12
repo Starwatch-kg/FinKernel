@@ -4,6 +4,7 @@ Zero tolerance for vulnerabilities.
 All endpoints require authentication.
 No IDOR vulnerabilities.
 """
+
 from fastapi import FastAPI, HTTPException, Depends, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,7 +16,8 @@ import httpx
 import sys
 import os
 from typing import Optional
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.redis import client as redis_client, delete_cache
 from shared.schemas import TransactionCreate, TransactionResponse, PredictionResponse
@@ -24,13 +26,23 @@ from shared.models import User
 from shared.startup import validate_startup
 from shared.logger import setup_logger
 from shared.auth_secure import (
-    hash_password, verify_password, create_access_token, create_refresh_token,
-    get_current_user, get_current_admin, verify_resource_ownership,
-    is_admin_email, UserContext, decode_token
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    get_current_user,
+    get_current_admin,
+    verify_resource_ownership,
+    is_admin_email,
+    UserContext,
+    decode_token,
 )
 from shared.security_hardening import (
-    SecurityHeadersMiddleware, RequestIDMiddleware,
-    sanitize_string, validate_amount, RateLimitExceeded
+    SecurityHeadersMiddleware,
+    RequestIDMiddleware,
+    sanitize_string,
+    validate_amount,
+    RateLimitExceeded,
 )
 from shared.rate_limit_global import GlobalRateLimiter, apply_rate_limit
 from shared.audit_logger import audit_logger
@@ -44,7 +56,7 @@ app = FastAPI(
     title="Financial API Gateway - Production",
     version="2.0.0",
     docs_url="/docs" if config.debug else None,  # Disable docs in production
-    redoc_url=None
+    redoc_url=None,
 )
 
 # Add security middleware (ORDER MATTERS)
@@ -53,8 +65,7 @@ app.add_middleware(SecurityHeadersMiddleware)  # Second: add security headers
 
 # CORS configuration - STRICT
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost,http://localhost:80"
+    "ALLOWED_ORIGINS", "http://localhost,http://localhost:80"
 ).split(",")
 
 app.add_middleware(
@@ -63,7 +74,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"]
+    expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
 )
 
 # Initialize rate limiter
@@ -80,7 +91,7 @@ CATEGORY_MAP = {
     "entertainment": "Развлечения",
     "education": "Образование",
     "salary": "Зарплата",
-    "other": "Другое"
+    "other": "Другое",
 }
 
 CATEGORY_ICONS = {
@@ -96,13 +107,14 @@ CATEGORY_ICONS = {
     "развлечения": "🎮",
     "образование": "📚",
     "зарплата": "💰",
-    "другое": "💸"
+    "другое": "💸",
 }
 
 
 # ============================================================================
 # EXCEPTION HANDLERS - STANDARDIZED ERROR RESPONSES
 # ============================================================================
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -115,7 +127,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         error_dict = {
             "loc": error.get("loc", []),
             "msg": error.get("msg", ""),
-            "type": error.get("type", "")
+            "type": error.get("type", ""),
         }
         # Handle ctx if present
         if "ctx" in error:
@@ -130,8 +142,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "error": "validation_error",
             "message": "Invalid request data",
             "details": errors,
-            "request_id": request_id
-        }
+            "request_id": request_id,
+        },
     )
 
 
@@ -143,9 +155,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={
             "error": "http_error",
             "message": exc.detail,
-            "request_id": request_id
+            "request_id": request_id,
         },
-        headers=exc.headers
+        headers=exc.headers,
     )
 
 
@@ -157,9 +169,9 @@ async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded)
         content={
             "error": "rate_limit_exceeded",
             "message": str(exc),
-            "request_id": request_id
+            "request_id": request_id,
         },
-        headers={"Retry-After": str(exc.retry_after)}
+        headers={"Retry-After": str(exc.retry_after)},
     )
 
 
@@ -172,8 +184,8 @@ async def general_exception_handler(request: Request, exc: Exception):
         content={
             "error": "internal_error",
             "message": "An internal error occurred",
-            "request_id": request_id
-        }
+            "request_id": request_id,
+        },
     )
 
 
@@ -181,21 +193,22 @@ async def general_exception_handler(request: Request, exc: Exception):
 # PYDANTIC MODELS - INPUT VALIDATION
 # ============================================================================
 
+
 class RegisterRequest(BaseModel):
     email: EmailStr
     name: constr(min_length=2, max_length=100)
     password: constr(min_length=8, max_length=128)
 
-    @validator('password')
+    @validator("password")
     def password_strength(cls, v):
         if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain at least one digit')
+            raise ValueError("Password must contain at least one digit")
         if not any(c.isalpha() for c in v):
-            raise ValueError('Password must contain at least one letter')
+            raise ValueError("Password must contain at least one letter")
         if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain at least one uppercase letter')
-        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v):
-            raise ValueError('Password must contain at least one special character')
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in v):
+            raise ValueError("Password must contain at least one special character")
         return v
 
 
@@ -222,11 +235,11 @@ class TransactionCreateRequest(BaseModel):
     category: str
     description: Optional[str] = Field(None, max_length=500)
 
-    @validator('amount')
+    @validator("amount")
     def validate_amount_field(cls, v):
         return validate_amount(v)
 
-    @validator('description')
+    @validator("description")
     def sanitize_description(cls, v):
         if v:
             return sanitize_string(v, max_length=500)
@@ -237,25 +250,21 @@ class TransactionCreateRequest(BaseModel):
 # PUBLIC ENDPOINTS (NO AUTH REQUIRED)
 # ============================================================================
 
+
 @app.get("/health")
 async def health():
     """Health check endpoint - no auth required"""
-    return {
-        "status": "ok",
-        "service": "api-gateway",
-        "version": "2.0.0"
-    }
+    return {"status": "ok", "service": "api-gateway", "version": "2.0.0"}
 
 
 # ============================================================================
 # AUTHENTICATION ENDPOINTS
 # ============================================================================
 
+
 @app.post("/api/auth/register", response_model=AuthResponse)
 async def register(
-    request: Request,
-    req: RegisterRequest,
-    db: AsyncSession = Depends(get_db)
+    request: Request, req: RegisterRequest, db: AsyncSession = Depends(get_db)
 ):
     """Register new user - rate limited"""
     await apply_rate_limit(request, rate_limiter, "auth:register", req.email)
@@ -271,12 +280,7 @@ async def register(
 
     # Create user with strong password hash
     password_hash = hash_password(req.password)
-    user = User(
-        email=email,
-        username=name,
-        password_hash=password_hash,
-        balance=5000.0
-    )
+    user = User(email=email, username=name, password_hash=password_hash, balance=5000.0)
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -293,15 +297,13 @@ async def register(
         "refresh_token": refresh_token,
         "token_type": "Bearer",
         "expires_in": 900,
-        "is_admin": is_admin
+        "is_admin": is_admin,
     }
 
 
 @app.post("/api/auth/login", response_model=AuthResponse)
 async def login(
-    request: Request,
-    req: LoginRequest,
-    db: AsyncSession = Depends(get_db)
+    request: Request, req: LoginRequest, db: AsyncSession = Depends(get_db)
 ):
     """Login user - rate limited"""
     await apply_rate_limit(request, rate_limiter, "auth:login", req.email)
@@ -320,7 +322,7 @@ async def login(
             email=req.email,
             reason="invalid_credentials",
             request_id=request_id,
-            ip_address=request.client.host if request.client else None
+            ip_address=request.client.host if request.client else None,
         )
 
         raise HTTPException(401, "Invalid credentials")
@@ -337,15 +339,13 @@ async def login(
         "refresh_token": refresh_token,
         "token_type": "Bearer",
         "expires_in": 900,
-        "is_admin": is_admin
+        "is_admin": is_admin,
     }
 
 
 @app.post("/api/auth/refresh", response_model=AuthResponse)
 async def refresh_token(
-    request: Request,
-    req: RefreshRequest,
-    db: AsyncSession = Depends(get_db)
+    request: Request, req: RefreshRequest, db: AsyncSession = Depends(get_db)
 ):
     """Refresh access token - rate limited"""
     await apply_rate_limit(request, rate_limiter, "auth:refresh")
@@ -374,7 +374,7 @@ async def refresh_token(
         "refresh_token": new_refresh_token,
         "token_type": "Bearer",
         "expires_in": 900,
-        "is_admin": is_admin
+        "is_admin": is_admin,
     }
 
 
@@ -382,17 +382,20 @@ async def refresh_token(
 # TRANSACTION ENDPOINTS - AUTHENTICATION REQUIRED
 # ============================================================================
 
+
 @app.post("/api/transactions")
 async def create_transaction(
     request: Request,
     txn: TransactionCreateRequest,
-    user: UserContext = Depends(get_current_user)
+    user: UserContext = Depends(get_current_user),
 ):
     """
     Create transaction for authenticated user.
     User ID comes from JWT token ONLY.
     """
-    await apply_rate_limit(request, rate_limiter, "finance:transaction", str(user.user_id))
+    await apply_rate_limit(
+        request, rate_limiter, "finance:transaction", str(user.user_id)
+    )
 
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -402,21 +405,21 @@ async def create_transaction(
         "amount": txn.amount,
         "type": txn.type,
         "category": txn.category,
-        "description": txn.description
+        "description": txn.description,
     }
 
     # Use resilient HTTP client with retry
     resp = await default_client.post(
-        f"{TRANSACTIONS_URL}/transactions",
-        json=transaction_data,
-        request_id=request_id
+        f"{TRANSACTIONS_URL}/transactions", json=transaction_data, request_id=request_id
     )
     result = resp.json()
 
     # Map category
     if result.get("category"):
         result["category"] = CATEGORY_MAP.get(result["category"], result["category"])
-        result["category_icon"] = CATEGORY_ICONS.get(result.get("category", "").lower(), "💰")
+        result["category_icon"] = CATEGORY_ICONS.get(
+            result.get("category", "").lower(), "💰"
+        )
     result["comment"] = result.get("description", "")
     result["date"] = result.get("timestamp", "")
 
@@ -430,7 +433,7 @@ async def create_transaction(
 async def get_transactions(
     request: Request,
     limit: int = Query(30, ge=1, le=100),
-    user: UserContext = Depends(get_current_user)
+    user: UserContext = Depends(get_current_user),
 ):
     """
     Get transactions for authenticated user.
@@ -443,7 +446,7 @@ async def get_transactions(
     # Use resilient HTTP client with retry
     resp = await default_client.get(
         f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit={limit}",
-        request_id=request_id
+        request_id=request_id,
     )
     transactions = resp.json()
 
@@ -461,21 +464,21 @@ async def get_transactions(
 
 @app.delete("/api/transactions/{transaction_id}")
 async def delete_transaction(
-    request: Request,
-    transaction_id: int,
-    user: UserContext = Depends(get_current_user)
+    request: Request, transaction_id: int, user: UserContext = Depends(get_current_user)
 ):
     """
     Delete transaction - ownership verified by transaction service.
     """
-    await apply_rate_limit(request, rate_limiter, "finance:transaction", str(user.user_id))
+    await apply_rate_limit(
+        request, rate_limiter, "finance:transaction", str(user.user_id)
+    )
 
     request_id = getattr(request.state, "request_id", "unknown")
 
     # Use resilient HTTP client with retry
     resp = await default_client.delete(
         f"{TRANSACTIONS_URL}/transactions/{transaction_id}?user_id={user.user_id}",
-        request_id=request_id
+        request_id=request_id,
     )
 
     await delete_cache(f"dashboard:{user.user_id}")
@@ -487,10 +490,10 @@ async def delete_transaction(
 # DASHBOARD ENDPOINT - AUTHENTICATION REQUIRED
 # ============================================================================
 
+
 @app.get("/api/dashboard")
 async def get_dashboard(
-    request: Request,
-    user: UserContext = Depends(get_current_user)
+    request: Request, user: UserContext = Depends(get_current_user)
 ):
     """
     Get dashboard for authenticated user.
@@ -502,20 +505,18 @@ async def get_dashboard(
 
     # Fetch data with resilient client
     balance_resp = await default_client.get(
-        f"{TRANSACTIONS_URL}/balance/{user.user_id}",
-        request_id=request_id
+        f"{TRANSACTIONS_URL}/balance/{user.user_id}", request_id=request_id
     )
     txns_resp = await default_client.get(
         f"{TRANSACTIONS_URL}/transactions/{user.user_id}?limit=10",
-        request_id=request_id
+        request_id=request_id,
     )
 
     # Try to get AI prediction (non-critical)
     prediction = None
     try:
         pred_resp = await default_client.get(
-            f"{AI_URL}/predict/{user.user_id}",
-            request_id=request_id
+            f"{AI_URL}/predict/{user.user_id}", request_id=request_id
         )
         prediction = pred_resp.json()
     except Exception as e:
@@ -556,29 +557,42 @@ async def get_dashboard(
                 icon = CATEGORY_ICONS.get(eng, "💸")
                 break
 
-        spending_chart.append({
-            "category": cat,
-            "amount": amount,
-            "percent": round(percent, 1),
-            "icon": icon
-        })
+        spending_chart.append(
+            {
+                "category": cat,
+                "amount": amount,
+                "percent": round(percent, 1),
+                "icon": icon,
+            }
+        )
 
     # Generate AI tips
     ai_tips = []
     if prediction:
         risk = prediction.get("risk_level", "safe")
         if risk == "critical":
-            ai_tips.extend(["🚨 Срочно сократите расходы!", "💡 Пересмотрите ежедневные траты"])
+            ai_tips.extend(
+                ["🚨 Срочно сократите расходы!", "💡 Пересмотрите ежедневные траты"]
+            )
         elif risk == "danger":
-            ai_tips.extend(["⚠️ Контролируйте бюджет внимательнее", "📊 Проанализируйте крупные расходы"])
+            ai_tips.extend(
+                [
+                    "⚠️ Контролируйте бюджет внимательнее",
+                    "📊 Проанализируйте крупные расходы",
+                ]
+            )
         else:
             ai_tips.extend(["✅ Финансы под контролем", "💰 Продолжайте откладывать"])
 
     # Calculate stats
-    categories_used = len(set(txn.get("category") for txn in transactions if txn.get("type") == "expense"))
+    categories_used = len(
+        set(txn.get("category") for txn in transactions if txn.get("type") == "expense")
+    )
     savings_rate = 0
     if balance_data.get("total_income", 0) > 0:
-        savings = balance_data.get("total_income", 0) - balance_data.get("total_expenses", 0)
+        savings = balance_data.get("total_income", 0) - balance_data.get(
+            "total_expenses", 0
+        )
         savings_rate = int((savings / balance_data.get("total_income", 1)) * 100)
 
     dashboard = {
@@ -593,14 +607,16 @@ async def get_dashboard(
             "transactions_count": balance_data.get("transaction_count", 0),
             "savings_rate": savings_rate,
             "categories_used": categories_used,
-            "achievements": 0
-        }
+            "achievements": 0,
+        },
     }
 
     # Add forecast
     if prediction and prediction.get("days_left"):
         days_left = int(prediction["days_left"])
-        daily_avg = int(balance_data.get("balance", 0) / days_left) if days_left > 0 else 0
+        daily_avg = (
+            int(balance_data.get("balance", 0) / days_left) if days_left > 0 else 0
+        )
         dashboard["forecast"] = {"days_left": days_left, "daily_avg": daily_avg}
 
     return dashboard
@@ -610,10 +626,10 @@ async def get_dashboard(
 # AI PREDICTION ENDPOINTS - AUTHENTICATION REQUIRED
 # ============================================================================
 
+
 @app.post("/api/predict")
 async def trigger_prediction(
-    request: Request,
-    user: UserContext = Depends(get_current_user)
+    request: Request, user: UserContext = Depends(get_current_user)
 ):
     """Trigger AI prediction for authenticated user"""
     await apply_rate_limit(request, rate_limiter, "ai:predict", str(user.user_id))
@@ -621,16 +637,14 @@ async def trigger_prediction(
     request_id = getattr(request.state, "request_id", "unknown")
 
     resp = await long_timeout_client.post(
-        f"{AI_URL}/predict/{user.user_id}",
-        request_id=request_id
+        f"{AI_URL}/predict/{user.user_id}", request_id=request_id
     )
     return resp.json()
 
 
 @app.get("/api/predict")
 async def get_prediction(
-    request: Request,
-    user: UserContext = Depends(get_current_user)
+    request: Request, user: UserContext = Depends(get_current_user)
 ):
     """Get AI prediction for authenticated user"""
     await apply_rate_limit(request, rate_limiter, "read:dashboard", str(user.user_id))
@@ -638,8 +652,7 @@ async def get_prediction(
     request_id = getattr(request.state, "request_id", "unknown")
 
     resp = await default_client.get(
-        f"{AI_URL}/predict/{user.user_id}",
-        request_id=request_id
+        f"{AI_URL}/predict/{user.user_id}", request_id=request_id
     )
     if resp.status_code == 404:
         raise HTTPException(404, "No prediction found")
@@ -650,11 +663,12 @@ async def get_prediction(
 # ADMIN ENDPOINTS - ADMIN AUTHENTICATION REQUIRED
 # ============================================================================
 
+
 @app.get("/api/admin/users")
 async def list_all_users(
     request: Request,
     admin: UserContext = Depends(get_current_admin),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Admin only: List all users"""
     result = await db.execute(select(User).limit(100))
@@ -666,7 +680,7 @@ async def list_all_users(
             "email": u.email,
             "username": u.username,
             "balance": u.balance,
-            "created_at": u.created_at.isoformat()
+            "created_at": u.created_at.isoformat(),
         }
         for u in users
     ]
@@ -674,20 +688,18 @@ async def list_all_users(
 
 @app.get("/api/admin/user/{user_id}/dashboard")
 async def admin_view_user_dashboard(
-    request: Request,
-    user_id: int,
-    admin: UserContext = Depends(get_current_admin)
+    request: Request, user_id: int, admin: UserContext = Depends(get_current_admin)
 ):
     """Admin only: View any user's dashboard"""
     request_id = getattr(request.state, "request_id", "unknown")
 
     balance_resp = await default_client.get(
-        f"{TRANSACTIONS_URL}/balance/{user_id}",
-        request_id=request_id
+        f"{TRANSACTIONS_URL}/balance/{user_id}", request_id=request_id
     )
     return balance_resp.json()
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

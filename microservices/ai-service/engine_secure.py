@@ -1,12 +1,14 @@
 """
 SECURE PREDICTION ENGINE - Prompt injection protection
 """
+
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 import sys
 import json
 import re
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.logger import setup_logger
 from shared.security_hardening import sanitize_for_llm
@@ -20,9 +22,12 @@ class PredictionEngine:
         # Import OpenRouter client only if available
         try:
             from openrouter_client_secure import OpenRouterClient
+
             self.openrouter = OpenRouterClient()
         except ImportError:
-            logger.warning("OpenRouter client not available, using statistical model only")
+            logger.warning(
+                "OpenRouter client not available, using statistical model only"
+            )
             self.openrouter = None
 
     def calculate_features(self, transactions: List[Dict]) -> Dict:
@@ -30,7 +35,7 @@ class PredictionEngine:
         if not transactions:
             return self._default_features()
 
-        expenses = [t['amount'] for t in transactions if t['type'] == 'expense']
+        expenses = [t["amount"] for t in transactions if t["type"] == "expense"]
         if not expenses:
             return self._default_features()
 
@@ -47,20 +52,17 @@ class PredictionEngine:
             "rolling_30d": float(rolling_30d),
             "volatility": float(volatility),
             "trend_slope": float(trend_slope),
-            "total_txns": len(expenses)
+            "total_txns": len(expenses),
         }
 
     async def predict(
-        self,
-        balance: float,
-        features: Dict,
-        transactions: List[Dict]
+        self, balance: float, features: Dict, transactions: List[Dict]
     ) -> Tuple[Optional[float], float, str, str, bool]:
         """
         Predict using LLM with SANITIZED inputs and strict output validation.
         Falls back to statistical model if LLM fails.
         """
-        if features['total_txns'] < self.min_txns:
+        if features["total_txns"] < self.min_txns:
             return None, 0.3, "safe", "📊 Недостаточно данных", False
 
         if balance <= 0:
@@ -79,7 +81,7 @@ class PredictionEngine:
                         llm_result["confidence"],
                         llm_result["risk_level"],
                         llm_result["recommendation"],
-                        True  # AI was used
+                        True,  # AI was used
                     )
                 else:
                     logger.warning("LLM output validation failed, using fallback")
@@ -136,12 +138,12 @@ class PredictionEngine:
 
         # Check for injection patterns in recommendation
         dangerous_patterns = [
-            r'<script',
-            r'javascript:',
-            r'onerror=',
-            r'onclick=',
-            r'eval\(',
-            r'exec\(',
+            r"<script",
+            r"javascript:",
+            r"onerror=",
+            r"onclick=",
+            r"eval\(",
+            r"exec\(",
         ]
         for pattern in dangerous_patterns:
             if re.search(pattern, recommendation, re.IGNORECASE):
@@ -150,14 +152,16 @@ class PredictionEngine:
 
         return True
 
-    def _statistical_predict(self, balance: float, features: Dict) -> Tuple[float, float, str, str]:
+    def _statistical_predict(
+        self, balance: float, features: Dict
+    ) -> Tuple[float, float, str, str]:
         """Fallback statistical prediction"""
-        adjusted_spend = 0.6 * features['rolling_7d'] + 0.4 * features['rolling_30d']
+        adjusted_spend = 0.6 * features["rolling_7d"] + 0.4 * features["rolling_30d"]
 
-        if features['trend_slope'] > 0:
-            adjusted_spend *= (1 + min(features['trend_slope'] * 0.5, 0.3))
+        if features["trend_slope"] > 0:
+            adjusted_spend *= 1 + min(features["trend_slope"] * 0.5, 0.3)
 
-        adjusted_spend += features['volatility'] * 0.5
+        adjusted_spend += features["volatility"] * 0.5
         adjusted_spend = max(adjusted_spend, 1.0)
 
         days_left = balance / adjusted_spend
@@ -194,14 +198,14 @@ class PredictionEngine:
     def _calc_confidence(self, features: Dict) -> float:
         """Calculate confidence score"""
         conf = 0.5
-        txns = features['total_txns']
+        txns = features["total_txns"]
         if txns >= 30:
             conf += 0.25
         elif txns >= 15:
             conf += 0.15
         elif txns >= 7:
             conf += 0.10
-        if features['volatility'] < features['daily_avg'] * 0.3:
+        if features["volatility"] < features["daily_avg"] * 0.3:
             conf += 0.10
         return max(0.3, min(0.95, conf))
 
@@ -213,5 +217,5 @@ class PredictionEngine:
             "rolling_30d": 0.0,
             "volatility": 0.0,
             "trend_slope": 0.0,
-            "total_txns": 0
+            "total_txns": 0,
         }

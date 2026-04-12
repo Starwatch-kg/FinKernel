@@ -1,6 +1,8 @@
 """Startup validation and initialization"""
+
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.config import init_config
 from shared.logger import setup_logger
@@ -19,6 +21,7 @@ def validate_startup():
         # Check critical dependencies
         try:
             import redis.asyncio as redis
+
             logger.info("✓ Redis client available")
         except ImportError as e:
             logger.error(f"✗ Redis client not available: {e}")
@@ -26,6 +29,7 @@ def validate_startup():
 
         try:
             import sqlalchemy
+
             logger.info("✓ SQLAlchemy available")
         except ImportError as e:
             logger.error(f"✗ SQLAlchemy not available: {e}")

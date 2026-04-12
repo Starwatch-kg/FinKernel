@@ -2,6 +2,7 @@
 Integration tests for audit logging.
 Tests that critical operations are properly logged.
 """
+
 import pytest
 from httpx import AsyncClient
 import uuid
@@ -14,7 +15,6 @@ tests_path = Path(__file__).parent.parent
 sys.path.insert(0, str(tests_path))
 
 from helpers import register_and_get_token
-
 
 BASE_URL = "http://localhost:8000"
 
@@ -31,13 +31,16 @@ class TestAuditLogging:
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
             # Create transaction
-            response = await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Test transaction",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Test transaction",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             assert response.status_code == 200
             # Audit log should contain this transaction creation
@@ -52,13 +55,16 @@ class TestAuditLogging:
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
             # Create transaction
-            create_response = await client.post("/api/transactions", json={
-                "amount": 50.0,
-                "type": "expense",
-                "category": "food",
-                "description": "To be deleted",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            create_response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 50.0,
+                    "type": "expense",
+                    "category": "food",
+                    "description": "To be deleted",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
             transaction_id = create_response.json()["id"]
 
             # Delete transaction
@@ -79,12 +85,15 @@ class TestAuditLogging:
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
             # Execute trade
-            response = await client.post("/api/trade", json={
-                "ticker": "AAPL",
-                "shares": 1,
-                "action": "buy",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            response = await client.post(
+                "/api/trade",
+                json={
+                    "ticker": "AAPL",
+                    "shares": 1,
+                    "action": "buy",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             # Might fail if trade service not available, but if succeeds:
             if response.status_code == 200:
@@ -98,10 +107,13 @@ class TestAuditLogging:
         """Test failed login attempts are logged"""
         async with AsyncClient(base_url=BASE_URL) as client:
             # Attempt login with wrong credentials
-            response = await client.post("/api/auth/login", json={
-                "email": "nonexistent@example.com",
-                "password": "WrongPassword123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login",
+                json={
+                    "email": "nonexistent@example.com",
+                    "password": "WrongPassword123!@#",
+                },
+            )
 
             assert response.status_code == 401
 
@@ -118,10 +130,10 @@ class TestAuditLogging:
 
             # Try to login 5 times with wrong password
             for i in range(5):
-                response = await client.post("/api/auth/login", json={
-                    "email": email,
-                    "password": f"WrongPassword{i}!@#"
-                })
+                response = await client.post(
+                    "/api/auth/login",
+                    json={"email": email, "password": f"WrongPassword{i}!@#"},
+                )
                 assert response.status_code in [401, 429]
 
             # All 5 attempts should be logged
@@ -140,13 +152,16 @@ class TestAuditLogging:
             initial_balance = dashboard.json()["balance"]["current"]
 
             # Create transaction that changes balance
-            await client.post("/api/transactions", json={
-                "amount": 200.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Balance change test",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 200.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Balance change test",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             # Audit log should contain:
             # - event_type: balance.changed (or transaction.created)
@@ -190,13 +205,16 @@ class TestAuditLogContent:
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
             # Make request and get request_id from header
-            response = await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Test",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Test",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             request_id = response.headers.get("x-request-id")
             assert request_id is not None
@@ -218,13 +236,16 @@ class TestAuditLogContent:
             client.headers["Authorization"] = f"Bearer {auth_data['token']}"
 
             # Create transaction
-            await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Test",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Test",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             # Audit log should contain user_id
 
@@ -267,13 +288,16 @@ class TestAuditLogFailure:
 
             # Even if Redis is down (audit logging fails),
             # transaction should still succeed
-            response = await client.post("/api/transactions", json={
-                "amount": 100.0,
-                "type": "income",
-                "category": "salary",
-                "description": "Test",
-                "idempotency_key": str(uuid.uuid4())
-            })
+            response = await client.post(
+                "/api/transactions",
+                json={
+                    "amount": 100.0,
+                    "type": "income",
+                    "category": "salary",
+                    "description": "Test",
+                    "idempotency_key": str(uuid.uuid4()),
+                },
+            )
 
             # Should succeed even if audit logging fails
             assert response.status_code == 200

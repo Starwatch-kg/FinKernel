@@ -3,12 +3,14 @@ PRODUCTION-GRADE TRANSACTION SERVICE - SECURITY HARDENED
 Race condition protection with database-level locking.
 Atomic financial operations.
 """
+
 from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import get_db
 from shared.models import User, Transaction, TransactionType
@@ -49,9 +51,7 @@ async def health():
 
 @app.post("/transactions", response_model=TransactionResponse)
 async def create_transaction(
-    request: Request,
-    txn: TransactionCreate,
-    db: AsyncSession = Depends(get_db)
+    request: Request, txn: TransactionCreate, db: AsyncSession = Depends(get_db)
 ):
     """
     Create transaction with ATOMIC balance update.
@@ -70,7 +70,9 @@ async def create_transaction(
     # CRITICAL: Check idempotency key to prevent duplicate transactions
     if txn.idempotency_key:
         existing_result = await db.execute(
-            select(Transaction).where(Transaction.idempotency_key == txn.idempotency_key)
+            select(Transaction).where(
+                Transaction.idempotency_key == txn.idempotency_key
+            )
         )
         existing_txn = existing_result.scalar_one_or_none()
         if existing_txn:
@@ -110,17 +112,21 @@ async def create_transaction(
             category=txn.category.value,
             description=txn.description,
             idempotency_key=txn.idempotency_key,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         db.add(db_txn)
 
         # Update balance ATOMICALLY
         if txn.type == TransactionType.income:
             user.balance += validated_amount
-            logger.info(f"[{request_id}] Income: user {txn.user_id} +{validated_amount}")
+            logger.info(
+                f"[{request_id}] Income: user {txn.user_id} +{validated_amount}"
+            )
         else:
             user.balance -= validated_amount
-            logger.info(f"[{request_id}] Expense: user {txn.user_id} -{validated_amount}")
+            logger.info(
+                f"[{request_id}] Expense: user {txn.user_id} -{validated_amount}"
+            )
 
         # Flush to get transaction ID before commit
         await db.flush()
@@ -135,16 +141,19 @@ async def create_transaction(
         amount=validated_amount,
         transaction_type=txn.type.value,
         request_id=request_id,
-        idempotency_key=txn.idempotency_key
+        idempotency_key=txn.idempotency_key,
     )
 
     # Publish event (after commit)
-    await publish_event("transaction.created", {
-        "user_id": txn.user_id,
-        "transaction_id": db_txn.id,
-        "amount": validated_amount,
-        "type": txn.type.value
-    })
+    await publish_event(
+        "transaction.created",
+        {
+            "user_id": txn.user_id,
+            "transaction_id": db_txn.id,
+            "amount": validated_amount,
+            "type": txn.type.value,
+        },
+    )
 
     # Invalidate cache
     await delete_cache(f"dashboard:{txn.user_id}")
@@ -154,9 +163,7 @@ async def create_transaction(
 
 @app.get("/transactions/{user_id}", response_model=list[TransactionResponse])
 async def get_transactions(
-    user_id: int,
-    limit: int = 50,
-    db: AsyncSession = Depends(get_db)
+    user_id: int, limit: int = 50, db: AsyncSession = Depends(get_db)
 ):
     """Get transactions for user - pagination enforced"""
     # Enforce max limit
@@ -182,13 +189,15 @@ async def get_balance(user_id: int, db: AsyncSession = Depends(get_db)):
 
     # Calculate totals
     income = await db.execute(
-        select(func.coalesce(func.sum(Transaction.amount), 0))
-        .where(Transaction.user_id == user_id, Transaction.type == "income")
+        select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            Transaction.user_id == user_id, Transaction.type == "income"
+        )
     )
 
     expenses = await db.execute(
-        select(func.coalesce(func.sum(Transaction.amount), 0))
-        .where(Transaction.user_id == user_id, Transaction.type == "expense")
+        select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            Transaction.user_id == user_id, Transaction.type == "expense"
+        )
     )
 
     count = await db.execute(
@@ -200,15 +209,13 @@ async def get_balance(user_id: int, db: AsyncSession = Depends(get_db)):
         "balance": round(user.balance, 2),
         "total_income": round(income.scalar(), 2),
         "total_expenses": round(expenses.scalar(), 2),
-        "transaction_count": count.scalar()
+        "transaction_count": count.scalar(),
     }
 
 
 @app.delete("/transactions/{transaction_id}")
 async def delete_transaction(
-    request: Request,
-    transaction_id: int,
-    db: AsyncSession = Depends(get_db)
+    request: Request, transaction_id: int, db: AsyncSession = Depends(get_db)
 ):
     """
     Delete transaction with ATOMIC balance reversal.
@@ -221,6 +228,7 @@ async def delete_transaction(
     # Get user_id from query param (passed by gateway after JWT verification)
     # In future: add get_current_user dependency here too for defense in depth
     from fastapi import Query
+
     user_id: int = Query(...)
 
     async with db.begin():
@@ -229,7 +237,7 @@ async def delete_transaction(
             select(Transaction)
             .where(
                 Transaction.id == transaction_id,
-                Transaction.user_id == user_id  # OWNERSHIP CHECK
+                Transaction.user_id == user_id,  # OWNERSHIP CHECK
             )
             .with_for_update()
         )
@@ -259,7 +267,7 @@ async def delete_transaction(
                 )
                 raise HTTPException(
                     400,
-                    f"Cannot delete transaction: insufficient balance to reverse income"
+                    f"Cannot delete transaction: insufficient balance to reverse income",
                 )
             user.balance -= txn.amount
         else:
@@ -284,7 +292,7 @@ async def delete_transaction(
         transaction_type=txn.type.value,
         request_id=request_id,
         balance_before=balance_before,
-        balance_after=balance_after
+        balance_after=balance_after,
     )
 
     await delete_cache(f"dashboard:{user_id}")
@@ -294,4 +302,5 @@ async def delete_transaction(
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)

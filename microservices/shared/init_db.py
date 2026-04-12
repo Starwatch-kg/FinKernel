@@ -1,7 +1,9 @@
 """Database initialization"""
+
 import asyncio
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.db import engine
 from shared.models import Base

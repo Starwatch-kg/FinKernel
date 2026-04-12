@@ -2,6 +2,7 @@
 Unit tests for portfolio service.
 Tests trade execution, idempotency, and portfolio management.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
@@ -82,7 +83,7 @@ class TestTradeBuy:
             None,  # No existing trade with idempotency key
             mock_user,  # User found
             mock_stock,  # Stock found
-            None  # No existing position
+            None,  # No existing position
         ]
 
         # Verify user has sufficient funds
@@ -103,14 +104,16 @@ class TestTradeBuy:
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
             None,  # No existing trade
             mock_user,
-            mock_stock
+            mock_stock,
         ]
 
         # Should fail - insufficient funds
         assert mock_user.balance < total_cost
 
     @pytest.mark.asyncio
-    async def test_buy_trade_updates_existing_position(self, mock_db, mock_user, mock_stock, mock_portfolio):
+    async def test_buy_trade_updates_existing_position(
+        self, mock_db, mock_user, mock_stock, mock_portfolio
+    ):
         """Test buy trade updates existing position with new average price"""
         shares = 5
         total_cost = mock_stock.price * shares
@@ -119,7 +122,7 @@ class TestTradeBuy:
             None,  # No existing trade
             mock_user,
             mock_stock,
-            mock_portfolio  # Existing position
+            mock_portfolio,  # Existing position
         ]
 
         # Calculate new average price
@@ -139,7 +142,7 @@ class TestTradeBuy:
             None,  # No existing trade
             mock_user,
             mock_stock,
-            None  # No existing position
+            None,  # No existing position
         ]
 
         # Should create new position with avg_price = current price
@@ -149,7 +152,9 @@ class TestTradeBuy:
     @pytest.mark.asyncio
     async def test_buy_trade_idempotent(self, mock_db, mock_trade_history):
         """Test buy trade with duplicate idempotency key returns existing trade"""
-        mock_db.execute.return_value.scalar_one_or_none.return_value = mock_trade_history
+        mock_db.execute.return_value.scalar_one_or_none.return_value = (
+            mock_trade_history
+        )
 
         # Should return existing trade
         result = mock_trade_history
@@ -162,7 +167,9 @@ class TestTradeSell:
     """Test sell trade execution"""
 
     @pytest.mark.asyncio
-    async def test_sell_trade_success(self, mock_db, mock_user, mock_stock, mock_portfolio):
+    async def test_sell_trade_success(
+        self, mock_db, mock_user, mock_stock, mock_portfolio
+    ):
         """Test successful sell trade"""
         shares = 5
         total_proceeds = mock_stock.price * shares
@@ -171,7 +178,7 @@ class TestTradeSell:
             None,  # No existing trade
             mock_user,
             mock_stock,
-            mock_portfolio  # Has position
+            mock_portfolio,  # Has position
         ]
 
         # Verify user has enough shares
@@ -182,7 +189,9 @@ class TestTradeSell:
         assert expected_balance == 10000.0 + 892.50
 
     @pytest.mark.asyncio
-    async def test_sell_trade_insufficient_shares(self, mock_db, mock_user, mock_stock, mock_portfolio):
+    async def test_sell_trade_insufficient_shares(
+        self, mock_db, mock_user, mock_stock, mock_portfolio
+    ):
         """Test sell trade fails with insufficient shares"""
         shares = 20  # More than owned
         mock_portfolio.shares = 10
@@ -191,7 +200,7 @@ class TestTradeSell:
             None,  # No existing trade
             mock_user,
             mock_stock,
-            mock_portfolio
+            mock_portfolio,
         ]
 
         # Should fail - insufficient shares
@@ -204,13 +213,15 @@ class TestTradeSell:
             None,  # No existing trade
             mock_user,
             mock_stock,
-            None  # No position
+            None,  # No position
         ]
 
         # Should fail - no position to sell
 
     @pytest.mark.asyncio
-    async def test_sell_all_shares_deletes_position(self, mock_db, mock_user, mock_stock, mock_portfolio):
+    async def test_sell_all_shares_deletes_position(
+        self, mock_db, mock_user, mock_stock, mock_portfolio
+    ):
         """Test selling all shares deletes the position"""
         shares = 10  # All shares
         mock_portfolio.shares = 10
@@ -219,7 +230,7 @@ class TestTradeSell:
             None,
             mock_user,
             mock_stock,
-            mock_portfolio
+            mock_portfolio,
         ]
 
         # After selling all, position should be deleted
@@ -227,7 +238,9 @@ class TestTradeSell:
         assert mock_portfolio.shares == 0
 
     @pytest.mark.asyncio
-    async def test_sell_partial_shares_updates_position(self, mock_db, mock_user, mock_stock, mock_portfolio):
+    async def test_sell_partial_shares_updates_position(
+        self, mock_db, mock_user, mock_stock, mock_portfolio
+    ):
         """Test selling partial shares updates position"""
         shares = 5  # Partial
         mock_portfolio.shares = 10
@@ -236,7 +249,7 @@ class TestTradeSell:
             None,
             mock_user,
             mock_stock,
-            mock_portfolio
+            mock_portfolio,
         ]
 
         # After selling partial, position should remain
@@ -340,7 +353,9 @@ class TestTradeIdempotency:
     @pytest.mark.asyncio
     async def test_duplicate_trade_returns_existing(self, mock_db, mock_trade_history):
         """Test duplicate idempotency key returns existing trade"""
-        mock_db.execute.return_value.scalar_one_or_none.return_value = mock_trade_history
+        mock_db.execute.return_value.scalar_one_or_none.return_value = (
+            mock_trade_history
+        )
 
         result = mock_trade_history
         assert result.idempotency_key == "trade-key-123"
@@ -363,7 +378,9 @@ class TestTradeIdempotency:
         assert trade1.user_id != trade2.user_id
 
     @pytest.mark.asyncio
-    async def test_trade_history_records_all_trades(self, mock_db, mock_user, mock_stock):
+    async def test_trade_history_records_all_trades(
+        self, mock_db, mock_user, mock_stock
+    ):
         """Test all trades are recorded in history"""
         # Each trade should create a TradeHistory record
         # This is important for audit trail
@@ -376,7 +393,7 @@ class TestStockPriceUpdates:
     async def test_stock_price_updated_on_trade(self, mock_stock):
         """Test stock price is updated from market data during trade"""
         # Mock market data provider
-        with patch('shared.market_data.get_market_data_provider') as mock_provider:
+        with patch("shared.market_data.get_market_data_provider") as mock_provider:
             mock_provider.return_value.get_current_price.return_value = 180.00
             mock_provider.return_value.get_change_percent.return_value = 2.5
 

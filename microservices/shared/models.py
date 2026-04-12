@@ -1,5 +1,16 @@
 """Shared SQLAlchemy models"""
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, Boolean, JSON
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    ForeignKey,
+    Enum,
+    Boolean,
+    JSON,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -50,7 +61,9 @@ class Transaction(Base):
     category = Column(Enum(TransactionCategory))
     description = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    idempotency_key = Column(String, unique=True, nullable=True, index=True)  # For idempotent operations
+    idempotency_key = Column(
+        String, unique=True, nullable=True, index=True
+    )  # For idempotent operations
     user = relationship("User", back_populates="transactions")
 
 
@@ -102,7 +115,9 @@ class TradeHistory(Base):
     action = Column(String)  # "buy" or "sell"
     price = Column(Float)
     total_cost = Column(Float)
-    idempotency_key = Column(String, unique=True, nullable=True, index=True)  # For idempotent operations
+    idempotency_key = Column(
+        String, unique=True, nullable=True, index=True
+    )  # For idempotent operations
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 

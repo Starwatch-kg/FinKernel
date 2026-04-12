@@ -1,4 +1,5 @@
 """Health check system with degradation detection"""
+
 from enum import Enum
 from typing import Dict, Optional
 from datetime import datetime
@@ -56,7 +57,7 @@ class ComponentHealth:
             "message": self.message,
             "error_count": self.error_count,
             "consecutive_failures": self.consecutive_failures,
-            "last_check": self.last_check.isoformat()
+            "last_check": self.last_check.isoformat(),
         }
 
 
@@ -98,9 +99,8 @@ class HealthCheckSystem:
             "status": overall.value,
             "timestamp": datetime.utcnow().isoformat(),
             "components": {
-                name: comp.to_dict()
-                for name, comp in self.components.items()
-            }
+                name: comp.to_dict() for name, comp in self.components.items()
+            },
         }
 
     async def check_database(self, db_session_factory) -> bool:

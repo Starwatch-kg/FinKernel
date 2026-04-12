@@ -1,4 +1,5 @@
 """Production-safe logging configuration"""
+
 import logging
 import sys
 from typing import Optional
@@ -22,8 +23,8 @@ def setup_logger(name: str, level: Optional[str] = None) -> logging.Logger:
 
     # Format: timestamp | level | service | message
     formatter = logging.Formatter(
-        '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     handler.setFormatter(formatter)
 

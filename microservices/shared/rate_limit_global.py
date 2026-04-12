@@ -1,4 +1,5 @@
 """Global rate limiting with Redis backend"""
+
 import time
 from typing import Optional, Tuple
 from redis.asyncio import Redis
@@ -23,7 +24,7 @@ class GlobalRateLimiter:
         key: str,
         max_requests: int,
         window_seconds: int,
-        identifier: Optional[str] = None
+        identifier: Optional[str] = None,
     ) -> Tuple[bool, dict]:
         """
         Check if request is within rate limit.
@@ -66,7 +67,7 @@ class GlobalRateLimiter:
                 return False, {
                     "remaining": 0,
                     "reset_at": int(now + retry_after),
-                    "retry_after": retry_after
+                    "retry_after": retry_after,
                 }
 
             # Add current request
@@ -80,7 +81,7 @@ class GlobalRateLimiter:
             return True, {
                 "remaining": remaining,
                 "reset_at": int(now + window_seconds),
-                "retry_after": 0
+                "retry_after": 0,
             }
 
         except Exception as e:
@@ -92,7 +93,7 @@ class GlobalRateLimiter:
                 allowed, info = fallback_limiter.check_rate_limit(
                     key=full_key,
                     max_requests=max_requests,
-                    window_seconds=window_seconds
+                    window_seconds=window_seconds,
                 )
 
                 if not allowed:
@@ -112,7 +113,7 @@ class GlobalRateLimiter:
                 return True, {
                     "remaining": max_requests,
                     "reset_at": int(now + window_seconds),
-                    "retry_after": 0
+                    "retry_after": 0,
                 }
 
 
@@ -122,19 +123,15 @@ RATE_LIMITS = {
     "auth:login": {"max_requests": 5, "window": 300},  # 5 per 5 min
     "auth:register": {"max_requests": 3, "window": 300},  # 3 per 5 min
     "auth:refresh": {"max_requests": 10, "window": 60},  # 10 per min
-
     # AI endpoints - strict (expensive operations)
     "ai:predict": {"max_requests": 10, "window": 60},  # 10 per min
     "ai:generate": {"max_requests": 5, "window": 60},  # 5 per min
-
     # Financial operations - moderate
     "finance:trade": {"max_requests": 20, "window": 60},  # 20 per min
     "finance:transaction": {"max_requests": 50, "window": 60},  # 50 per min
-
     # Read operations - lenient
     "read:dashboard": {"max_requests": 100, "window": 60},  # 100 per min
     "read:list": {"max_requests": 200, "window": 60},  # 200 per min
-
     # Default fallback
     "default": {"max_requests": 100, "window": 60},
 }
@@ -149,7 +146,7 @@ async def apply_rate_limit(
     request: Request,
     rate_limiter: GlobalRateLimiter,
     endpoint_type: str,
-    user_identifier: Optional[str] = None
+    user_identifier: Optional[str] = None,
 ):
     """
     Apply rate limit to request.
@@ -162,7 +159,7 @@ async def apply_rate_limit(
         key=endpoint_type,
         max_requests=config["max_requests"],
         window_seconds=config["window"],
-        identifier=user_identifier
+        identifier=user_identifier,
     )
 
     # Add rate limit headers to response (will be added by middleware)
@@ -180,6 +177,6 @@ async def apply_rate_limit(
                 "Retry-After": str(info["retry_after"]),
                 "X-RateLimit-Limit": str(config["max_requests"]),
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(info["reset_at"])
-            }
+                "X-RateLimit-Reset": str(info["reset_at"]),
+            },
         )

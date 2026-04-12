@@ -1,13 +1,15 @@
 """
 SECURE OPENROUTER CLIENT - Prompt injection protection
 """
+
 import os
 import json
 import asyncio
 from typing import Optional, Dict, Any
 from openai import AsyncOpenAI
 import sys
-sys.path.append('/app')
+
+sys.path.append("/app")
 
 from shared.config import get_config
 from shared.logger import setup_logger
@@ -24,20 +26,16 @@ class OpenRouterClient:
         self.model = config.openrouter_model
 
         if self.api_key:
-            self.client = AsyncOpenAI(
-                api_key=self.api_key,
-                base_url=self.base_url
-            )
+            self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
             logger.info(f"OpenRouter client initialized with model: {self.model}")
         else:
             self.client = None
-            logger.warning("OpenRouter API key not configured - using fallback statistical model")
+            logger.warning(
+                "OpenRouter API key not configured - using fallback statistical model"
+            )
 
     async def predict_financial_runway(
-        self,
-        balance: float,
-        transactions: list,
-        features: Dict[str, Any]
+        self, balance: float, transactions: list, features: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
         Use LLM to predict financial runway with SANITIZED inputs.
@@ -63,16 +61,13 @@ class OpenRouterClient:
                                 "Analyze user spending patterns and predict how many days their money will last. "
                                 "Return ONLY valid JSON with the exact structure specified. "
                                 "Do not include any other text or explanation."
-                            )
+                            ),
                         },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=0.3,
                     max_tokens=500,
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 content = response.choices[0].message.content
@@ -83,22 +78,25 @@ class OpenRouterClient:
                     logger.info(f"LLM prediction successful for balance ${balance:.2f}")
                     return result
                 else:
-                    logger.warning(f"LLM output parsing failed on attempt {attempt + 1}")
+                    logger.warning(
+                        f"LLM output parsing failed on attempt {attempt + 1}"
+                    )
 
             except Exception as e:
-                logger.warning(f"OpenRouter attempt {attempt + 1}/{max_retries} failed: {e}")
+                logger.warning(
+                    f"OpenRouter attempt {attempt + 1}/{max_retries} failed: {e}"
+                )
                 if attempt == max_retries - 1:
-                    logger.error(f"OpenRouter API error after {max_retries} attempts: {e}")
+                    logger.error(
+                        f"OpenRouter API error after {max_retries} attempts: {e}"
+                    )
                     return None
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
 
         return None
 
     def _build_safe_prediction_prompt(
-        self,
-        balance: float,
-        transactions: list,
-        features: Dict
+        self, balance: float, transactions: list, features: Dict
     ) -> str:
         """
         Build prompt with SANITIZED transaction data.
@@ -111,7 +109,7 @@ class OpenRouterClient:
         txn_lines = []
         for t in recent_txns:
             # Sanitize description (already sanitized in main_secure.py, but double-check)
-            safe_desc = sanitize_for_llm(t.get('description', ''), max_length=50)
+            safe_desc = sanitize_for_llm(t.get("description", ""), max_length=50)
 
             # Build safe transaction line
             txn_lines.append(
@@ -163,7 +161,13 @@ Do not include any other text. Return only the JSON."""
             data = json.loads(content)
 
             # Validate required fields
-            required = ["days_left", "risk_level", "confidence", "explanation", "recommendation"]
+            required = [
+                "days_left",
+                "risk_level",
+                "confidence",
+                "explanation",
+                "recommendation",
+            ]
             for field in required:
                 if field not in data:
                     logger.error(f"Missing required field: {field}")
@@ -194,8 +198,12 @@ Do not include any other text. Return only the JSON."""
                 data["risk_level"] = "warning"
 
             # Sanitize text fields
-            data["explanation"] = sanitize_for_llm(str(data["explanation"]), max_length=150)
-            data["recommendation"] = sanitize_for_llm(str(data["recommendation"]), max_length=150)
+            data["explanation"] = sanitize_for_llm(
+                str(data["explanation"]), max_length=150
+            )
+            data["recommendation"] = sanitize_for_llm(
+                str(data["recommendation"]), max_length=150
+            )
 
             return data
 

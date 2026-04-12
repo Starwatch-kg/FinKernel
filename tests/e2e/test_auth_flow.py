@@ -2,11 +2,11 @@
 End-to-end tests for authentication flow.
 Tests registration, login, token refresh, and authorization.
 """
+
 import pytest
 from httpx import AsyncClient
 import uuid
 import time
-
 
 BASE_URL = "http://localhost:8000"
 
@@ -20,11 +20,14 @@ class TestRegistration:
         async with AsyncClient(base_url=BASE_URL) as client:
             unique_id = uuid.uuid4().hex[:8]
             email = f"test_{unique_id}@example.com"
-            response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": f"Test User {unique_id}",
-                "password": "Test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={
+                    "email": email,
+                    "name": f"Test User {unique_id}",
+                    "password": "Test123!@#",
+                },
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -42,19 +45,25 @@ class TestRegistration:
             email = f"duplicate_{unique_id}@example.com"
 
             # First registration
-            response1 = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": f"User {unique_id}_1",
-                "password": "Test123!@#"
-            })
+            response1 = await client.post(
+                "/api/auth/register",
+                json={
+                    "email": email,
+                    "name": f"User {unique_id}_1",
+                    "password": "Test123!@#",
+                },
+            )
             assert response1.status_code == 200
 
             # Second registration with same email
-            response2 = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": f"User {unique_id}_2",
-                "password": "Test123!@#"
-            })
+            response2 = await client.post(
+                "/api/auth/register",
+                json={
+                    "email": email,
+                    "name": f"User {unique_id}_2",
+                    "password": "Test123!@#",
+                },
+            )
             assert response2.status_code == 400
             assert "already exists" in response2.json()["message"].lower()
 
@@ -65,46 +74,45 @@ class TestRegistration:
             email = f"test_{uuid.uuid4().hex[:8]}@example.com"
 
             # No uppercase
-            response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "test123!@#"},
+            )
             assert response.status_code == 422
 
             # No digit
-            response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "TestTest!@#"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "TestTest!@#"},
+            )
             assert response.status_code == 422
 
             # No special character
-            response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123456"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123456"},
+            )
             assert response.status_code == 422
 
             # Too short
-            response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Te1!"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Te1!"},
+            )
             assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_register_invalid_email(self):
         """Test registration with invalid email fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            response = await client.post("/api/auth/register", json={
-                "email": "not-an-email",
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/register",
+                json={
+                    "email": "not-an-email",
+                    "name": "Test User",
+                    "password": "Test123!@#",
+                },
+            )
             assert response.status_code == 422
 
     @pytest.mark.asyncio
@@ -115,11 +123,14 @@ class TestRegistration:
 
             # Try to register 4 times quickly (limit is 3 per 5 min)
             for i in range(4):
-                response = await client.post("/api/auth/register", json={
-                    "email": f"{email_base}_{i}@example.com",
-                    "name": f"User {email_base}_{i}",
-                    "password": "Test123!@#"
-                })
+                response = await client.post(
+                    "/api/auth/register",
+                    json={
+                        "email": f"{email_base}_{i}@example.com",
+                        "name": f"User {email_base}_{i}",
+                        "password": "Test123!@#",
+                    },
+                )
 
                 if i < 3:
                     assert response.status_code == 200
@@ -139,17 +150,15 @@ class TestLogin:
             password = "Test123!@#"
 
             # Register user
-            await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": password
-            })
+            await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": password},
+            )
 
             # Login
-            response = await client.post("/api/auth/login", json={
-                "email": email,
-                "password": password
-            })
+            response = await client.post(
+                "/api/auth/login", json={"email": email, "password": password}
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -165,17 +174,16 @@ class TestLogin:
             email = f"wrongpass_{uuid.uuid4().hex[:8]}@example.com"
 
             # Register user
-            await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+            )
 
             # Login with wrong password
-            response = await client.post("/api/auth/login", json={
-                "email": email,
-                "password": "WrongPassword123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login",
+                json={"email": email, "password": "WrongPassword123!@#"},
+            )
 
             assert response.status_code == 401
             assert "invalid credentials" in response.json()["message"].lower()
@@ -184,10 +192,13 @@ class TestLogin:
     async def test_login_nonexistent_user(self):
         """Test login with non-existent user fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            response = await client.post("/api/auth/login", json={
-                "email": f"nonexistent_{uuid.uuid4().hex[:8]}@example.com",
-                "password": "Test123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login",
+                json={
+                    "email": f"nonexistent_{uuid.uuid4().hex[:8]}@example.com",
+                    "password": "Test123!@#",
+                },
+            )
 
             assert response.status_code == 401
             assert "invalid credentials" in response.json()["message"].lower()
@@ -200,17 +211,15 @@ class TestLogin:
             password = "Test123!@#"
 
             # Register with mixed case
-            await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": password
-            })
+            await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": password},
+            )
 
             # Login with lowercase
-            response = await client.post("/api/auth/login", json={
-                "email": email.lower(),
-                "password": password
-            })
+            response = await client.post(
+                "/api/auth/login", json={"email": email.lower(), "password": password}
+            )
 
             assert response.status_code == 200
 
@@ -225,17 +234,16 @@ class TestTokenRefresh:
             email = f"refresh_{uuid.uuid4().hex[:8]}@example.com"
 
             # Register and get tokens
-            register_response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            register_response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+            )
             refresh_token = register_response.json()["refresh_token"]
 
             # Refresh token
-            response = await client.post("/api/auth/refresh", json={
-                "refresh_token": refresh_token
-            })
+            response = await client.post(
+                "/api/auth/refresh", json={"refresh_token": refresh_token}
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -249,9 +257,9 @@ class TestTokenRefresh:
     async def test_refresh_with_invalid_token(self):
         """Test refresh with invalid token fails"""
         async with AsyncClient(base_url=BASE_URL) as client:
-            response = await client.post("/api/auth/refresh", json={
-                "refresh_token": "invalid.token.here"
-            })
+            response = await client.post(
+                "/api/auth/refresh", json={"refresh_token": "invalid.token.here"}
+            )
 
             assert response.status_code == 401
 
@@ -262,17 +270,16 @@ class TestTokenRefresh:
             email = f"wrongtoken_{uuid.uuid4().hex[:8]}@example.com"
 
             # Register and get tokens
-            register_response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            register_response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+            )
             access_token = register_response.json()["access_token"]
 
             # Try to refresh with access token
-            response = await client.post("/api/auth/refresh", json={
-                "refresh_token": access_token
-            })
+            response = await client.post(
+                "/api/auth/refresh", json={"refresh_token": access_token}
+            )
 
             assert response.status_code == 401
 
@@ -298,11 +305,10 @@ class TestAuthorization:
             email = f"access_{uuid.uuid4().hex[:8]}@example.com"
 
             # Register and get token
-            register_response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            register_response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+            )
             token = register_response.json()["access_token"]
 
             # Access protected endpoint with token
@@ -344,11 +350,10 @@ class TestAdminAuthorization:
         async with AsyncClient(base_url=BASE_URL) as client:
             # Regular user
             email = f"regular_{uuid.uuid4().hex[:8]}@example.com"
-            register_response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Regular User",
-                "password": "Test123!@#"
-            })
+            register_response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Regular User", "password": "Test123!@#"},
+            )
             token = register_response.json()["access_token"]
 
             # Try to access admin endpoint
@@ -367,11 +372,10 @@ class TestTokenExpiration:
         async with AsyncClient(base_url=BASE_URL) as client:
             email = f"expiry_{uuid.uuid4().hex[:8]}@example.com"
 
-            register_response = await client.post("/api/auth/register", json={
-                "email": email,
-                "name": "Test User",
-                "password": "Test123!@#"
-            })
+            register_response = await client.post(
+                "/api/auth/register",
+                json={"email": email, "name": "Test User", "password": "Test123!@#"},
+            )
 
             data = register_response.json()
             assert data["expires_in"] == 900  # 15 minutes in seconds
@@ -406,10 +410,13 @@ class TestAuditLogging:
         """Test failed login attempts are logged"""
         async with AsyncClient(base_url=BASE_URL) as client:
             # Attempt login with wrong credentials
-            response = await client.post("/api/auth/login", json={
-                "email": "nonexistent@example.com",
-                "password": "WrongPassword123!@#"
-            })
+            response = await client.post(
+                "/api/auth/login",
+                json={
+                    "email": "nonexistent@example.com",
+                    "password": "WrongPassword123!@#",
+                },
+            )
 
             assert response.status_code == 401
             # Audit log should contain this failed attempt

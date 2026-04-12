@@ -1,4 +1,5 @@
 """Production-safe configuration management"""
+
 import os
 import sys
 from typing import Optional
@@ -6,6 +7,7 @@ from typing import Optional
 
 class ConfigurationError(Exception):
     """Raised when required configuration is missing"""
+
     pass
 
 
@@ -130,11 +132,17 @@ class Config:
         print("Configuration loaded:")
         print(f"  Environment: {self.environment}")
         print(f"  Debug: {self.debug}")
-        print(f"  Database: {self.database_url.split('@')[1] if '@' in self.database_url else 'configured'}")
-        print(f"  Redis: {self.redis_url.split('@')[1] if '@' in self.redis_url else 'configured'}")
+        print(
+            f"  Database: {self.database_url.split('@')[1] if '@' in self.database_url else 'configured'}"
+        )
+        print(
+            f"  Redis: {self.redis_url.split('@')[1] if '@' in self.redis_url else 'configured'}"
+        )
         print(f"  JWT Algorithm: {self.jwt_algorithm}")
         print(f"  JWT Expiry: {self.jwt_expiry_minutes} minutes")
-        print(f"  OpenRouter: {'configured' if self.openrouter_api_key else 'not configured (using fallback)'}")
+        print(
+            f"  OpenRouter: {'configured' if self.openrouter_api_key else 'not configured (using fallback)'}"
+        )
         print(f"  Admin emails: {len(self.admin_emails)} configured")
         print("=" * 60)
 
