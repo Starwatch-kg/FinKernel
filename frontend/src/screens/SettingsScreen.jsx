@@ -33,7 +33,7 @@ export default function SettingsScreen() {
 
       <div style={s.card}>
         <div style={s.sectionTitle}>О приложении</div>
-        <div style={s.about}>Pulse — платформа для обучения инвестированию через интерактивные уроки и виртуальный портфель</div>
+        <div style={s.about}>Kernel — платформа для обучения инвестированию через интерактивные уроки и виртуальный портфель</div>
         <div style={s.version}>Версия 2.0.0</div>
       </div>
     </div>

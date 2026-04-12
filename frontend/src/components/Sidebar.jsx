@@ -64,7 +64,7 @@ export default function Sidebar({ active, onNavigate, userName, onLogout, refres
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <img src="/icons/F-Kernel.png" alt="FinFuture" style={{...s.logoImg, cursor: "pointer"}} onClick={() => onNavigate("home")} />
+        <img src="/icons/F-Kernel.png" alt="Kernel" style={{...s.logoImg, cursor: "pointer"}} onClick={() => onNavigate("home")} />
       </Motion.div>
 
       <div style={{ ...s.divider, ...(isMobile ? s.dividerMobile : {}) }} />

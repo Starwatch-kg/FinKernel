@@ -85,7 +85,7 @@ export default function AuthScreen({ onAuth }) {
       <div style={s.card}>
         {/* Logo */}
         <div style={s.logo}>
-          <img src="/icons/F-Kernel.png" alt="FinFuture" style={{ height: 36 }} />
+          <img src="/icons/F-Kernel.png" alt="Kernel" style={{ height: 36 }} />
         </div>
         <div style={s.tagline}>Умный финансовый ассистент для управления личными финансами</div>
 
