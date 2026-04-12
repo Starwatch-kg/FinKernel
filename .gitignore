@@ -68,3 +68,11 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+# Project cleanup
+backups/
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
+.claude/
+.codex

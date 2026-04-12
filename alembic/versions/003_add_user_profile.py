@@ -1,7 +1,7 @@
 """add user profile fields
 
-Revision ID: 002
-Revises: 001
+Revision ID: 003
+Revises: 002
 Create Date: 2026-04-12
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '002'
-down_revision = '001'
+revision = '003'
+down_revision = '002'
 branch_labels = None
 depends_on = None
 

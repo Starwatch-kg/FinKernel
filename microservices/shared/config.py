@@ -44,10 +44,24 @@ class Config:
     def jwt_expiry_minutes(self) -> int:
         return int(os.getenv("JWT_EXPIRY_MINUTES", "10080"))  # 7 days default
 
-    # OpenRouter API
+    # Groq API (Primary LLM)
+    @property
+    def groq_api_key(self) -> Optional[str]:
+        """Groq API key - primary LLM provider"""
+        return os.getenv("GROQ_API_KEY")
+
+    @property
+    def groq_base_url(self) -> str:
+        return os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+
+    @property
+    def groq_model(self) -> str:
+        return os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+
+    # OpenRouter API (Fallback LLM)
     @property
     def openrouter_api_key(self) -> Optional[str]:
-        """OpenRouter API key - optional, system falls back to statistical model"""
+        """OpenRouter API key - fallback LLM provider"""
         return os.getenv("OPENROUTER_API_KEY")
 
     @property
@@ -56,7 +70,7 @@ class Config:
 
     @property
     def openrouter_model(self) -> str:
-        return os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet")
+        return os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
 
     # Service URLs
     @property
@@ -141,7 +155,10 @@ class Config:
         print(f"  JWT Algorithm: {self.jwt_algorithm}")
         print(f"  JWT Expiry: {self.jwt_expiry_minutes} minutes")
         print(
-            f"  OpenRouter: {'configured' if self.openrouter_api_key else 'not configured (using fallback)'}"
+            f"  Groq: {'configured' if self.groq_api_key else 'not configured'}"
+        )
+        print(
+            f"  OpenRouter: {'configured' if self.openrouter_api_key else 'not configured'}"
         )
         print(f"  Admin emails: {len(self.admin_emails)} configured")
         print("=" * 60)

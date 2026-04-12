@@ -12,6 +12,22 @@ const item = {
   show:   { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
+function formatAmountInput(value) {
+  const normalized = String(value || "")
+    .replace(/[^\d.,\s]/g, "")
+    .replace(/\s+/g, "")
+    .replace(",", ".")
+
+  if (!normalized) return ""
+
+  const parts = normalized.split(".")
+  const integerPart = (parts[0] || "").replace(/^0+(?=\d)/, "")
+  const groupedInteger = (integerPart || "0").replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  const fractionalPart = parts.slice(1).join("").slice(0, 2)
+
+  return fractionalPart ? `${groupedInteger}.${fractionalPart}` : groupedInteger
+}
+
 function AnimatedNumber({ value, suffix = "", masked = false }) {
   const [display, setDisplay] = useState(0)
   const ref = useRef(null)
@@ -209,10 +225,11 @@ export default function TransactionsScreen({ onRefresh }) {
             <div style={s.formGroup}>
               <label style={s.formLabel}>Сумма</label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={newTransaction.amount}
-                onChange={e => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-                placeholder="0"
+                onChange={e => setNewTransaction({ ...newTransaction, amount: formatAmountInput(e.target.value) })}
+                placeholder="1 000"
                 style={s.formInput}
               />
             </div>
@@ -220,32 +237,58 @@ export default function TransactionsScreen({ onRefresh }) {
             {/* Category */}
             <div style={s.formGroup}>
               <label style={s.formLabel}>Категория</label>
-              <select
-                value={newTransaction.category}
-                onChange={e => setNewTransaction({ ...newTransaction, category: e.target.value })}
-                style={s.formInput}
-              >
-                <option value="">Выбери категорию</option>
-                {newTransaction.type === "expense" ? (
-                  <>
-                    <option value="Еда">🍔 Еда</option>
-                    <option value="Транспорт">🚗 Транспорт</option>
-                    <option value="Развлечения">🎮 Развлечения</option>
-                    <option value="Покупки">🛍️ Покупки</option>
-                    <option value="Здоровье">💊 Здоровье</option>
-                    <option value="Образование">📚 Образование</option>
-                    <option value="Другое">💸 Другое</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Зарплата">💰 Зарплата</option>
-                    <option value="Фриланс">💼 Фриланс</option>
-                    <option value="Инвестиции">📈 Инвестиции</option>
-                    <option value="Подарок">🎁 Подарок</option>
-                    <option value="Другое">💵 Другое</option>
-                  </>
-                )}
-              </select>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 8,
+              }}>
+                {(newTransaction.type === "expense"
+                  ? [
+                    { value: "Еда", icon: "🍔", color: "#ff9800" },
+                    { value: "Транспорт", icon: "🚗", color: "#2196f3" },
+                    { value: "Развлечения", icon: "🎮", color: "#9c27b0" },
+                    { value: "Покупки", icon: "🛍️", color: "#e91e63" },
+                    { value: "Здоровье", icon: "💊", color: "#4caf50" },
+                    { value: "Образование", icon: "📚", color: "#ff5722" },
+                    { value: "Другое", icon: "💸", color: "#607d8b" },
+                  ]
+                  : [
+                    { value: "Зарплата", icon: "💰", color: "#4caf50" },
+                    { value: "Фриланс", icon: "💼", color: "#2196f3" },
+                    { value: "Инвестиции", icon: "📈", color: "#ff9800" },
+                    { value: "Подарок", icon: "🎁", color: "#e91e63" },
+                    { value: "Другое", icon: "💵", color: "#607d8b" },
+                  ]
+                ).map(cat => {
+                  const isActive = newTransaction.category === cat.value
+                  return (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setNewTransaction({ ...newTransaction, category: cat.value })}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                        padding: "12px 4px", borderRadius: 12, border: "1.5px solid",
+                        borderColor: isActive ? cat.color : "rgba(0,0,0,0.06)",
+                        background: isActive
+                          ? `${cat.color}12`
+                          : "#fafafa",
+                        cursor: "pointer", fontFamily: "inherit",
+                        transition: "all 0.2s ease",
+                        transform: isActive ? "scale(1.04)" : "scale(1)",
+                        boxShadow: isActive ? `0 3px 12px ${cat.color}20` : "none",
+                      }}
+                    >
+                      <span style={{ fontSize: 22 }}>{cat.icon}</span>
+                      <span style={{
+                        fontSize: 11, fontWeight: isActive ? 700 : 500,
+                        color: isActive ? cat.color : "rgba(0,0,0,0.55)",
+                        lineHeight: 1.2, textAlign: "center",
+                      }}>{cat.value}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Date */}

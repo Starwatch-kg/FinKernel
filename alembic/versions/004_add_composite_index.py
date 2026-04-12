@@ -16,7 +16,7 @@ depends_on = None
 
 def upgrade():
     # Add composite index for user_id + timestamp (common query pattern)
-    op.create_index('idx_user_timestamp', 'transactions', ['user_id', 'timestamp'])
+    op.create_index('idx_user_timestamp', 'transactions', ['user_id', 'timestamp'], if_not_exists=True)
 
 
 def downgrade():

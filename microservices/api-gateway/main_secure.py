@@ -112,6 +112,40 @@ CATEGORY_ICONS = {
     "другое": "💸",
 }
 
+LEVEL_META = [
+    {"name": "Новичок", "icon": "🌱"},
+    {"name": "Практик", "icon": "📘"},
+    {"name": "Аналитик", "icon": "📊"},
+    {"name": "Стратег", "icon": "🧭"},
+    {"name": "Эксперт", "icon": "🏆"},
+]
+
+
+def build_level_info(total_xp: int) -> dict:
+    level = max(total_xp // 100 + 1, 1)
+    current_index = min(level - 1, len(LEVEL_META) - 1)
+    next_index = min(level, len(LEVEL_META) - 1)
+    current = LEVEL_META[current_index]
+    next_level = LEVEL_META[next_index]
+    xp_from = max((level - 1) * 100, 0)
+    xp_to = level * 100
+
+    return {
+        "current": {
+            "level": level,
+            "name": current["name"],
+            "icon": current["icon"],
+            "xp_from": xp_from,
+            "xp_to": xp_to,
+        },
+        "next": {
+            "level": level + 1,
+            "name": next_level["name"],
+            "icon": next_level["icon"],
+            "xp_from": xp_to,
+        },
+    }
+
 
 # ============================================================================
 # EXCEPTION HANDLERS - STANDARDIZED ERROR RESPONSES
@@ -577,10 +611,27 @@ async def get_dashboard(
     pred_task = default_client.get(
         f"{AI_URL}/predict/{user.user_id}", request_id=request_id
     )
+    progress_task = default_client.get(
+        f"{TRANSACTIONS_URL}/progress",
+        params={"userId": str(user.user_id)},
+        request_id=request_id,
+    )
+    achievements_task = default_client.get(
+        f"{TRANSACTIONS_URL}/achievements",
+        params={"userId": str(user.user_id)},
+        request_id=request_id,
+    )
 
     # Wait for all requests in parallel
-    results = await asyncio.gather(balance_task, txns_task, pred_task, return_exceptions=True)
-    balance_resp, txns_resp, pred_resp = results
+    results = await asyncio.gather(
+        balance_task,
+        txns_task,
+        pred_task,
+        progress_task,
+        achievements_task,
+        return_exceptions=True,
+    )
+    balance_resp, txns_resp, pred_resp, progress_resp, achievements_resp = results
 
     # Handle prediction failure gracefully
     prediction = None
@@ -589,6 +640,20 @@ async def get_dashboard(
             prediction = pred_resp.json()
         except Exception as e:
             logger.warning(f"AI prediction parse error for user {user.user_id}: {e}")
+
+    progress_data = {}
+    if not isinstance(progress_resp, Exception):
+        try:
+            progress_data = progress_resp.json()
+        except Exception as e:
+            logger.warning(f"Progress parse error for user {user.user_id}: {e}")
+
+    achievements = []
+    if not isinstance(achievements_resp, Exception):
+        try:
+            achievements = achievements_resp.json()
+        except Exception as e:
+            logger.warning(f"Achievements parse error for user {user.user_id}: {e}")
 
     balance_data = balance_resp.json()
     transactions = txns_resp.json()
@@ -663,6 +728,12 @@ async def get_dashboard(
         )
         savings_rate = int((savings / balance_data.get("total_income", 1)) * 100)
 
+    unlocked_achievements = [
+        achievement for achievement in achievements if achievement.get("unlocked")
+    ]
+    total_xp = int(progress_data.get("total_xp", 0) or 0)
+    level_info = build_level_info(total_xp)
+
     dashboard = {
         "balance": {"current": balance_data.get("balance", 0)},
         "income": {"month": balance_data.get("total_income", 0)},
@@ -671,11 +742,14 @@ async def get_dashboard(
         "forecast": None,
         "ai_tips": ai_tips,
         "spending_chart": spending_chart,
+        "xp": total_xp,
+        "streak": 0,
+        "level_info": level_info,
         "stats": {
             "transactions_count": balance_data.get("transaction_count", 0),
             "savings_rate": savings_rate,
             "categories_used": categories_used,
-            "achievements": 0,
+            "achievements": len(unlocked_achievements),
         },
     }
 
@@ -883,6 +957,51 @@ async def submit_onboarding(
     except httpx.HTTPError as e:
         logger.error(f"Failed to submit onboarding: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit onboarding")
+
+
+class AIChatRequest(BaseModel):
+    message: str
+
+
+@app.post("/api/ai-chat")
+async def ai_chat(
+    request: Request,
+    req: AIChatRequest,
+    user: UserContext = Depends(get_current_user),
+):
+    """AI financial chat - proxies to AI service"""
+    await apply_rate_limit(request, rate_limiter, "ai:chat", str(user.user_id))
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await long_timeout_client.post(
+            f"{AI_URL}/chat",
+            json={"message": req.message, "user_id": user.user_id},
+            request_id=request_id,
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"AI chat error: {e}")
+        raise HTTPException(500, "AI chat unavailable")
+
+
+@app.get("/api/v2/ai-advice")
+async def get_ai_advice(
+    request: Request,
+    user: UserContext = Depends(get_current_user),
+):
+    """Get personalized AI advice"""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        resp = await default_client.get(
+            f"{AI_URL}/ai-advice/{user.user_id}",
+            request_id=request_id,
+        )
+        return resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"AI advice error: {e}")
+        return {"tips": []}
 
 
 if __name__ == "__main__":

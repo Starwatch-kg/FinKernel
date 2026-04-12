@@ -23,11 +23,81 @@ from portfolio_routes_secure import router as portfolio_router
 from shared.audit_logger import audit_logger
 from shared.db import get_db
 from shared.logger import setup_logger
-from shared.models import Transaction, TransactionType, User
+from shared.models import Achievement, Transaction, TransactionType, User
 from shared.redis import delete_cache, publish_event
 from shared.schemas import TransactionCreate, TransactionResponse
 from shared.security_hardening import RequestIDMiddleware, validate_amount
 from shared.startup import validate_startup
+
+
+async def check_achievements(user_id: int, db: AsyncSession):
+    """Check and unlock achievements based on user's transaction history"""
+    from market_routes import ACHIEVEMENT_TEMPLATES, get_generated_achievement_templates
+
+    # Get existing unlocked achievements
+    result = await db.execute(
+        select(Achievement).where(Achievement.user_id == user_id)
+    )
+    unlocked_titles = {a.title for a in result.scalars().all()}
+
+    # Count user transactions
+    count_result = await db.execute(
+        select(func.count(Transaction.id)).where(Transaction.user_id == user_id)
+    )
+    txn_count = count_result.scalar() or 0
+
+    # Count distinct categories used
+    cat_result = await db.execute(
+        select(func.count(func.distinct(Transaction.category))).where(
+            Transaction.user_id == user_id
+        )
+    )
+    cat_count = cat_result.scalar() or 0
+
+    # Get user balance
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    balance = user.balance if user else 0
+
+    # Define unlock conditions
+    unlock_checks = {
+        "Первый шаг": txn_count >= 1,
+        "Активный пользователь": txn_count >= 10,
+        "Записывающий всё": txn_count >= 50,
+        "Финансовый аналитик": txn_count >= 100,
+        "Мастер учёта": txn_count >= 500,
+        "Категоризатор": cat_count >= 5,
+        "Организатор": cat_count >= 7,
+        "Первая экономия": balance >= 1000,
+        "Бережливый": balance >= 5000,
+        "Мастер экономии": balance >= 10000,
+        "Финансовый гений": balance >= 50000,
+        "Миллионер": balance >= 1000000,
+    }
+
+    generated_templates = await get_generated_achievement_templates(user_id, db)
+
+    newly_unlocked = []
+    for template in ACHIEVEMENT_TEMPLATES + generated_templates:
+        name = template["name"]
+        if name in unlocked_titles:
+            continue
+        is_unlocked = template.get("unlocked")
+        if is_unlocked is None:
+            is_unlocked = name in unlock_checks and unlock_checks[name]
+        if is_unlocked:
+            ach = Achievement(
+                user_id=user_id,
+                title=name,
+                xp_reward=template["xp_reward"],
+                unlocked_at=datetime.utcnow(),
+            )
+            db.add(ach)
+            newly_unlocked.append(name)
+            logger.info(f"🏆 Achievement unlocked for user {user_id}: {name} (+{template['xp_reward']} XP)")
+
+    if newly_unlocked:
+        await db.commit()
 
 config = validate_startup()
 logger = setup_logger("transaction_service_secure")
@@ -158,6 +228,12 @@ async def create_transaction(
 
     # Invalidate cache
     await delete_cache(f"dashboard:{txn.user_id}")
+
+    # Check and unlock achievements
+    try:
+        await check_achievements(txn.user_id, db)
+    except Exception as e:
+        logger.warning(f"[{request_id}] Achievement check failed: {e}")
 
     return db_txn
 

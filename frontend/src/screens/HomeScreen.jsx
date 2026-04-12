@@ -8,11 +8,11 @@ const container = {
 }
 const item = {
   hidden: { opacity: 0, y: 10 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
 }
 const statItem = {
   hidden: { opacity: 0, scale: 0.95 },
-  show:   { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
 }
 
 function AnimatedNumber({ value, suffix = "" }) {
@@ -47,11 +47,11 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const load = () => { setLoading(true); setError(null); getDashboard().then(d => { setData(d); setLoading(false) }).catch(e => { setError(e.message||"Ошибка"); setLoading(false) }) }
+  const load = () => { setLoading(true); setError(null); getDashboard().then(d => { setData(d); setLoading(false) }).catch(e => { setError(e.message || "Ошибка"); setLoading(false) }) }
   useEffect(() => { load() }, [])
 
   if (loading) return <div style={s.loading}>Загрузка...</div>
-  if (error || !data) return <div style={s.loading}><div style={{fontSize:48,marginBottom:16}}>⚠️</div><div style={{marginBottom:16}}>{error||"Ошибка"}</div><button onClick={load} style={{padding:"10px 24px",borderRadius:10,border:"1px solid rgba(0,0,0,0.12)",background:"transparent",color:"#b8860b",cursor:"pointer",fontFamily:"inherit"}}>Повторить</button></div>
+  if (error || !data) return <div style={s.loading}><div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div><div style={{ marginBottom: 16 }}>{error || "Ошибка"}</div><button onClick={load} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid rgba(0,0,0,0.12)", background: "transparent", color: "#b8860b", cursor: "pointer", fontFamily: "inherit" }}>Повторить</button></div>
 
   const { balance, income, expenses, transactions, forecast, ai_tips, spending_chart, stats } = data
 
@@ -164,210 +164,223 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
         <div style={s.cardLabel}>ФИНАНСОВАЯ ДИНАМИКА</div>
 
         {(() => {
-          // Group transactions by date and calculate cumulative balance
-          const last30Days = []
+          const txns = transactions || []
+
+          // Build per-day buckets only for days that have data
+          const dayMap = {}
+          txns.forEach(t => {
+            const raw = t.date || t.timestamp || ''
+            const key = raw ? new Date(raw).toISOString().split('T')[0] : null
+            if (!key) return
+            if (!dayMap[key]) dayMap[key] = { income: 0, expense: 0, label: new Date(raw).getDate(), dateStr: key }
+            if (t.type === 'income') dayMap[key].income += t.amount || 0
+            else dayMap[key].expense += t.amount || 0
+          })
+
+          // Build sorted array of active days + fill gaps up to 14 days range
           const today = new Date()
-
-          for (let i = 29; i >= 0; i--) {
-            const date = new Date(today)
-            date.setDate(date.getDate() - i)
-            const dateStr = date.toISOString().split('T')[0]
-
-            const dayTransactions = (transactions || []).filter(t => {
-              const tDate = new Date(t.date).toISOString().split('T')[0]
-              return tDate === dateStr
-            })
-
-            const dayIncome = dayTransactions
-              .filter(t => t.type === 'income')
-              .reduce((sum, t) => sum + (t.amount || 0), 0)
-
-            const dayExpense = dayTransactions
-              .filter(t => t.type === 'expense')
-              .reduce((sum, t) => sum + (t.amount || 0), 0)
-
-            last30Days.push({
-              date: dateStr,
-              income: dayIncome,
-              expense: dayExpense,
-              net: dayIncome - dayExpense,
-              label: date.getDate()
+          const days = []
+          for (let i = 13; i >= 0; i--) {
+            const d = new Date(today)
+            d.setDate(d.getDate() - i)
+            const key = d.toISOString().split('T')[0]
+            days.push({
+              key,
+              label: d.getDate(),
+              month: d.toLocaleString('ru-RU', { month: 'short' }),
+              income: (dayMap[key] || {}).income || 0,
+              expense: (dayMap[key] || {}).expense || 0,
             })
           }
 
-          // Calculate cumulative balance
-          let runningBalance = balance?.current || 0
-          for (let i = last30Days.length - 1; i >= 0; i--) {
-            last30Days[i].balance = runningBalance
-            runningBalance -= last30Days[i].net
+          // Compute cumulative balance from right (today) backwards
+          let bal = balance?.current || 0
+          for (let i = days.length - 1; i >= 0; i--) {
+            days[i].balance = bal
+            bal -= (days[i].income - days[i].expense)
           }
 
-          const maxBalance = Math.max(...last30Days.map(d => d.balance), 1000)
-          const minBalance = Math.min(...last30Days.map(d => d.balance), 0)
-            const maxIncome = Math.max(...last30Days.map(d => d.income))
-            const maxExpense = Math.max(...last30Days.map(d => d.expense))
-            const maxValue = Math.max(maxBalance, maxIncome, maxExpense)
-            const minValue = Math.min(minBalance, 0)
-            const range = maxValue - minValue || 1
+          const hasData = txns.length > 0
+          const maxBal = Math.max(...days.map(d => d.balance))
+          const minBal = Math.min(...days.map(d => d.balance))
+          const balRange = Math.max(maxBal - minBal, 1)
 
-            const chartWidth = 800
-            const chartHeight = 200
-            const padding = { top: 20, right: 20, bottom: 30, left: 60 }
-            const innerWidth = chartWidth - padding.left - padding.right
-            const innerHeight = chartHeight - padding.top - padding.bottom
+          const maxBar = Math.max(...days.map(d => Math.max(d.income, d.expense)), 1)
 
-            const getY = (value) => {
-              return padding.top + innerHeight - ((value - minValue) / range) * innerHeight
-            }
+          const W = 700
+          const H = 190
+          const PAD = { top: 16, right: 16, bottom: 28, left: 54 }
+          const IW = W - PAD.left - PAD.right
+          const IH = H - PAD.top - PAD.bottom
+          const n = days.length
+          const step = IW / Math.max(n - 1, 1)
+          const barW = Math.max(step * 0.28, 4)
+          const barZone = IH * 0.32   // bottom 32% for bars
+          const lineZone = IH * 0.68  // top 68% for balance line
 
-            const getX = (index) => {
-              return padding.left + (index / (last30Days.length - 1)) * innerWidth
-            }
+          const getX = i => PAD.left + i * step
+          const getBalY = v => {
+            const pct = balRange > 0 ? (v - minBal) / balRange : 0.5
+            return PAD.top + lineZone * (1 - pct)
+          }
 
-            // Create paths
-            const balancePath = last30Days.map((d, i) => {
-              const x = getX(i)
-              const y = getY(d.balance)
-              return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
-            }).join(' ')
+          const balPath = days.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getBalY(d.balance).toFixed(1)}`).join(' ')
+          const areaPath = balPath +
+            ` L ${getX(n - 1).toFixed(1)} ${(PAD.top + lineZone).toFixed(1)}` +
+            ` L ${getX(0).toFixed(1)} ${(PAD.top + lineZone).toFixed(1)} Z`
 
-            return (
-              <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }}>
-                <svg width={chartWidth} height={chartHeight} style={{ display: 'block' }}>
-                  {/* Grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                    const y = padding.top + innerHeight * (1 - ratio)
-                    const value = minValue + range * ratio
-                    return (
-                      <g key={i}>
-                        <line
-                          x1={padding.left}
-                          y1={y}
-                          x2={chartWidth - padding.right}
-                          y2={y}
-                          stroke="rgba(0,0,0,0.05)"
-                          strokeWidth="1"
-                        />
-                        <text
-                          x={padding.left - 10}
-                          y={y + 4}
-                          textAnchor="end"
-                          fontSize="10"
-                          fill="rgba(0,0,0,0.4)"
-                        >
-                          {(value / 1000).toFixed(0)}k
-                        </text>
-                      </g>
-                    )
-                  })}
+          // Unique gradient id to avoid conflicts across re-renders
+          const gradId = 'finGrad_home'
 
-                  {/* Income bars */}
-                  {last30Days.map((d, i) => {
-                    if (d.income === 0) return null
-                    const x = getX(i)
-                    const y = getY(d.income)
-                    const barHeight = getY(0) - y
-                    return (
-                      <rect
-                        key={`income-${i}`}
-                        x={x - 3}
-                        y={y}
-                        width="6"
-                        height={barHeight}
-                        fill="#21a038"
-                        opacity="0.3"
-                      />
-                    )
-                  })}
+          // Y-axis grid for balance
+          const gridRatios = [0, 0.5, 1]
 
-                  {/* Expense bars */}
-                  {last30Days.map((d, i) => {
-                    if (d.expense === 0) return null
-                    const x = getX(i)
-                    const y = getY(0)
-                    const barHeight = getY(0) - getY(d.expense)
-                    return (
-                      <rect
-                        key={`expense-${i}`}
-                        x={x - 3}
-                        y={y}
-                        width="6"
-                        height={barHeight}
-                        fill="#f44336"
-                        opacity="0.3"
-                      />
-                    )
-                  })}
+          return (
+            <div style={{ position: 'relative', width: '100%' }}>
+              <svg
+                viewBox={`0 0 ${W} ${H}`}
+                preserveAspectRatio="none"
+                style={{ display: 'block', width: '100%', height: 180 }}
+              >
+                <defs>
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffdd2d" stopOpacity="0.22" />
+                    <stop offset="100%" stopColor="#ffdd2d" stopOpacity="0" />
+                  </linearGradient>
+                  <clipPath id="chartClip">
+                    <rect x={PAD.left} y={PAD.top} width={IW} height={IH} />
+                  </clipPath>
+                </defs>
 
-                  {/* Balance line */}
+                {/* Horizontal grid */}
+                {gridRatios.map((r, i) => {
+                  const y = PAD.top + lineZone * (1 - r)
+                  const val = minBal + balRange * r
+                  return (
+                    <g key={i}>
+                      <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+                        stroke="rgba(0,0,0,0.05)" strokeWidth="1" strokeDasharray={r === 0 ? '0' : '3,3'} />
+                      <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(0,0,0,0.35)">
+                        {val >= 1000 ? `${(val / 1000).toFixed(0)}к` : Math.round(val)}
+                      </text>
+                    </g>
+                  )
+                })}
+
+                {/* Separator between line zone and bar zone */}
+                <line
+                  x1={PAD.left} y1={PAD.top + lineZone}
+                  x2={W - PAD.right} y2={PAD.top + lineZone}
+                  stroke="rgba(0,0,0,0.06)" strokeWidth="1"
+                />
+
+                {/* Income bars */}
+                {days.map((d, i) => {
+                  if (d.income === 0) return null
+                  const h = (d.income / maxBar) * barZone * 0.85
+                  const x = getX(i)
+                  const baseY = H - PAD.bottom
+                  return (
+                    <rect key={`inc-${i}`}
+                      x={x - barW - 1} y={baseY - h}
+                      width={barW} height={h}
+                      fill="#21a038" opacity="0.45" rx="2"
+                    />
+                  )
+                })}
+
+                {/* Expense bars */}
+                {days.map((d, i) => {
+                  if (d.expense === 0) return null
+                  const h = (d.expense / maxBar) * barZone * 0.85
+                  const x = getX(i)
+                  const baseY = H - PAD.bottom
+                  return (
+                    <rect key={`exp-${i}`}
+                      x={x + 1} y={baseY - h}
+                      width={barW} height={h}
+                      fill="#f44336" opacity="0.45" rx="2"
+                    />
+                  )
+                })}
+
+                {/* Balance area */}
+                {hasData && <path d={areaPath} fill={`url(#${gradId})`} clipPath="url(#chartClip)" />}
+
+                {/* Balance line */}
+                {hasData && (
                   <Motion.path
-                    d={balancePath}
+                    d={balPath}
                     fill="none"
                     stroke="#ffdd2d"
-                    strokeWidth="3"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    clipPath="url(#chartClip)"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
                   />
+                )}
 
-                  {/* Balance points - only show every 5th point */}
-                  {last30Days.filter((_, i) => i % 5 === 0).map((d, idx) => {
-                    const i = idx * 5
-                    const x = getX(i)
-                    const y = getY(d.balance)
-                    return (
-                      <circle
-                        key={`point-${i}`}
-                        cx={x}
-                        cy={y}
-                        r="4"
-                        fill="#ffdd2d"
-                        stroke="#fff"
-                        strokeWidth="2"
-                      />
-                    )
-                  })}
+                {/* Balance dots — every 2nd point */}
+                {hasData && days.filter((_, i) => i % 2 === 0).map((d, idx) => {
+                  const i = idx * 2
+                  return (
+                    <circle key={`dot-${i}`}
+                      cx={getX(i)} cy={getBalY(d.balance)}
+                      r="3" fill="#ffdd2d" stroke="#fff" strokeWidth="1.5"
+                    />
+                  )
+                })}
 
-                  {/* X-axis labels */}
-                  {last30Days.filter((_, i) => i % 5 === 0).map((d, i) => {
-                    const index = i * 5
-                    const x = getX(index)
-                    return (
-                      <text
-                        key={`label-${i}`}
-                        x={x}
-                        y={chartHeight - 10}
-                        textAnchor="middle"
-                        fontSize="10"
-                        fill="rgba(0,0,0,0.4)"
-                      >
-                        {d.label}
-                      </text>
-                    )
-                  })}
-                </svg>
+                {/* X-axis date labels */}
+                {days.map((d, i) => {
+                  // Show every 2nd label
+                  if (i % 2 !== 0) return null
+                  return (
+                    <text key={`xl-${i}`}
+                      x={getX(i)} y={H - 8}
+                      textAnchor="middle" fontSize="9" fill="rgba(0,0,0,0.38)"
+                    >
+                      {d.label}
+                    </text>
+                  )
+                })}
+              </svg>
 
-                {/* Legend */}
-                <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 12, fontSize: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 16, height: 3, background: '#ffdd2d', borderRadius: 2 }} />
-                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Баланс</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 16, height: 8, background: '#21a038', opacity: 0.3, borderRadius: 2 }} />
-                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Доходы</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 16, height: 8, background: '#f44336', opacity: 0.3, borderRadius: 2 }} />
-                    <span style={{ color: 'rgba(0,0,0,0.6)' }}>Расходы</span>
-                  </div>
+              {/* Empty state */}
+              {!hasData && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  color: 'rgba(0,0,0,0.3)', fontSize: 13,
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>📊</div>
+                  <div>Добавь транзакции, чтобы увидеть динамику</div>
+                </div>
+              )}
+
+              {/* Legend */}
+              <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 10, fontSize: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 14, height: 2.5, background: '#ffdd2d', borderRadius: 2 }} />
+                  <span style={{ color: 'rgba(0,0,0,0.55)', fontSize: 11 }}>Баланс</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, background: '#21a038', opacity: 0.5, borderRadius: 2 }} />
+                  <span style={{ color: 'rgba(0,0,0,0.55)', fontSize: 11 }}>Доходы</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, background: '#f44336', opacity: 0.5, borderRadius: 2 }} />
+                  <span style={{ color: 'rgba(0,0,0,0.55)', fontSize: 11 }}>Расходы</span>
                 </div>
               </div>
-            )
-          })()}
-        </Motion.div>
+            </div>
+          )
+        })()}
+      </Motion.div>
 
       {/* Forecast + AI Tips */}
       <div style={s.row}>
@@ -390,41 +403,93 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
               </div>
             </>
           ) : (
-            <div style={s.allDone}><img src="/icons/free-icon-target-6745066.png" alt="" style={{width:40,height:40}} /><div>Добавь транзакции для прогноза</div></div>
+            <div style={s.allDone}><img src="/icons/free-icon-target-6745066.png" alt="" style={{ width: 40, height: 40 }} /><div>Добавь транзакции для прогноза</div></div>
           )}
         </Motion.div>
 
-        <Motion.div variants={item} style={s.card} whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.09)" }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <div style={{ fontSize: 24 }}>🤖</div>
-            <div style={s.cardLabel}>AI-СОВЕТНИК</div>
+        <Motion.div
+          variants={item}
+          style={{
+            ...s.card,
+            background: "linear-gradient(135deg, #fffef5 0%, #ffffff 100%)",
+            border: "1px solid rgba(255,221,45,0.15)",
+          }}
+          whileHover={{ y: -2, boxShadow: "0 8px 28px rgba(255,221,45,0.12)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: "linear-gradient(135deg, #ffdd2d, #ffa000)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, boxShadow: "0 4px 12px rgba(255,221,45,0.3)",
+              }}>🤖</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>AI-Советник</div>
+                <div style={{ fontSize: 11, color: "rgba(0,0,0,0.35)" }}>Персональные рекомендации</div>
+              </div>
+            </div>
+            <Motion.div
+              style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: ai_tips?.length ? "#21a038" : "rgba(0,0,0,0.15)",
+              }}
+              animate={ai_tips?.length ? { scale: [1, 1.3, 1], opacity: [1, 0.7, 1] } : {}}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
           </div>
-          <div style={s.missionsList}>
-            {ai_tips?.slice(0, 3).map((tip, i) => (
-              <Motion.div
-                key={i}
-                style={{
-                  ...s.missionItem,
-                  background: "linear-gradient(135deg, rgba(255,221,45,0.08), rgba(255,221,45,0.02))",
-                  border: "1px solid rgba(255,221,45,0.2)",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                }}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + i * 0.07, duration: 0.3 }}
-              >
-                <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
-                <span style={{ flex: 1, fontSize: 13, color: "#1a1a1a", lineHeight: 1.5, fontWeight: 500 }}>
-                  {tip.text}
-                </span>
-              </Motion.div>
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {ai_tips?.slice(0, 3).map((tip, i) => {
+              const tipText = typeof tip === 'string' ? tip : tip.text || tip
+              const isWarning = tipText.includes("🚨") || tipText.includes("⚠️")
+              const isGood = tipText.includes("✅") || tipText.includes("💰")
+              return (
+                <Motion.div
+                  key={i}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 10,
+                    background: isWarning
+                      ? "linear-gradient(135deg, rgba(244,67,54,0.06), rgba(244,67,54,0.02))"
+                      : isGood
+                        ? "linear-gradient(135deg, rgba(33,160,56,0.06), rgba(33,160,56,0.02))"
+                        : "linear-gradient(135deg, rgba(255,221,45,0.08), rgba(255,221,45,0.02))",
+                    border: isWarning
+                      ? "1px solid rgba(244,67,54,0.12)"
+                      : isGood
+                        ? "1px solid rgba(33,160,56,0.12)"
+                        : "1px solid rgba(255,221,45,0.15)",
+                    borderRadius: 12,
+                    padding: "12px 14px",
+                  }}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 + i * 0.07, duration: 0.3 }}
+                >
+                  <span style={{
+                    fontSize: 18, flexShrink: 0, marginTop: 1,
+                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))",
+                  }}>
+                    {isWarning ? "⚠️" : isGood ? "✅" : "💡"}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 13, color: "#1a1a1a", lineHeight: 1.5, fontWeight: 500 }}>
+                    {tipText}
+                  </span>
+                </Motion.div>
+              )
+            })}
           </div>
           {!ai_tips?.length && (
-            <div style={{ textAlign: "center", padding: "30px 20px", color: "rgba(0,0,0,0.35)", fontSize: 13 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🤖</div>
-              <div>Добавь транзакции, чтобы получить персональные советы от AI</div>
+            <div style={{
+              textAlign: "center", padding: "24px 20px", color: "rgba(0,0,0,0.3)", fontSize: 13,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+            }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: "linear-gradient(135deg, rgba(255,221,45,0.15), rgba(255,160,0,0.1))",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28,
+              }}>🤖</div>
+              <div>Добавь транзакции для персональных советов</div>
             </div>
           )}
         </Motion.div>
@@ -432,39 +497,39 @@ export default function HomeScreen({ onStartLesson, onNavigate }) {
 
       {/* Recent Transactions */}
       <AnimatePresence>
-      {transactions?.length > 0 && (
-        <Motion.div
-          style={s.eventCard}
-          variants={item}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.35 }}
-        >
-          <div style={{ fontSize: 11, color: "#b8860b", fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>
-            ПОСЛЕДНИЕ ТРАНЗАКЦИИ
-          </div>
-          {transactions.slice(0, 3).map((t, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, fontSize: 14, padding: "8px 0", color: "#1a1a1a", borderBottom: i < 2 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
-              <span style={{ fontSize: 20 }}>{t.category_icon || "💰"}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>{t.category}</div>
-                <div style={{ fontSize: 12, color: "rgba(0,0,0,0.4)" }}>{t.comment || t.date}</div>
-              </div>
-              <span style={{ color: t.type === "income" ? "#21a038" : "#f44336", fontWeight: 700 }}>
-                {t.type === "income" ? "+" : "-"}{t.amount?.toLocaleString("ru-RU")} с
-              </span>
-            </div>
-          ))}
-          <Motion.button
-            style={{ ...s.startBtn, marginTop: 12 }}
-            onClick={() => onNavigate("transactions")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+        {transactions?.length > 0 && (
+          <Motion.div
+            style={s.eventCard}
+            variants={item}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35 }}
           >
-            Все транзакции →
-          </Motion.button>
-        </Motion.div>
-      )}
+            <div style={{ fontSize: 11, color: "#b8860b", fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>
+              ПОСЛЕДНИЕ ТРАНЗАКЦИИ
+            </div>
+            {transactions.slice(0, 3).map((t, i) => (
+              <div key={i} style={{ display: "flex", gap: 12, fontSize: 14, padding: "8px 0", color: "#1a1a1a", borderBottom: i < 2 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                <span style={{ fontSize: 20 }}>{t.category_icon || "💰"}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{t.category}</div>
+                  <div style={{ fontSize: 12, color: "rgba(0,0,0,0.4)" }}>{t.comment || t.date}</div>
+                </div>
+                <span style={{ color: t.type === "income" ? "#21a038" : "#f44336", fontWeight: 700 }}>
+                  {t.type === "income" ? "+" : "-"}{t.amount?.toLocaleString("ru-RU")} с
+                </span>
+              </div>
+            ))}
+            <Motion.button
+              style={{ ...s.startBtn, marginTop: 12 }}
+              onClick={() => onNavigate("transactions")}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Все транзакции →
+            </Motion.button>
+          </Motion.div>
+        )}
       </AnimatePresence>
 
       {/* Spending by Category with Chart */}

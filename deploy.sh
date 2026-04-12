@@ -11,7 +11,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_DIR="/home/neo/Project/FIN"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKUP_DIR="$PROJECT_DIR/backups"
 
 # Functions
@@ -35,7 +35,7 @@ check_requirements() {
         exit 1
     fi
 
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         log_error "Docker Compose is not installed"
         exit 1
     fi
@@ -49,8 +49,8 @@ backup_database() {
     mkdir -p "$BACKUP_DIR"
     BACKUP_FILE="$BACKUP_DIR/backup_$(date +%Y%m%d_%H%M%S).sql"
 
-    if docker-compose ps postgres | grep -q "Up"; then
-        docker-compose exec -T postgres pg_dump -U finuser financedb > "$BACKUP_FILE"
+    if docker compose ps postgres | grep -q "Up"; then
+        docker compose exec -T postgres pg_dump -U finuser financedb > "$BACKUP_FILE"
         log_info "✅ Backup created: $BACKUP_FILE"
     else
         log_warn "PostgreSQL not running, skipping backup"
@@ -60,7 +60,7 @@ backup_database() {
 run_migrations() {
     log_info "Running database migrations..."
 
-    docker-compose run --rm transactions alembic upgrade head
+    docker compose run --rm transactions alembic upgrade head
 
     if [ $? -eq 0 ]; then
         log_info "✅ Migrations completed"
@@ -73,7 +73,7 @@ run_migrations() {
 build_containers() {
     log_info "Building Docker containers..."
 
-    docker-compose build --no-cache
+    docker compose build --no-cache
 
     if [ $? -eq 0 ]; then
         log_info "✅ Build successful"
@@ -88,17 +88,22 @@ start_services() {
 
     # Start database and redis first
     log_info "Starting PostgreSQL and Redis..."
-    docker-compose up -d postgres redis
+    docker compose up -d postgres redis
     sleep 5
 
     # Start backend services
     log_info "Starting backend services..."
-    docker-compose up -d transactions ai
+    docker compose up -d transactions ai
     sleep 5
 
     # Start gateway
     log_info "Starting API Gateway..."
-    docker-compose up -d gateway
+    docker compose up -d gateway
+    sleep 5
+
+    # Start frontend
+    log_info "Starting frontend..."
+    docker compose up -d frontend
     sleep 5
 
     log_info "✅ All services started"
@@ -133,6 +138,14 @@ health_checks() {
         exit 1
     fi
 
+    # Check Frontend
+    if curl -f http://localhost/health &> /dev/null; then
+        log_info "✅ Frontend is healthy"
+    else
+        log_error "❌ Frontend health check failed"
+        exit 1
+    fi
+
     log_info "✅ All health checks passed"
 }
 
@@ -144,11 +157,11 @@ cleanup() {
 
 show_status() {
     log_info "Service Status:"
-    docker-compose ps
+    docker compose ps
 
     echo ""
     log_info "Logs (last 20 lines):"
-    docker-compose logs --tail=20
+    docker compose logs --tail=20
 }
 
 # Main deployment flow
@@ -178,6 +191,7 @@ main() {
 
     echo ""
     log_info "Access the application at:"
+    log_info "  - Frontend: http://SERVER_IP or http://localhost"
     log_info "  - API Gateway: http://localhost:8000"
     log_info "  - Transaction Service: http://localhost:8001"
     log_info "  - AI Service: http://localhost:8002"

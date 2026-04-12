@@ -20,16 +20,34 @@ logger = setup_logger("prediction_engine_secure")
 class PredictionEngine:
     def __init__(self):
         self.min_txns = 3
-        # Import OpenRouter client only if available
+
+        # Primary: Groq
+        self.groq = None
+        try:
+            from groq_client import GroqClient
+            self.groq = GroqClient()
+            if not self.groq.client:
+                self.groq = None
+        except ImportError:
+            logger.warning("Groq client not available")
+
+        # Fallback: OpenRouter
+        self.openrouter = None
         try:
             from openrouter_client_secure import OpenRouterClient
-
             self.openrouter = OpenRouterClient()
+            if not self.openrouter.client:
+                self.openrouter = None
         except ImportError:
-            logger.warning(
-                "OpenRouter client not available, using statistical model only"
-            )
-            self.openrouter = None
+            logger.warning("OpenRouter client not available")
+
+        providers = []
+        if self.groq:
+            providers.append("Groq")
+        if self.openrouter:
+            providers.append("OpenRouter")
+        providers.append("Statistical")
+        logger.info(f"LLM cascade: {' → '.join(providers)}")
 
     def calculate_features(self, transactions: List[Dict]) -> Dict:
         """Calculate statistical features from transactions"""
@@ -60,8 +78,8 @@ class PredictionEngine:
         self, balance: float, features: Dict, transactions: List[Dict]
     ) -> Tuple[Optional[float], float, str, str, bool]:
         """
-        Predict using LLM with SANITIZED inputs and strict output validation.
-        Falls back to statistical model if LLM fails.
+        Cascading prediction: Groq → OpenRouter → Statistical.
+        Returns (days_left, confidence, risk_level, recommendation, ai_used)
         """
         if features["total_txns"] < self.min_txns:
             return None, 0.3, "safe", "📊 Недостаточно данных", False
@@ -69,27 +87,48 @@ class PredictionEngine:
         if balance <= 0:
             return 0, 0.95, "critical", "⚠️ Баланс на нуле!", False
 
-        # Try LLM prediction with sanitized inputs
-        if self.openrouter:
+        # 1. Try Groq (primary)
+        if self.groq:
             try:
-                llm_result = await self.openrouter.predict_financial_runway(
+                result = await self.groq.predict_financial_runway(
                     balance, transactions, features
                 )
-
-                if llm_result and self._validate_llm_output(llm_result):
+                if result and self._validate_llm_output(result):
+                    logger.info("✅ Prediction via Groq")
                     return (
-                        llm_result["days_left"],
-                        llm_result["confidence"],
-                        llm_result["risk_level"],
-                        llm_result["recommendation"],
-                        True,  # AI was used
+                        result["days_left"],
+                        result["confidence"],
+                        result["risk_level"],
+                        result["recommendation"],
+                        True,
                     )
                 else:
-                    logger.warning("LLM output validation failed, using fallback")
+                    logger.warning("Groq output invalid, trying OpenRouter...")
             except Exception as e:
-                logger.warning(f"LLM prediction failed: {e}, using fallback")
+                logger.warning(f"Groq failed: {e}, trying OpenRouter...")
 
-        # Fallback to statistical model
+        # 2. Try OpenRouter (fallback)
+        if self.openrouter:
+            try:
+                result = await self.openrouter.predict_financial_runway(
+                    balance, transactions, features
+                )
+                if result and self._validate_llm_output(result):
+                    logger.info("✅ Prediction via OpenRouter (fallback)")
+                    return (
+                        result["days_left"],
+                        result["confidence"],
+                        result["risk_level"],
+                        result["recommendation"],
+                        True,
+                    )
+                else:
+                    logger.warning("OpenRouter output invalid, using statistical...")
+            except Exception as e:
+                logger.warning(f"OpenRouter failed: {e}, using statistical...")
+
+        # 3. Statistical model (last resort)
+        logger.info("📊 Using statistical prediction (all LLMs unavailable)")
         days_left, confidence, risk, rec = self._statistical_predict(balance, features)
         return days_left, confidence, risk, rec, False
 

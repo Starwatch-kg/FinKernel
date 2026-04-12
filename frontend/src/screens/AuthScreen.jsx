@@ -115,11 +115,11 @@ export default function AuthScreen({ onAuth }) {
 
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <button style={{...s.tbankBtn, flex: 1, fontSize: 13}} disabled={loading}
-            onClick={() => quickLogin("guest@finfuture.app", "Гость", "guest12345")}>
+            onClick={() => quickLogin("guest@finfuture.app", "Гость", "Guest@12345")}>
             Войти как гость
           </button>
           <button style={{...s.tbankBtn, flex: 1, fontSize: 13, background: "#1a1a1a", color: "#fff", border: "none"}} disabled={loading}
-            onClick={() => quickLogin("admin@finfuture.app", "Админ", "admin12345")}>
+            onClick={() => quickLogin("admin@finfuture.app", "Админ", "Admin@12345")}>
             Войти как админ
           </button>
         </div>

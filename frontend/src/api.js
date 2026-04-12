@@ -37,6 +37,17 @@ async function apiFetch(url, options = {}) {
       // Handle different error formats from backend
       let detail = body.message || body.detail || body.error || `Ошибка сервера (${res.status})`
 
+      // Backend validation errors: { message: "Invalid request data", details: [{msg: "..."}, ...] }
+      if (body.details && Array.isArray(body.details)) {
+        const msgs = body.details.map(e => {
+          let msg = e.msg || e.message || ""
+          // Strip Pydantic prefix "Value error, "
+          msg = msg.replace(/^Value error,\s*/i, "")
+          return msg
+        }).filter(Boolean)
+        if (msgs.length) detail = msgs.join(". ")
+      }
+
       // Pydantic v2 returns detail as an array of validation errors
       if (Array.isArray(detail)) {
         detail = detail.map(e => e.msg || e.message).join(", ")
@@ -116,11 +127,20 @@ export const getDashboard = () => apiFetch(`${BASE}/dashboard`)
 // FIXED: No userId parameter - backend extracts from JWT
 export const getTransactions = (limit = 30) => apiFetch(`${BASE}/transactions?limit=${limit}`)
 
+function parseTransactionAmount(amount) {
+  if (typeof amount === "number") return amount
+  const normalized = String(amount || "")
+    .replace(/\s+/g, "")
+    .replace(",", ".")
+    .trim()
+  return parseFloat(normalized)
+}
+
 // FIXED: Map frontend fields to backend fields
 export const addTransaction = (transaction) => {
   // Map frontend fields to backend expected format
   const backendTransaction = {
-    amount: parseFloat(transaction.amount),
+    amount: parseTransactionAmount(transaction.amount),
     type: transaction.type, // "income" or "expense"
     category: mapCategoryToBackend(transaction.category), // Map Russian to English
     description: transaction.comment || transaction.description || "",

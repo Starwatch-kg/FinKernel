@@ -16,6 +16,7 @@ from shared.models import (
     Achievement,
     DailyMission,
     MarketEvent,
+    Transaction,
     User,
     UserMarketResponse,
 )
@@ -245,6 +246,55 @@ ACHIEVEMENT_TEMPLATES = [
     {"id": 30, "name": "Полуночник", "description": "Добавь транзакцию после полуночи", "icon": "🌙", "category": "streak", "xp_reward": 100},
 ]
 
+
+async def get_generated_achievement_templates(
+    user_id: int, db: AsyncSession
+) -> list[dict]:
+    """Generate a few personalized achievements from current user activity."""
+    result = await db.execute(
+        select(Transaction)
+        .where(Transaction.user_id == user_id)
+        .order_by(Transaction.timestamp.desc())
+    )
+    transactions = result.scalars().all()
+
+    income_count = sum(1 for txn in transactions if txn.type.value == "income")
+    described_count = sum(1 for txn in transactions if (txn.description or "").strip())
+    active_days = len({txn.timestamp.date().isoformat() for txn in transactions})
+
+    return [
+        {
+            "id": 101,
+            "name": "История доходов",
+            "description": "AI-цель: добавь 3 доходные транзакции",
+            "icon": "🤖",
+            "category": "budget",
+            "xp_reward": 80,
+            "generated": True,
+            "unlocked": income_count >= 3,
+        },
+        {
+            "id": 102,
+            "name": "Финансовый дневник",
+            "description": "AI-цель: оставь комментарий к 5 транзакциям",
+            "icon": "🧠",
+            "category": "discipline",
+            "xp_reward": 90,
+            "generated": True,
+            "unlocked": described_count >= 5,
+        },
+        {
+            "id": 103,
+            "name": "Ритм недели",
+            "description": "AI-цель: веди учёт расходов 7 разных дней",
+            "icon": "📆",
+            "category": "streak",
+            "xp_reward": 120,
+            "generated": True,
+            "unlocked": active_days >= 7,
+        },
+    ]
+
 @router.get("/achievements")
 async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
     """Get user achievements"""
@@ -258,9 +308,12 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
     unlocked = result.scalars().all()
     unlocked_ids = {a.title for a in unlocked}
 
+    generated_templates = await get_generated_achievement_templates(user_id, db)
+    all_templates = ACHIEVEMENT_TEMPLATES + generated_templates
+
     # Return all achievements with unlocked status
     achievements_list = []
-    for template in ACHIEVEMENT_TEMPLATES:
+    for template in all_templates:
         unlocked_ach = next((a for a in unlocked if a.title == template["name"]), None)
         achievements_list.append({
             "id": template["id"],
@@ -269,7 +322,8 @@ async def get_achievements(userId: str, db: AsyncSession = Depends(get_db)):
             "icon": template["icon"],
             "category": template["category"],
             "xp_reward": template["xp_reward"],
-            "unlocked": template["name"] in unlocked_ids,
+            "generated": template.get("generated", False),
+            "unlocked": template.get("unlocked", template["name"] in unlocked_ids),
             "unlocked_at": unlocked_ach.unlocked_at.isoformat() if unlocked_ach else None,
         })
 
