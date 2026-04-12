@@ -1,0 +1,72 @@
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_transactions_no_double_spend - httpx.ConnectError: All connection attempts failed
+FAILED tests/concurrency/test_race_conditions.py::test_idempotency_prevents_duplicates - httpx.ConnectError: All connection attempts failed
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trades_no_overspend - httpx.ConnectError: All connection attempts failed
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_deletion_no_double_credit - httpx.ConnectError: All connection attempts failed
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_trade_idempotency - httpx.ConnectError: All connection attempts failed
+FAILED tests/concurrency/test_race_conditions.py::test_concurrent_mixed_operations - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_success - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_duplicate_email - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_weak_password - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_invalid_email - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestRegistration::test_register_rate_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_success - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_wrong_password - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_nonexistent_user - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestLogin::test_login_case_insensitive_email - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_token_success - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_with_invalid_token - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestTokenRefresh::test_refresh_with_access_token_fails - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_protected_endpoint_requires_auth - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_valid_token_grants_access - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_invalid_token_rejected - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAuthorization::test_malformed_auth_header_rejected - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAdminAuthorization::test_admin_endpoint_requires_admin - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestTokenExpiration::test_access_token_short_lived - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestSecurityHeaders::test_security_headers_present - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_auth_flow.py::TestAuditLogging::test_failed_login_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_unauthenticated_request_rejected - httpx.ConnectError: All connection attempts failed
+FAILED tests/e2e/test_transaction_flow.py::TestTransactionSecurity::test_cannot_access_other_user_transactions - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_creation_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_transaction_deletion_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_trade_execution_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_failed_login_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_multiple_failed_logins_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogging::test_balance_change_logged - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_request_id - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogContent::test_audit_log_contains_user_id - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_audit_logging.py::TestAuditLogFailure::test_operation_succeeds_even_if_audit_fails - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_login_rate_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_register_rate_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_transaction_rate_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimiting::test_rate_limit_headers - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_fallback_limiter_when_redis_down - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitFallback::test_rate_limit_per_user - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitRecovery::test_rate_limit_window_reset - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_ai_endpoints_stricter_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitByEndpoint::test_read_endpoints_lenient_limit - httpx.ConnectError: All connection attempts failed
+FAILED tests/integration/test_rate_limiting.py::TestRateLimitSlidingWindow::test_sliding_window_behavior - httpx.ConnectError: All connection attempts failed
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_create_and_retrieve_transaction - pytest.PytestRemovedIn9Warning: 'test_create_and_retrieve_transaction' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_affects_balance - pytest.PytestRemovedIn9Warning: 'test_transaction_affects_balance' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_delete_transaction_reverses_balance - pytest.PytestRemovedIn9Warning: 'test_delete_transaction_reverses_balance' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_insufficient_funds_rejected - pytest.PytestRemovedIn9Warning: 'test_insufficient_funds_rejected' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_idempotency - pytest.PytestRemovedIn9Warning: 'test_transaction_idempotency' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_concurrent_transactions_no_race_condition - pytest.PytestRemovedIn9Warning: 'test_concurrent_transactions_no_race_condition' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_transaction_validation - pytest.PytestRemovedIn9Warning: 'test_transaction_validation' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionE2E::test_dashboard_aggregates_correctly - pytest.PytestRemovedIn9Warning: 'test_dashboard_aggregates_correctly' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_limit - pytest.PytestRemovedIn9Warning: 'test_transaction_limit' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+ERROR tests/e2e/test_transaction_flow.py::TestTransactionPagination::test_transaction_max_limit - pytest.PytestRemovedIn9Warning: 'test_transaction_max_limit' requested an async fixture 'client', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+============ 47 failed, 52 passed, 3 warnings, 10 errors in 14.05s =============
+Error: Process completed with exit code 1.
+
