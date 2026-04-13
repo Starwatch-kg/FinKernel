@@ -1,4 +1,4 @@
-# FinKernel
+# FinKernel 
 
 FinKernel is a Docker-based personal finance platform with:
 - React frontend
